@@ -1,0 +1,879 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next mist use-motion" lang>
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="Hexo, NexT">
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="一.应用层协议是什么        - [应用协议都有哪些](#应用协议都有哪些)  二.在我上网的过程中，都发生了什么          1.打开浏览器，输入网址URL，看看都有什么          2.通过访问的域名找出其IP地址(专门保存了 Web 服务器域名与 IP 的对应关系，它就是 DNS 服务器)          3.浏览器发出读取文件(URL 中域名后面部分对应的文件)的HT">
+<meta property="og:type" content="article">
+<meta property="og:title" content="你可能不知道的HTTP协议">
+<meta property="og:url" content="http://yoursite.com/2021/09/23/HTTP协议/index.html">
+<meta property="og:site_name" content="boomery">
+<meta property="og:description" content="一.应用层协议是什么        - [应用协议都有哪些](#应用协议都有哪些)  二.在我上网的过程中，都发生了什么          1.打开浏览器，输入网址URL，看看都有什么          2.通过访问的域名找出其IP地址(专门保存了 Web 服务器域名与 IP 的对应关系，它就是 DNS 服务器)          3.浏览器发出读取文件(URL 中域名后面部分对应的文件)的HT">
+<meta property="og:locale" content="default">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/img_convert/4f424da9bc5cb5e2dd3e1a3045371b14.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/img_convert/5f0e5a2415109fc43424b25a681f5659.png">
+<meta property="og:image" content="https://pic4.zhimg.com/80/v2-5fc6a6e065a3bedb50b31afe4397188b_1440w.jpg">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/img_convert/0a2d96f21e593c4ef7c6898b90da16ca.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/img_convert/69f8c521704b9be654dbb14d2ea3a3fa.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/img_convert/5938a55976892eab428048a89a78c979.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/img_convert/a4ea6f35d2c78f1ea1223cea68abe047.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/img_convert/10d87c6a05ab113638f6bc3cec3f34bf.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/img_convert/0fad4263a847908a44f92c1ca1e35e8c.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/img_convert/a8fc587e097a697d2d1765e4a7dc0599.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/img_convert/bfec594f22465eaabbc7b44bd098e17d.png">
+<meta property="og:image" content="https://pic4.zhimg.com/80/v2-a373437b39843593dd44ed0dc3255d0f_1440w.jpg">
+<meta property="og:image" content="https://i.loli.net/2021/05/25/P96XzRIcr24hCMj.png">
+<meta property="og:image" content="https://pic4.zhimg.com/80/v2-299b4a71f9b005fa15fbcd4cabfd841b_1440w.png">
+<meta property="og:updated_time" content="2021-09-23T09:22:57.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="你可能不知道的HTTP协议">
+<meta name="twitter:description" content="一.应用层协议是什么        - [应用协议都有哪些](#应用协议都有哪些)  二.在我上网的过程中，都发生了什么          1.打开浏览器，输入网址URL，看看都有什么          2.通过访问的域名找出其IP地址(专门保存了 Web 服务器域名与 IP 的对应关系，它就是 DNS 服务器)          3.浏览器发出读取文件(URL 中域名后面部分对应的文件)的HT">
+<meta name="twitter:image" content="https://img-blog.csdnimg.cn/img_convert/4f424da9bc5cb5e2dd3e1a3045371b14.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Mist',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2021/09/23/HTTP协议/">
+
+
+
+
+
+  <title>你可能不知道的HTTP协议 | boomery</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="default">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">boomery</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-question-circle"></i> <br>
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tech">
+          <a href="/categories/技术" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-question-circle"></i> <br>
+            
+            Tech
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-life">
+          <a href="/categories/生活" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-question-circle"></i> <br>
+            
+            Life
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-question-circle"></i> <br>
+            
+            About
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2021/09/23/HTTP协议/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="boomery">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="boomery">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">你可能不知道的HTTP协议</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2021-09-23T17:12:35+08:00">
+                2021-09-23
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/技术/" itemprop="url" rel="index">
+                    <span itemprop="name">技术</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <ul>
+<li><a href="#一应用层协议是什么">一.应用层协议是什么</a>        <pre><code>- [应用协议都有哪些](#应用协议都有哪些)
+</code></pre></li>
+<li><a href="#二在我上网的过程中都发生了什么">二.在我上网的过程中，都发生了什么</a>         <ul>
+<li><a href="#1打开浏览器输入网址url看看都有什么">1.打开浏览器，输入网址URL，看看都有什么</a>         </li>
+<li><a href="#2通过访问的域名找出其ip地址专门保存了-web-服务器域名与-ip-的对应关系它就是-dns-服务器">2.通过访问的域名找出其IP地址(专门保存了 Web 服务器域名与 IP 的对应关系，它就是 DNS 服务器)</a>         </li>
+<li><a href="#3浏览器发出读取文件url-中域名后面部分对应的文件的http-请求该请求报文作为-tcp-三次握手的第三个报文的数据发送给服务器">3.浏览器发出读取文件(URL 中域名后面部分对应的文件)的HTTP 请求，该请求报文作为 TCP 三次握手的第三个报文的数据发送给服务器</a>         </li>
+<li><a href="#4服务器给浏览器响应一个301永久重定向响应">4.服务器给浏览器响应一个301永久重定向响应</a>         </li>
+<li><a href="#5浏览器跟踪重定向地址">5.浏览器跟踪重定向地址</a>         </li>
+<li><a href="#6服务器处理请求">6.服务器处理请求</a>          </li>
+<li><a href="#7服务器对浏览器请求作出响应并把对应的-html-文本发送给浏览器">7.服务器对浏览器请求作出响应，并把对应的 html 文本发送给浏览器</a>          </li>
+<li><a href="#9浏览器显示-html">8.浏览器显示 HTML</a>         </li>
+<li><a href="#10浏览器发送请求获取嵌入在-html-中的资源如图片音频视频cssjs等等">9.浏览器发送请求获取嵌入在 HTML 中的资源（如图片、音频、视频、CSS、JS等等）</a> </li>
+</ul>
+</li>
+<li><a href="#三问题来了">三.问题来了</a></li>
+<li><a href="#四原来如此">四.原来如此</a></li>
+<li><a href="#五http10----http11---http20">五.HTTP1.0  <em>&amp;</em>  HTTP1.1  <em>&amp;</em> HTTP2.0</a> <ul>
+<li><a href="#1http10和http11的区别">1.HTTP1.0和HTTP1.1的区别</a>      </li>
+<li><a href="#2http11和http20的区别">2.HTTP1.1和HTTP2.0的区别</a></li>
+</ul>
+</li>
+<li><a href="#六https">六.HTTPS</a> </li>
+<li><a href="#思考题https能被劫持吗">思考题</a><h1 id="一-应用层协议是什么"><a href="#一-应用层协议是什么" class="headerlink" title="一.应用层协议是什么"></a>一.应用层协议是什么</h1>应用层协议(application layer protocol)定义了运行在不同端系统上的应用程序进程如何相互传递报文。</li>
+</ul>
+<hr>
+<h3 id="应用协议都有哪些"><a href="#应用协议都有哪些" class="headerlink" title="应用协议都有哪些"></a>应用协议都有哪些</h3><ul>
+<li>域名系统(Domain Name System，DNS)：用于实现网络设备名字到IP地址映射的网络服务。</li>
+<li>文件传输协议(File Transfer Protocol，FTP)：用于实现交互式文件传输功能。</li>
+<li>SMTP是一种提供可靠且有效电子邮件传输的协议。SMTP 是建模在 FTP 文件传输服务上的一种邮件服务，SMTP 服务器在默认端口 25 上监听客户请求，主要用于传输系统之间的邮件信息。</li>
+<li>简单网络管理协议(simple Network Management Protocol，SNMP)：用于管理与监视网络设备。</li>
+<li>远程登录协议(Telnet)：用于实现远程登录功能。</li>
+<li><strong>超文本传输协议(HyperText Transfer Protocol，HTTP)：超文本传输协议，是一个基于请求与响应，无状态的，应用层的协议，常基于TCP/IP协议传输数据，互联网上应用最为广泛的一种网络协议,所有的WWW文件都必须遵守这个标准。设计HTTP的初衷是为了提供一种发布和接收HTML页面的方法。请求和响应消息的头以ASCII形式给出。</strong></li>
+</ul>
+<hr>
+<p>延展了解：WWW是什么<br>凡是上网的人，谁不知道“WWW”的重要作用？要输入网址，首先得打出这三个字母来。<br>万维网是无数个网络站点和网页的集合，它们在一起构成了因特网最主要的部分。</p>
+<h2 id="（伯纳斯·李，在世界上最大型的粒子物理学实验室-欧洲核子研究组织，发明了万维网。）"><a href="#（伯纳斯·李，在世界上最大型的粒子物理学实验室-欧洲核子研究组织，发明了万维网。）" class="headerlink" title="（伯纳斯·李，在世界上最大型的粒子物理学实验室-欧洲核子研究组织，发明了万维网。）"></a>（伯纳斯·李，在世界上最大型的粒子物理学实验室-欧洲核子研究组织，发明了万维网。）</h2><h1 id="二-在我上网的过程中，都发生了什么"><a href="#二-在我上网的过程中，都发生了什么" class="headerlink" title="二.在我上网的过程中，都发生了什么"></a>二.在我上网的过程中，都发生了什么</h1><h3 id="1-打开浏览器，输入网址URL，看看都有什么"><a href="#1-打开浏览器，输入网址URL，看看都有什么" class="headerlink" title="1.打开浏览器，输入网址URL，看看都有什么"></a>1.打开浏览器，输入网址URL，看看都有什么</h3><h2 id><a href="#" class="headerlink" title></a><img src="https://img-blog.csdnimg.cn/img_convert/4f424da9bc5cb5e2dd3e1a3045371b14.png" alt="a"></h2><h3 id="2-通过访问的域名找出其IP地址-专门保存了-Web-服务器域名与-IP-的对应关系，它就是-DNS-服务器"><a href="#2-通过访问的域名找出其IP地址-专门保存了-Web-服务器域名与-IP-的对应关系，它就是-DNS-服务器" class="headerlink" title="2.通过访问的域名找出其IP地址(专门保存了 Web 服务器域名与 IP 的对应关系，它就是 DNS 服务器)"></a>2.通过访问的域名找出其IP地址(专门保存了 Web 服务器域名与 IP 的对应关系，它就是 DNS 服务器)</h3><h2 id="-1"><a href="#-1" class="headerlink" title></a><img src="https://img-blog.csdnimg.cn/img_convert/5f0e5a2415109fc43424b25a681f5659.png" alt="b"></h2><h3 id="3-浏览器发出读取文件-URL-中域名后面部分对应的文件-的HTTP-请求，该请求报文作为-TCP-三次握手的第三个报文的数据发送给服务器"><a href="#3-浏览器发出读取文件-URL-中域名后面部分对应的文件-的HTTP-请求，该请求报文作为-TCP-三次握手的第三个报文的数据发送给服务器" class="headerlink" title="3.浏览器发出读取文件(URL 中域名后面部分对应的文件)的HTTP 请求，该请求报文作为 TCP 三次握手的第三个报文的数据发送给服务器"></a>3.浏览器发出读取文件(URL 中域名后面部分对应的文件)的HTTP 请求，该请求报文作为 TCP 三次握手的第三个报文的数据发送给服务器</h3><ul>
+<li>请求长这样<br> <img src="https://pic4.zhimg.com/80/v2-5fc6a6e065a3bedb50b31afe4397188b_1440w.jpg" alt="c"><ul>
+<li>(请求方法一般有：GET、POST、PUT、DELETE等)</li>
+<li>POST和GET区别（传参方式一个通过 url，一个通过正文）</li>
+</ul>
+</li>
+<li><p>接下来应用程序(浏览器)通过调用 Socket 库，来委托协议栈工作。协议栈的上半部分有两块，分别是负责收发数据的 TCP 和 UDP 协议，它们两会接受应用层的委托执行收发数据的操作。<br> <img src="https://img-blog.csdnimg.cn/img_convert/0a2d96f21e593c4ef7c6898b90da16ca.png" alt="d"></p>
+</li>
+<li><p>在 HTTP 传输数据之前，首先需要 TCP 建立连接，TCP 连接的建立，通常称为三次握手。这个所谓的「连接」，只是双方计算机里维护一个状态机，在连接建立的过程中，双方的状态变化时序图就像这样。</p>
+</li>
+<li><img src="https://img-blog.csdnimg.cn/img_convert/69f8c521704b9be654dbb14d2ea3a3fa.png" alt="e"></li>
+<li><strong>一开始，客户端和服务端都处于 CLOSED 状态。先是服务端主动监听某个端口，处于 LISTEN 状态。<br>然后客户端主动发起连接 SYN，之后处于 SYN-SENT 状态。<br>服务端收到发起的连接，返回 SYN，并且 ACK 客户端的 SYN，之后处于 SYN-RCVD 状态。<br>客户端收到服务端发送的 SYN 和 ACK 之后，发送 ACK 的 ACK，之后处于 ESTABLISHED 状态，因为它一发一收成功了。<br>服务端收到 ACK 的 ACK 之后，处于 ESTABLISHED 状态，因为它也一发一收了。</strong></li>
+<li>(延展阅读SYN攻击属于DDoS攻击的一种，它利用TCP协议缺陷，通过发送大量的半连接请求，耗费CPU和内存资源。)</li>
+<li>TCP 报文生成。在双方建立了连接后，TCP 报文中的数据部分就是存放 HTTP 头部 + 数据，组装好 TCP 报文之后，就需交给下面的网络层处理。</li>
+<li>至此，网络包的报文如下图。</li>
+<li><img src="https://img-blog.csdnimg.cn/img_convert/5938a55976892eab428048a89a78c979.png" alt="f"></li>
+<li>IP 报文生成。</li>
+<li><img src="https://img-blog.csdnimg.cn/img_convert/a4ea6f35d2c78f1ea1223cea68abe047.png" alt="g"></li>
+<li>MAC 报文生成。</li>
+<li><img src="https://img-blog.csdnimg.cn/img_convert/10d87c6a05ab113638f6bc3cec3f34bf.png" alt="h"></li>
+<li>最后网络包格式</li>
+<li><img src="https://img-blog.csdnimg.cn/img_convert/0fad4263a847908a44f92c1ca1e35e8c.png" alt="i"></li>
+<li>网卡驱动从 IP 模块获取到包之后，会将其复制到网卡内的缓存区中，接着会其开头加上报头和起始帧分界符，在末尾加上用于检测错误的帧校验序列。</li>
+<li><img src="https://img-blog.csdnimg.cn/img_convert/a8fc587e097a697d2d1765e4a7dc0599.png" alt="j"></li>
+<li>互相扒皮 —— 服务器 与 客户端</li>
+<li><img src="https://img-blog.csdnimg.cn/img_convert/bfec594f22465eaabbc7b44bd098e17d.png" alt="k"></li>
+</ul>
+<hr>
+<h3 id="4-服务器给浏览器响应一个301永久重定向响应"><a href="#4-服务器给浏览器响应一个301永久重定向响应" class="headerlink" title="4.服务器给浏览器响应一个301永久重定向响应"></a>4.服务器给浏览器响应一个301永久重定向响应</h3><h3 id="5-浏览器跟踪重定向地址"><a href="#5-浏览器跟踪重定向地址" class="headerlink" title="5.浏览器跟踪重定向地址"></a>5.浏览器跟踪重定向地址</h3><h3 id="6-服务器处理请求"><a href="#6-服务器处理请求" class="headerlink" title="6.服务器处理请求"></a>6.服务器处理请求</h3><hr>
+<h3 id="7-服务器对浏览器请求作出响应，并把对应的-html-文本发送给浏览器"><a href="#7-服务器对浏览器请求作出响应，并把对应的-html-文本发送给浏览器" class="headerlink" title="7.服务器对浏览器请求作出响应，并把对应的 html 文本发送给浏览器"></a>7.服务器对浏览器请求作出响应，并把对应的 html 文本发送给浏览器</h3><p>Web服务器解析请求，定位请求资源。服务器将资源复本写到TCP套接字，由客户端读取。一个响应由状态行、响应头部、空行和响应数据4部分组成。<br>   HTTP响应与HTTP请求相似，HTTP响应也由3个部分构成，分别是：</p>
+<ul>
+<li>状态行：由协议版本、数字形式的状态代码&lt;1xx,2xx,4xx,5xx&gt;、及相应的状态描述，各元素之间以空格分隔。)示例：HTTP/1.1 200 OK \r\n</li>
+<li>响应头(Response Header)：由关键字/值对组成，每行一对，关键字和值用英文冒号”:”分隔。示例：<img src="https://pic4.zhimg.com/80/v2-a373437b39843593dd44ed0dc3255d0f_1440w.jpg" alt="l"></li>
+<li>响应正文：包含着我们需要的一些具体信息，比如cookie，html,image，后端返回的请求数据等等。这里需要注意，响应正文和响应头之间有一行空格，表示响应头的信息到空格为止<h3 id="8-浏览器显示-HTML"><a href="#8-浏览器显示-HTML" class="headerlink" title="8.浏览器显示 HTML"></a>8.浏览器显示 HTML</h3><h3 id="9-浏览器发送请求获取嵌入在-HTML-中的资源（如图片、音频、视频、CSS、JS等等）"><a href="#9-浏览器发送请求获取嵌入在-HTML-中的资源（如图片、音频、视频、CSS、JS等等）" class="headerlink" title="9.浏览器发送请求获取嵌入在 HTML 中的资源（如图片、音频、视频、CSS、JS等等）"></a>9.浏览器发送请求获取嵌入在 HTML 中的资源（如图片、音频、视频、CSS、JS等等）</h3></li>
+</ul>
+<hr>
+<h1 id="三-问题来了"><a href="#三-问题来了" class="headerlink" title="三.问题来了"></a>三.问题来了</h1><ul>
+<li>1.现代浏览器在与服务器建立了一个 TCP 连接后是否会在一个 HTTP 请求完成后断开？什么情况下会断开？</li>
+<li>2.一个 TCP 连接可以对应几个 HTTP 请求？</li>
+<li>3.一个 TCP 连接中 HTTP 请求发送可以一起发送么（比如一起发三个请求，再三个响应一起接收）？</li>
+<li>4.浏览器对同一 Host 建立 TCP 连接到数量有没有限制？</li>
+</ul>
+<hr>
+<p>。<br>。<br>。<br>。<br>。<br>。<br>。<br>。<br>。<br>。<br>。<br>。</p>
+<p>。<br>。<br>。<br>。<br>。<br>。<br>。<br>。<br>。</p>
+<h1 id="四-原来如此"><a href="#四-原来如此" class="headerlink" title="四.原来如此"></a>四.原来如此</h1><ul>
+<li>1.现代浏览器在与服务器建立了一个 TCP 连接后是否会在一个 HTTP 请求完成后断开？什么情况下会断开？<br> 答：在 HTTP/1.0 中，一个服务器在发送完一个HTTP 响应后，会断开 TCP 链接。但是这样每次请求都会重新建立和断开 TCP 连接，代价过大。既然维持TCP 连接好处这么多，HTTP/1.1 就把 Connection 头写进标准，并且默认开启持久连接，除非请求中写明 Connection: close，那么浏览器和服务器之间是会维持一段时间的 TCP 连接，不会一个请求结束就断掉。</li>
+<li>2.一个 TCP 连接可以对应几个 HTTP 请求？<br> 答：如果维持连接，一个 TCP 连接是可以发送多个 HTTP 请求的。</li>
+<li><p>3.一个 TCP 连接中 HTTP 请求发送可以一起发送么（比如一起发三个请求，再三个响应一起接收）？<br> 答：在 HTTP/1.1 存在 Pipelining 技术可以完成这个多个请求同时发送，但是由于浏览器默认关闭，所以可以认为这是不可行的。在 HTTP2 中由于 Multiplexing 特点的存在，多个 HTTP 请求可以在同一个 TCP 连接中并行进行。</p>
+</li>
+<li><p>4.浏览器对同一 Host 建立 TCP 连接到数量有没有限制？<br> 答：有。Chrome 最多允许对同一个 Host 建立六个 TCP 连接。不同的浏览器有一些区别。</p>
+</li>
+</ul>
+<hr>
+<h1 id="五-HTTP1-0-amp-HTTP1-1-amp-HTTP2-0"><a href="#五-HTTP1-0-amp-HTTP1-1-amp-HTTP2-0" class="headerlink" title="五.HTTP1.0  &amp;  HTTP1.1  &amp; HTTP2.0"></a>五.HTTP1.0  <em>&amp;</em>  HTTP1.1  <em>&amp;</em> HTTP2.0</h1><p><img src="https://i.loli.net/2021/05/25/P96XzRIcr24hCMj.png" alt="3.png"></p>
+<h3 id="1-HTTP1-0和HTTP1-1的区别"><a href="#1-HTTP1-0和HTTP1-1的区别" class="headerlink" title="1.HTTP1.0和HTTP1.1的区别"></a>1.HTTP1.0和HTTP1.1的区别</h3><ul>
+<li>长连接(Persistent Connection)<br>HTTP1.1支持长连接和请求的流水线处理，在一个TCP连接上可以传送多个HTTP请求和响应，减少了建立和关闭连接的消耗和延迟，在HTTP1.1中默认开启长连接keep-alive，一定程度上弥补了HTTP1.0每次请求都要创建连接的缺点。HTTP1.0需要使用keep-alive参数来告知服务器端要建立一个长连接。</li>
+<li>节约带宽<br>HTTP1.0中存在一些浪费带宽的现象，例如客户端只是需要某个对象的一部分，而服务器却将整个对象送过来了，并且不支持断点续传功能。HTTP1.1支持只发送header信息（不带任何body信息），如果服务器认为客户端有权限请求服务器，则返回100，客户端接收到100才开始把请求body发送到服务器；如果返回401，客户端就可以不用发送请求body了节约了带宽。</li>
+<li>HOST域<br>在HTTP1.0中认为每台服务器都绑定一个唯一的IP地址，因此，请求消息中的URL并没有传递主机名（hostname），HTTP1.0没有host域。随着虚拟主机技术的发展，在一台物理服务器上可以存在多个虚拟主机（Multi-homed Web Servers），并且它们共享一个IP地址。HTTP1.1的请求消息和响应消息都支持host域，且请求消息中如果没有host域会报告一个错误（400 Bad Request）。</li>
+<li>缓存处理<br>在HTTP1.0中主要使用header里的If-Modified-Since,Expires来做为缓存判断的标准，HTTP1.1则引入了更多的缓存控制策略例如Entity tag，If-Unmodified-Since, If-Match, If-None-Match等更多可供选择的缓存头来控制缓存策略。</li>
+<li>错误通知的管理<br>在HTTP1.1中新增了24个错误状态响应码，如409（Conflict）表示请求的资源与资源的当前状态发生冲突；410（Gone）表示服务器上的某个资源被永久性的删除。</li>
+</ul>
+<h3 id="2-HTTP1-1和HTTP2-0的区别"><a href="#2-HTTP1-1和HTTP2-0的区别" class="headerlink" title="2.HTTP1.1和HTTP2.0的区别"></a>2.HTTP1.1和HTTP2.0的区别</h3><ul>
+<li>HTTP/2 采用二进制格式传输数据</li>
+<li>多路复用<br>HTTP2.0使用了多路复用的技术，做到同一个连接并发处理多个请求，而且并发请求的数量比HTTP1.1大了好几个数量级。HTTP1.1也可以多建立几个TCP连接，来支持处理更多并发的请求，但是创建TCP连接本身也是有开销的。</li>
+<li>头部数据压缩<br>在HTTP1.1中，HTTP请求和响应都是由状态行、请求/响应头部、消息主体三部分组成。一般而言，消息主体都会经过gzip压缩，或者本身传输的就是压缩过后的二进制文件，但状态行和头部却没有经过任何压缩，直接以纯文本传输。随着Web功能越来越复杂，每个页面产生的请求数也越来越多，导致消耗在头部的流量越来越多，尤其是每次都要传输UserAgent、Cookie这类不会频繁变动的内容，完全是一种浪费。</li>
+<li>HTTP1.1不支持header数据的压缩，HTTP2.0使用HPACK算法对header的数据进行压缩，这样数据体积小了，在网络上传输就会更快。</li>
+<li>服务器推送<br>服务端推送是一种在客户端请求之前发送数据的机制。网页使用了许多资源：HTML、样式表、脚本、图片等等。在HTTP1.1中这些资源每一个都必须明确地请求。这是一个很慢的过程。浏览器从获取HTML开始，然后在它解析和评估页面的时候，增量地获取更多的资源。因为服务器必须等待浏览器做每一个请求，网络经常是空闲的和未充分使用的。 为了改善延迟，HTTP2.0引入了server push，它允许服务端推送资源给浏览器，在浏览器明确地请求之前，免得客户端再次创建连接发送请求到服务器端获取。这样客户端可以直接从本地加载这些资源，不用再通过网络。</li>
+</ul>
+<hr>
+<h1 id="六-HTTPS"><a href="#六-HTTPS" class="headerlink" title="六.HTTPS"></a>六.HTTPS</h1><h3 id="HTTP请求过程中，客户端与服务器之间没有任何身份确认的过程，数据全部明文传输，“裸奔”在互联网上，所以很容易遭到黑客的攻击。"><a href="#HTTP请求过程中，客户端与服务器之间没有任何身份确认的过程，数据全部明文传输，“裸奔”在互联网上，所以很容易遭到黑客的攻击。" class="headerlink" title="HTTP请求过程中，客户端与服务器之间没有任何身份确认的过程，数据全部明文传输，“裸奔”在互联网上，所以很容易遭到黑客的攻击。"></a>HTTP请求过程中，客户端与服务器之间没有任何身份确认的过程，数据全部明文传输，“裸奔”在互联网上，所以很容易遭到黑客的攻击。</h3><p>下面两图中，浏览器中填入的是相同的URL，左边是正确响应，而右边则是被劫持后的响应<br><img src="https://pic4.zhimg.com/80/v2-299b4a71f9b005fa15fbcd4cabfd841b_1440w.png" alt="s"><br>所以 HTTP 传输面临的风险有：</p>
+<p>（1） 窃听风险：黑客可以获知通信内容。</p>
+<p>（2） 篡改风险：黑客可以修改通信内容。</p>
+<p>（3） 冒充风险：黑客可以冒充他人身份参与通信。</p>
+<hr>
+<h3 id="为了防止上述现象的发生，人们想到一个办法：对传输的信息加密（即使黑客截获，也无法破解）"><a href="#为了防止上述现象的发生，人们想到一个办法：对传输的信息加密（即使黑客截获，也无法破解）" class="headerlink" title="为了防止上述现象的发生，人们想到一个办法：对传输的信息加密（即使黑客截获，也无法破解）"></a>为了防止上述现象的发生，人们想到一个办法：对传输的信息加密（即使黑客截获，也无法破解）</h3><p>(关于加密方式)</p>
+<ul>
+<li>对称加密<ul>
+<li>这种方式加密和解密同用一个密钥。加密和解密都会用到密钥。没有密钥就无法对密码解密，反过来说，任何人只要持有密钥就能解密了。</li>
+</ul>
+</li>
+<li><p>非对称加密</p>
+<ul>
+<li>使用公开密钥加密方式，发送密文的一方使用对方的公开密钥进行加密处理，对方收到被加密的信息后，再使用自己的私有密钥进行解密。利用这种方式，不需要发送用来解密的私有密钥，也不必担心密钥被攻击者窃听而盗走。</li>
+<li><p>缺点：公钥是公开的，所以针对私钥加密的信息，黑客截获后可以使用公钥进行解密，获取其中的内容；</p>
+<ul>
+<li><p>公钥并不包含服务器的信息，使用非对称加密算法无法确保服务器身份的合法性，存在中间人攻击的风险，服务器发送给客户端的公钥可能在传送过程中被中间人截获并篡改；</p>
+</li>
+<li><p>使用非对称加密在数据加密解密过程需要消耗一定时间，降低了数据传输效率；</p>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p>结合两者</p>
+<ul>
+<li>对称加密+非对称加密(HTTPS采用这种方式)</li>
+<li>发送密文的一方使用对方的公钥进行加密处理“对称的密钥”，然后对方用自己的私钥解密拿到“对称的密钥”，这样可以确保交换的密钥是安全的前提下，使用对称加密方式进行通信</li>
+</ul>
+</li>
+<li><p>假如 Alice 向 Bob 传送数字信息，为了保证信息传送的保密性、真实性、完整性和不可否认性，需要对传送的信息进行数字加密和签名，其传送过程为</p>
+<ul>
+<li>Alice 准备好要传送的数字信息（明文）； [3] <ul>
+<li>Alice 对数字信息进行哈希运算，得到一个信息摘要； [3] </li>
+<li>Alice 用自己的私钥对信息摘要进行加密得到 Alice 的数字签名，并将其附在数字信息上； [3] </li>
+<li>Alice 随机产生一个加密密钥，并用此密码对要发送的信息进行加密，形成密文； [3] </li>
+<li>Alice 用 Bob 的公钥对刚才随机产生的加密密钥进行加密，将加密后的 DES密钥连同密文一起传送给Bob； [3] </li>
+<li>Bob 收到 Alice 传送来的密文和加密过的 DES 密钥，先用自己的私钥对加密的 DES 密钥进行解密，得到 Alice随机产生的加密密钥； [3] </li>
+<li>Bob 然后用随机密钥对收到的密文进行解密，得到明文的数字信息，然后将随机密钥抛弃； [3] </li>
+<li>Bob 用 Alice 的公钥对 Alice 的数字签名进行解密，得到信息摘要； [3] </li>
+<li>Bob 用相同的哈希算法对收到的明文再进行一次哈希运算，得到一个新的信息摘要； [3] </li>
+<li>Bob 将收到的信息摘要和新产生的信息摘要进行比较，如果一致，说明收到的信息没有被修改过。 [3] </li>
+</ul>
+</li>
+</ul>
+</li>
+<li>如何证明公钥的真实性<ul>
+<li>CA证书颁发机构</li>
+<li>证书包含以下信息：申请者公钥、申请者的组织信息和个人信息、签发机构 CA的信息、有效时间、证书序列号等信息的明文，同时包含一个签名。 </li>
+</ul>
+</li>
+</ul>
+<hr>
+<h1 id="思考题：HTTPS能被劫持吗"><a href="#思考题：HTTPS能被劫持吗" class="headerlink" title="思考题：HTTPS能被劫持吗"></a>思考题：HTTPS能被劫持吗</h1>
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2021/09/23/设计模式/" rel="next" title="建造者模式与模板模式">
+                <i class="fa fa-chevron-left"></i> 建造者模式与模板模式
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">boomery</p>
+              <p class="site-description motion-element" itemprop="description"></p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives">
+              
+                  <span class="site-state-item-count">3</span>
+                  <span class="site-state-item-name">posts</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                
+                  <span class="site-state-item-count">2</span>
+                  <span class="site-state-item-name">categories</span>
+                
+              </div>
+            
+
+            
+
+          </nav>
+
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#一-应用层协议是什么"><span class="nav-number">1.</span> <span class="nav-text">一.应用层协议是什么</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#应用协议都有哪些"><span class="nav-number">1.0.1.</span> <span class="nav-text">应用协议都有哪些</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#（伯纳斯·李，在世界上最大型的粒子物理学实验室-欧洲核子研究组织，发明了万维网。）"><span class="nav-number">1.1.</span> <span class="nav-text">（伯纳斯·李，在世界上最大型的粒子物理学实验室-欧洲核子研究组织，发明了万维网。）</span></a></li></ol><li class="nav-item nav-level-1"><a class="nav-link" href="#二-在我上网的过程中，都发生了什么"><span class="nav-number">2.</span> <span class="nav-text">二.在我上网的过程中，都发生了什么</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-打开浏览器，输入网址URL，看看都有什么"><span class="nav-number">2.0.1.</span> <span class="nav-text">1.打开浏览器，输入网址URL，看看都有什么</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#"><span class="nav-number">2.1.</span> <span class="nav-text"></span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#2-通过访问的域名找出其IP地址-专门保存了-Web-服务器域名与-IP-的对应关系，它就是-DNS-服务器"><span class="nav-number">2.1.1.</span> <span class="nav-text">2.通过访问的域名找出其IP地址(专门保存了 Web 服务器域名与 IP 的对应关系，它就是 DNS 服务器)</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#-1"><span class="nav-number">2.2.</span> <span class="nav-text"></span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#3-浏览器发出读取文件-URL-中域名后面部分对应的文件-的HTTP-请求，该请求报文作为-TCP-三次握手的第三个报文的数据发送给服务器"><span class="nav-number">2.2.1.</span> <span class="nav-text">3.浏览器发出读取文件(URL 中域名后面部分对应的文件)的HTTP 请求，该请求报文作为 TCP 三次握手的第三个报文的数据发送给服务器</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-服务器给浏览器响应一个301永久重定向响应"><span class="nav-number">2.2.2.</span> <span class="nav-text">4.服务器给浏览器响应一个301永久重定向响应</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#5-浏览器跟踪重定向地址"><span class="nav-number">2.2.3.</span> <span class="nav-text">5.浏览器跟踪重定向地址</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#6-服务器处理请求"><span class="nav-number">2.2.4.</span> <span class="nav-text">6.服务器处理请求</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#7-服务器对浏览器请求作出响应，并把对应的-html-文本发送给浏览器"><span class="nav-number">2.2.5.</span> <span class="nav-text">7.服务器对浏览器请求作出响应，并把对应的 html 文本发送给浏览器</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#8-浏览器显示-HTML"><span class="nav-number">2.2.6.</span> <span class="nav-text">8.浏览器显示 HTML</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#9-浏览器发送请求获取嵌入在-HTML-中的资源（如图片、音频、视频、CSS、JS等等）"><span class="nav-number">2.2.7.</span> <span class="nav-text">9.浏览器发送请求获取嵌入在 HTML 中的资源（如图片、音频、视频、CSS、JS等等）</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#三-问题来了"><span class="nav-number">3.</span> <span class="nav-text">三.问题来了</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#四-原来如此"><span class="nav-number">4.</span> <span class="nav-text">四.原来如此</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#五-HTTP1-0-amp-HTTP1-1-amp-HTTP2-0"><span class="nav-number">5.</span> <span class="nav-text">五.HTTP1.0  &amp;  HTTP1.1  &amp; HTTP2.0</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-HTTP1-0和HTTP1-1的区别"><span class="nav-number">5.0.1.</span> <span class="nav-text">1.HTTP1.0和HTTP1.1的区别</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-HTTP1-1和HTTP2-0的区别"><span class="nav-number">5.0.2.</span> <span class="nav-text">2.HTTP1.1和HTTP2.0的区别</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#六-HTTPS"><span class="nav-number">6.</span> <span class="nav-text">六.HTTPS</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#HTTP请求过程中，客户端与服务器之间没有任何身份确认的过程，数据全部明文传输，“裸奔”在互联网上，所以很容易遭到黑客的攻击。"><span class="nav-number">6.0.1.</span> <span class="nav-text">HTTP请求过程中，客户端与服务器之间没有任何身份确认的过程，数据全部明文传输，“裸奔”在互联网上，所以很容易遭到黑客的攻击。</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#为了防止上述现象的发生，人们想到一个办法：对传输的信息加密（即使黑客截获，也无法破解）"><span class="nav-number">6.0.2.</span> <span class="nav-text">为了防止上述现象的发生，人们想到一个办法：对传输的信息加密（即使黑客截获，也无法破解）</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#思考题：HTTPS能被劫持吗"><span class="nav-number">7.</span> <span class="nav-text">思考题：HTTPS能被劫持吗</span></a></li></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">boomery</span>
+
+  
+</div>
+
+
+  <div class="powered-by">Powered by <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a></div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Mist</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>
