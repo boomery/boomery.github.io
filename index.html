@@ -1,55 +1,264 @@
-extends base
+<!DOCTYPE html>
+<html>
 
-block title
-  if config.subtitle
-    title= config.title + ' | ' + config.subtitle
-  else
-    title= config.title
+<head><meta name="generator" content="Hexo 3.8.0">
+    <meta charset="utf-8">
+    
+    <title>boomery</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 
-block content
-  for post in page.posts.toArray()
-    .post
-      h1.post-title
-        include _partial/helpers.pug
-        a(href=url_for(post.path))
-          +title(post)
-      .post-meta= post.date.format(config.date_format)
-      if theme.disqus.enable == true
-        a.disqus-comment-count(data-disqus-identifier=post.path, href=url_for(post.path) + '#disqus_thread')
-      if theme.changyan
-        a.ds-thread-count(href=url_for(post.path) + '#SOHUCS')
-          span.cy_cmt_count(id='sourceId::' + post.date.valueOf() style='margin: 0 3px 0 1px;') 0
-          span= ' ' + __('Comment')
-      if post.description
-        .post-content
-          != post.description
-      else if post.excerpt
-        .post-content
-          != post.excerpt
-      else if post.content
-        - var br = 0
-        - for (var i = 0; i < 5; ++i) {
-          - br = post.content.indexOf('\n',br+1)
-          if br<0
-            - break
-          if br >150
-            - break
-        - }
-        if br < 0
-          .post-content
-            != post.content
-        else
-          .post-content
-            != post.content.substring(0, br)
-      p(class='readmore')
-        a(href=url_for(post.path))= __('Readmore')
+    
 
-  include _partial/paginator.pug
-  if theme.disqus.enable == true
-    script(id='dsq-count-scr', src='//'+ theme.disqus.shortname + '.disqus.com/count.js', async)
-  if theme.changyan
-    script#cy_cmt_num(src='https://changyan.sohu.com/upload/plugins/plugins.list.count.js?clientId=' + theme.changyan, async)
-  if config.mathjax
-    include _partial/mathjax.pug
-  if config.mathjax2
-    include _partial/mathjax2.pug
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    <link rel="stylesheet" href="/dist/build.css?v=1632321966441">
+
+    <link rel="stylesheet" href="/dist/custom.css?v=1632321966441">
+
+    <script>
+        window.isPost = false
+        window.aomori = {
+            
+            
+            
+        }
+        window.aomori_logo_typed_animated = false
+        window.aomori_search_algolia = false
+
+    </script>
+
+</head></html>
+
+<body>
+
+    <div class="container">
+    <header class="header">
+        <div class="header-type">
+            
+            <div class="header-type-inner">
+                
+                    <a class="header-type-title" href="/">boomery</a>
+                
+    
+                
+            </div>
+        </div>
+        <div class="header-menu">
+            <div class="header-menu-inner">
+                
+            </div>
+            <div class="header-menu-social">
+                
+            </div>
+        </div>
+
+        <div class="header-menu-mobile">
+            <div class="header-menu-mobile-inner" id="mobile-menu-open">
+                <i class="icon icon-menu"></i>
+            </div>
+        </div>
+    </header>
+
+    <div class="header-menu-mobile-menu">
+        <div class="header-menu-mobile-menu-bg"></div>
+        <div class="header-menu-mobile-menu-wrap">
+            <div class="header-menu-mobile-menu-inner">
+                <div class="header-menu-mobile-menu-close" id="mobile-menu-close">
+                    <i class="icon icon-cross"></i>
+                </div>
+                <div class="header-menu-mobile-menu-list">
+                    
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+    <div class="container">
+        <div class="main">
+            <section class="inner">
+                <section class="inner-main">
+                    <div class="index">
+  
+    
+      <article id="post-测试一篇新闻章" class="article article-type-post">
+
+
+
+<div class="article-inner">
+    
+
+    <div class="article-body">
+    <header class="article-title">
+        <a href="/2021/04/29/测试一篇新闻章/">测试一篇新闻章</a>
+    </header>
+    <div class="article-entry post-inner-html">
+        
+        <p>写文章这么麻烦吗</p>
+
+        
+    </div>
+    </div>
+
+    <div class="article-badge">
+        
+        
+    </div>
+
+</div>
+
+<footer class="article-footer">
+    <div class="article-more-info">
+    <div class="article-date">
+  <time datetime="2021-04-29T07:43:28.000Z" itemprop="datePublished">2021-04-29</time>
+</div>
+    
+    
+    </div>
+</footer>
+
+</article>
+
+    
+  
+    
+      <article id="post-new-article" class="article article-type-post">
+
+
+
+<div class="article-inner">
+    
+
+    <div class="article-body">
+    <header class="article-title">
+        <a href="/2020/09/18/new-article/">今天又重新把之前搞了一半的hexo博客给复习了一遍,一堆坑坑</a>
+    </header>
+    <div class="article-entry post-inner-html">
+        
+        
+        
+    </div>
+    </div>
+
+    <div class="article-badge">
+        
+        
+    </div>
+
+</div>
+
+<footer class="article-footer">
+    <div class="article-more-info">
+    <div class="article-date">
+  <time datetime="2020-09-18T07:21:39.000Z" itemprop="datePublished">2020-09-18</time>
+</div>
+    
+    
+    </div>
+</footer>
+
+</article>
+
+    
+  
+
+  
+</div>
+
+                </section>
+            </section>
+
+            
+            <aside class="sidebar ">
+                
+
+
+<div class="widget" id="widget">
+    
+      
+    
+      
+
+    
+      
+
+    
+      
+  <div class="widget-wrap widget-recent-posts">
+    <div class="widget-title"><span>Recent Posts</span></div>
+    <div class="widget-inner">
+      <ul>
+        
+          <li>
+            <a href="/2021/04/29/测试一篇新闻章/">测试一篇新闻章</a>
+          </li>
+        
+          <li>
+            <a href="/2020/09/18/new-article/">今天又重新把之前搞了一半的hexo博客给复习了一遍,一堆坑坑</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+    
+      
+  <div class="widget-wrap widget-archive">
+    <div class="widget-title"><span>Archive</span></div>
+    <div class="widget-inner">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/">2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/">2020</a></li></ul>
+    </div>
+  </div>
+
+
+    
+</div>
+
+<div id="backtop"><i class="icon icon-arrow-up"></i></div>
+            </aside>
+            
+        </div>
+    </div>
+
+    <footer class="footer">
+    <div class="footer-wave">
+        <svg xmlns="http://www.w3.org/2000/svg" viewbox="0 0 1440 320"><path fill="#3c4859" fill-opacity="1" d="M0,160L60,181.3C120,203,240,245,360,240C480,235,600,181,720,186.7C840,192,960,256,1080,261.3C1200,267,1320,213,1380,186.7L1440,160L1440,320L1380,320C1320,320,1200,320,1080,320C960,320,840,320,720,320C600,320,480,320,360,320C240,320,120,320,60,320L0,320Z"/></svg>
+    </div>
+
+    <div class="footer-wrap">
+        <div class="footer-inner"> 
+            boomery &copy; 2021<br>
+            Powered By Hexo · Theme By <a href="https://github.com/lh1me/hexo-theme-aomori" target="_blank">Aomori</a>
+        </div>
+    </div>
+
+</footer>
+
+
+
+
+
+<script src="/dist/build.js?1632321966441"></script>
+<script src="/dist/custom.js?1632321966441"></script>
+
+
+
+
+
+
+
+
+</body>
+
+</html>

@@ -1,24 +1,206 @@
-extends base
+<!DOCTYPE html>
+<html>
 
-block title
-  if page.category
-     title= page.category + ' | ' + config.title
-  if page.tag
-     title= page.tag + ' | ' + config.title
-  if page.archive
-     title= __('archive') + ' | ' + config.title
-block content
-  if page.category || page.tag
-      h1.label-title=  __('reading_label', page.category || page.tag)
-  .post
-    .post-archive
-        - var allposts = page.posts.toArray().reduce((r, v, i, a, k = -v.date.format('YYYY')) => ((r[k] || (r[k] = [])).push(v), r), {})
-        each posts, year in allposts
-          h2= -year
-          ul.listing
-            for post in posts
-              li
-                span.date= post.date.format(config.date_format)
-                a(href=url_for(post.path), title=post.title)
-                  +title(post)
-  include _partial/paginator.pug
+<head><meta name="generator" content="Hexo 3.8.0">
+    <meta charset="utf-8">
+    
+    <title>Archive | 2021 | boomery</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    <link rel="stylesheet" href="/dist/build.css?v=1632321966441">
+
+    <link rel="stylesheet" href="/dist/custom.css?v=1632321966441">
+
+    <script>
+        window.isPost = false
+        window.aomori = {
+            
+            
+            
+        }
+        window.aomori_logo_typed_animated = false
+        window.aomori_search_algolia = false
+
+    </script>
+
+</head></html>
+
+<body>
+
+    <div class="container">
+    <header class="header">
+        <div class="header-type">
+            
+            <div class="header-type-inner">
+                
+                    <a class="header-type-title" href="/">boomery</a>
+                
+    
+                
+            </div>
+        </div>
+        <div class="header-menu">
+            <div class="header-menu-inner">
+                
+            </div>
+            <div class="header-menu-social">
+                
+            </div>
+        </div>
+
+        <div class="header-menu-mobile">
+            <div class="header-menu-mobile-inner" id="mobile-menu-open">
+                <i class="icon icon-menu"></i>
+            </div>
+        </div>
+    </header>
+
+    <div class="header-menu-mobile-menu">
+        <div class="header-menu-mobile-menu-bg"></div>
+        <div class="header-menu-mobile-menu-wrap">
+            <div class="header-menu-mobile-menu-inner">
+                <div class="header-menu-mobile-menu-close" id="mobile-menu-close">
+                    <i class="icon icon-cross"></i>
+                </div>
+                <div class="header-menu-mobile-menu-list">
+                    
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+    <div class="container">
+        <div class="main">
+            <section class="inner">
+                <section class="inner-main">
+                    <section class="archives-cover"></section>
+
+
+    
+    
+    
+    
+    <section class="archives-wrap">
+        <div class="archive-year-wrap">
+        <a href="/archives/2021" class="archive-year">2021</a>
+        </div>
+        <div class="archives">
+    
+    <article class="archive-article archive-type-post">
+  
+  
+    <h1 itemprop="name">
+      <a class="archive-article-title" href="/2021/04/29/测试一篇新闻章/">测试一篇新闻章</a>
+    </h1>
+  
+
+</article>
+
+
+    </div></section>
+
+
+
+
+                </section>
+            </section>
+
+            
+            <aside class="sidebar ">
+                
+
+
+<div class="widget" id="widget">
+    
+      
+    
+      
+
+    
+      
+
+    
+      
+  <div class="widget-wrap widget-recent-posts">
+    <div class="widget-title"><span>Recent Posts</span></div>
+    <div class="widget-inner">
+      <ul>
+        
+          <li>
+            <a href="/2021/04/29/测试一篇新闻章/">测试一篇新闻章</a>
+          </li>
+        
+          <li>
+            <a href="/2020/09/18/new-article/">今天又重新把之前搞了一半的hexo博客给复习了一遍,一堆坑坑</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+    
+      
+  <div class="widget-wrap widget-archive">
+    <div class="widget-title"><span>Archive</span></div>
+    <div class="widget-inner">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/">2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/">2020</a></li></ul>
+    </div>
+  </div>
+
+
+    
+</div>
+
+<div id="backtop"><i class="icon icon-arrow-up"></i></div>
+            </aside>
+            
+        </div>
+    </div>
+
+    <footer class="footer">
+    <div class="footer-wave">
+        <svg xmlns="http://www.w3.org/2000/svg" viewbox="0 0 1440 320"><path fill="#3c4859" fill-opacity="1" d="M0,160L60,181.3C120,203,240,245,360,240C480,235,600,181,720,186.7C840,192,960,256,1080,261.3C1200,267,1320,213,1380,186.7L1440,160L1440,320L1380,320C1320,320,1200,320,1080,320C960,320,840,320,720,320C600,320,480,320,360,320C240,320,120,320,60,320L0,320Z"/></svg>
+    </div>
+
+    <div class="footer-wrap">
+        <div class="footer-inner"> 
+            boomery &copy; 2021<br>
+            Powered By Hexo · Theme By <a href="https://github.com/lh1me/hexo-theme-aomori" target="_blank">Aomori</a>
+        </div>
+    </div>
+
+</footer>
+
+
+
+
+
+<script src="/dist/build.js?1632321966441"></script>
+<script src="/dist/custom.js?1632321966441"></script>
+
+
+
+
+
+
+
+
+</body>
+
+</html>
