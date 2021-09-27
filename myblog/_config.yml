@@ -11,6 +11,26 @@ author: boomery
 language:
 timezone:
 
+
+#aomori_widgets:
+#- toc # 文章导航
+#- category  #文章分类
+#- tag # 文章标签
+#- recent_posts  # 最新文章
+#- archive #文章归档
+#
+#aomori_menu:
+#  首页: /
+#  技术: /aboutCode
+#  生活: /aboutLife
+#  归档: /archives
+#  分类: /categories
+#  标签: /tags
+#  关于: /about
+
+
+
+
 # URL
 ## If your site is put in a subdirectory, set url as 'http://yoursite.com/child' and root as '/child/'
 url: http://yoursite.com
