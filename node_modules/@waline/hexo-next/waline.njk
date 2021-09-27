@@ -1,0 +1,16 @@
+{{ next_data('waline', {
+  lang: page.lang | default('zh-CN', true)
+}, config.waline, {
+  el: '#waline-comments',
+  libUrl: config.waline.libUrl | default('https://cdn.jsdelivr.net/npm/@waline/client/dist/Waline.min.js', true),
+  path: url_for(page.path) | replace(r/index\.html$/, '')
+}) }}
+<script>
+document.addEventListener('page:loaded', () => {
+  NexT.utils.loadComments(CONFIG.waline.el).then(() => 
+    NexT.utils.getScript(CONFIG.waline.libUrl, { condition: window.Waline })
+  ).then(() => {
+    new Waline(CONFIG.waline);
+  });
+});
+</script>
