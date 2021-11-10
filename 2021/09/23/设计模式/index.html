@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="default">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.4.0">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.4/css/all.min.css" integrity="sha256-mUZM63G8m73Mcidfrv5E+Y61y7a12O5mW4ezU3bxqW4=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/animate.css@3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"yoursite.com","root":"/","images":"/images","scheme":"Mist","darkmode":false,"version":"8.7.1","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12},"copycode":false,"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"Searching...","empty":"We didn't find any results for the search: ${query}","hits_time":"${hits} results found in ${time} ms","hits":"${hits} results found"}}</script><script src="/js/config.js"></script>
+<meta name="description" content="创建型模式 对类的实例化过程进行了抽象，能够将软件模块中对象的创建和对象的使用分离。为了使软件的结构更加清晰，外界对于这些对象只需要知道它们共同的接口，而不清楚其具体的实现细节，使整个系统的设计更加符合单一职责原则。  建造者模式（Builder pattern） 在用户不知道对象的建造过程和细节的情况下就可以直接创建复杂的对象。    Product: 最终要生成的对象，例如 Computer实">
+<meta property="og:type" content="article">
+<meta property="og:title" content="建造者模式与模板模式">
+<meta property="og:url" content="http://yoursite.com/2021/09/23/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/index.html">
+<meta property="og:site_name" content="boomery">
+<meta property="og:description" content="创建型模式 对类的实例化过程进行了抽象，能够将软件模块中对象的创建和对象的使用分离。为了使软件的结构更加清晰，外界对于这些对象只需要知道它们共同的接口，而不清楚其具体的实现细节，使整个系统的设计更加符合单一职责原则。  建造者模式（Builder pattern） 在用户不知道对象的建造过程和细节的情况下就可以直接创建复杂的对象。    Product: 最终要生成的对象，例如 Computer实">
+<meta property="og:locale">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/20190124133400623.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L1NodVNoZW5nMDAwNw==,size_16,color_FFFFFF,t_70">
+<meta property="article:published_time" content="2021-09-23T06:12:35.000Z">
+<meta property="article:modified_time" content="2021-09-23T08:37:54.529Z">
+<meta property="article:author" content="boomery">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://img-blog.csdnimg.cn/20190124133400623.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L1NodVNoZW5nMDAwNw==,size_16,color_FFFFFF,t_70">
+
+
+<link rel="canonical" href="http://yoursite.com/2021/09/23/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/">
+
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"default","comments":true,"permalink":"http://yoursite.com/2021/09/23/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/","path":"2021/09/23/设计模式/","title":"建造者模式与模板模式"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>建造者模式与模板模式 | boomery</title>
+  
+
+  <script src="/js/third-party/analytics/baidu-analytics.js"></script>
+  <script async src="https://hm.baidu.com/hm.js?249cf312fe9ea622e7e5efa7ab712e94"></script>
+
+
+<link rel="dns-prefetch" href="https://blog-comment-a-9hwfrezs5-boomery.vercel.app">
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <h1 class="site-title">boomery</h1>
+      <i class="logo-line"></i>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu">
+        <li class="menu-item menu-item-home"><a href="/" rel="section">Home</a></li>
+        <li class="menu-item menu-item-tech"><a href="/categories/%E6%8A%80%E6%9C%AF" rel="section">Tech</a></li>
+        <li class="menu-item menu-item-life"><a href="/categories/%E7%94%9F%E6%B4%BB" rel="section">Life</a></li>
+        <li class="menu-item menu-item-about"><a href="/about" rel="section">About</a></li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+        
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%88%9B%E5%BB%BA%E5%9E%8B%E6%A8%A1%E5%BC%8F"><span class="nav-number">1.</span> <span class="nav-text">创建型模式</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%BB%BA%E9%80%A0%E8%80%85%E6%A8%A1%E5%BC%8F%EF%BC%88Builder-pattern%EF%BC%89"><span class="nav-number">1.1.</span> <span class="nav-text">建造者模式（Builder pattern）</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%AE%9E%E4%BE%8B%E8%AE%B2%E8%A7%A3"><span class="nav-number">1.1.1.</span> <span class="nav-text">实例讲解</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BD%BF%E7%94%A8%E5%9C%BA%E6%99%AF"><span class="nav-number">1.1.2.</span> <span class="nav-text">使用场景</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BC%98%E7%82%B9"><span class="nav-number">1.1.3.</span> <span class="nav-text">优点</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%BC%BA%E7%82%B9"><span class="nav-number">1.1.4.</span> <span class="nav-text">缺点</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E8%A1%8C%E4%B8%BA%E5%9E%8B%E6%A8%A1%E5%BC%8F"><span class="nav-number">2.</span> <span class="nav-text">行为型模式</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%A8%A1%E6%9D%BF%E6%96%B9%E6%B3%95%E6%A8%A1%E5%BC%8F%EF%BC%88Template-Method-Pattern%EF%BC%89"><span class="nav-number">2.1.</span> <span class="nav-text">模板方法模式（Template Method Pattern）</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%AE%9E%E7%8E%B0"><span class="nav-number">2.1.1.</span> <span class="nav-text">实现</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%BB%A7%E6%89%BF%E6%8A%BD%E8%B1%A1%E6%A8%A1%E6%9D%BF%E7%B1%BB%E5%AE%9E%E7%8E%B0%E5%85%B7%E4%BD%93%E6%A8%A1%E6%9D%BF%E7%B1%BB"><span class="nav-number">2.1.2.</span> <span class="nav-text">继承抽象模板类实现具体模板类</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%B0%83%E7%94%A8"><span class="nav-number">2.1.3.</span> <span class="nav-text">调用</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%AE%9E%E4%BE%8B%E8%AE%B2%E8%A7%A3-1"><span class="nav-number">2.1.4.</span> <span class="nav-text">实例讲解</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BD%BF%E7%94%A8%E5%9C%BA%E6%99%AF-1"><span class="nav-number">2.1.5.</span> <span class="nav-text">使用场景</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BC%98%E7%82%B9-1"><span class="nav-number">2.1.6.</span> <span class="nav-text">优点</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%BC%BA%E7%82%B9-1"><span class="nav-number">2.1.7.</span> <span class="nav-text">缺点</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F%E5%8E%9F%E5%88%99"><span class="nav-number">3.</span> <span class="nav-text">设计模式原则</span></a></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author site-overview-item animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">boomery</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap site-overview-item animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">4</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+        <span class="site-state-item-count">2</span>
+        <span class="site-state-item-name">categories</span>
+      </div>
+      <div class="site-state-item site-state-tags">
+        <span class="site-state-item-count">1</span>
+        <span class="site-state-item-name">tags</span>
+      </div>
+  </nav>
+</div>
+
+
+
+        </div>
+      </div>
+    </div>
+  </aside>
+  <div class="sidebar-dimmer"></div>
+
+
+    </header>
+
+    
+  <div class="back-to-top" role="button" aria-label="Back to top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="default">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2021/09/23/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="boomery">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="boomery">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          建造者模式与模板模式
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">Posted on</span>
+      
+
+      <time title="Created: 2021-09-23 14:12:35 / Modified: 16:37:54" itemprop="dateCreated datePublished" datetime="2021-09-23T14:12:35+08:00">2021-09-23</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">In</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E6%8A%80%E6%9C%AF/" itemprop="url" rel="index"><span itemprop="name">技术</span></a>
+        </span>
+    </span>
+
+  
+    <span id="/2021/09/23/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/" class="post-meta-item leancloud_visitors" data-flag-title="建造者模式与模板模式" title="Views">
+      <span class="post-meta-item-icon">
+        <i class="far fa-eye"></i>
+      </span>
+      <span class="post-meta-item-text">Views: </span>
+      <span class="leancloud-visitors-count"></span>
+    </span>
+  
+  <span class="post-meta-item">
+    
+    <span class="post-meta-item-icon">
+      <i class="far fa-comment"></i>
+    </span>
+    <span class="post-meta-item-text">Waline: </span>
+  
+    <a title="waline" href="/2021/09/23/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/#waline-comments" itemprop="discussionUrl">
+      <span class="post-comments-count waline-comment-count" id="/2021/09/23/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/" data-xid="/2021/09/23/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <h1 id="创建型模式"><a href="#创建型模式" class="headerlink" title="创建型模式"></a>创建型模式</h1><ul>
+<li>对类的实例化过程进行了抽象，能够将软件模块中对象的创建和对象的使用分离。为了使软件的结构更加清晰，外界对于这些对象只需要知道它们共同的接口，而不清楚其具体的实现细节，使整个系统的设计更加符合单一职责原则。</li>
+</ul>
+<h2 id="建造者模式（Builder-pattern）"><a href="#建造者模式（Builder-pattern）" class="headerlink" title="建造者模式（Builder pattern）"></a>建造者模式（Builder pattern）</h2><ul>
+<li>在用户不知道对象的建造过程和细节的情况下就可以直接创建复杂的对象。</li>
+</ul>
+<p><img src="https://img-blog.csdnimg.cn/20190124133400623.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L1NodVNoZW5nMDAwNw==,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述"></p>
+<ul>
+<li>Product: 最终要生成的对象，例如 Computer实例。</li>
+<li>Builder： 构建者的抽象基类（有时会使用接口代替）。其定义了构建Product的抽象步骤，其实体类需要实现这些步骤。其会包含一个用来返回最终产品的方法Product getProduct()。</li>
+<li>ConcreteBuilder: Builder的实现类。</li>
+<li>Director: 指挥者，决定如何构建最终产品的算法. 其会包含一个负责组装的方法void Construct(Builder builder)， 在这个方法中通过调用builder的方法，就可以设置builder，等设置完成后，就可以通过builder的 getProduct() 方法获得最终的产品。</li>
+</ul>
+<p>示例代码</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">ComputerDirector director=<span class="keyword">new</span> ComputerDirector();<span class="comment">//1</span></span><br><span class="line">ComputerBuilder builder=<span class="keyword">new</span> MacComputerBuilder(<span class="string">&quot;I5处理器&quot;</span>,<span class="string">&quot;三星125&quot;</span>);<span class="comment">//2</span></span><br><span class="line">director.makeComputer(builder);<span class="comment">//3</span></span><br><span class="line">Computer macComputer=builder.getComputer();<span class="comment">//4</span></span><br></pre></td></tr></table></figure>
+<ul>
+<li>首先生成一个director ，</li>
+<li>然后生成一个目标builder ，</li>
+<li>接着使用director组装builder,</li>
+<li>组装完毕后使用builder创建产品实例</li>
+</ul>
+<h3 id="实例讲解"><a href="#实例讲解" class="headerlink" title="实例讲解"></a>实例讲解</h3><p>背景：小成希望去电脑城买一台组装的台式主机<br>过程：</p>
+<ol>
+<li>电脑城老板（Diretor）和小成（Client）进行需求沟通（买来打游戏？学习？）</li>
+<li>了解需求后，电脑城老板将小成需要的主机划分为各个部件（Builder）的建造请求（CPU、主板blabla）</li>
+<li>指挥装机人员（ConcreteBuilder）去构建组件；</li>
+<li>将组件组装起来成小成需要的电脑（Product）</li>
+</ol>
+<p><strong>步骤1：</strong> 定义组装的过程（Builder）：组装电脑的过程</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span>  <span class="keyword">abstract</span> <span class="class"><span class="keyword">class</span> <span class="title">Builder</span> </span>&#123;  </span><br><span class="line"></span><br><span class="line"><span class="comment">//第一步：装CPU</span></span><br><span class="line"><span class="comment">//声明为抽象方法，具体由子类实现 </span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">abstract</span> <span class="keyword">void</span>  <span class="title">BuildCPU</span><span class="params">()</span>；</span></span><br><span class="line"><span class="function"></span></span><br><span class="line"><span class="function"><span class="comment">//第二步：装主板</span></span></span><br><span class="line"><span class="function"><span class="comment">//声明为抽象方法，具体由子类实现 </span></span></span><br><span class="line"><span class="function">    <span class="keyword">public</span> <span class="keyword">abstract</span> <span class="keyword">void</span> BuildMainboard（）；</span></span><br><span class="line"><span class="function"></span></span><br><span class="line"><span class="function"><span class="comment">//第三步：装硬盘</span></span></span><br><span class="line"><span class="function"><span class="comment">//声明为抽象方法，具体由子类实现 </span></span></span><br><span class="line"><span class="function">    <span class="keyword">public</span> <span class="keyword">abstract</span> <span class="keyword">void</span> BuildHD（）；</span></span><br><span class="line"><span class="function"></span></span><br><span class="line"><span class="function"><span class="comment">//返回产品的方法：获得组装好的电脑</span></span></span><br><span class="line"><span class="function">    <span class="keyword">public</span> <span class="keyword">abstract</span> Computer GetComputer（）；</span></span><br><span class="line"><span class="function">&#125;</span></span><br></pre></td></tr></table></figure>
+<p><strong>步骤2：</strong> 电脑城老板委派任务给装机人员（Director）</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Director</span></span>&#123;</span><br><span class="line">                        <span class="comment">//指挥装机人员组装电脑</span></span><br><span class="line">                        <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">Construct</span><span class="params">(Builder builder)</span></span>&#123;</span><br><span class="line">                                </span><br><span class="line">                                 builder. BuildCPU();</span><br><span class="line">                                 builder.BuildMainboard（）;</span><br><span class="line">                                 builder. BuildHD（）;</span><br><span class="line">                              &#125;</span><br><span class="line"> &#125;</span><br></pre></td></tr></table></figure>
+<p><strong>步骤3</strong>：创建具体的建造者（ConcreteBuilder）:装机人员</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//装机人员1</span></span><br><span class="line">  <span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">ConcreteBuilder</span> <span class="title">extend</span>  <span class="title">Builder</span></span>&#123;</span><br><span class="line">    <span class="comment">//创建产品实例</span></span><br><span class="line">    Computer computer = <span class="keyword">new</span> Computer();</span><br><span class="line"></span><br><span class="line">    <span class="comment">//组装产品</span></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span>  <span class="title">BuildCPU</span><span class="params">()</span></span>&#123;  </span><br><span class="line">       computer.Add(<span class="string">&quot;组装好CPU&quot;</span>)</span><br><span class="line">    &#125;  </span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span>  BuildMainboard（）&#123;  </span><br><span class="line">       computer.Add(<span class="string">&quot;组装好主板&quot;</span>)</span><br><span class="line">    &#125;  </span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span>  BuildHD（）&#123;  </span><br><span class="line">       computer.Add(<span class="string">&quot;组装好硬盘&quot;</span>)</span><br><span class="line">    &#125;  </span><br><span class="line"></span><br><span class="line">    <span class="comment">//返回组装成功的电脑</span></span><br><span class="line">     <span class="meta">@Override</span></span><br><span class="line">      <span class="keyword">public</span>  Computer GetComputer（）&#123;  </span><br><span class="line">      <span class="keyword">return</span> computer</span><br><span class="line">    &#125;  </span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//装机人员2</span></span><br><span class="line">  <span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">ConcreteBuilder2</span> <span class="title">extend</span>  <span class="title">Builder</span></span>&#123;</span><br><span class="line">    <span class="comment">//创建产品实例</span></span><br><span class="line">    Computer computer = <span class="keyword">new</span> Computer();</span><br><span class="line"></span><br><span class="line">    <span class="comment">//组装产品</span></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span>  <span class="title">BuildCPU</span><span class="params">()</span></span>&#123;  </span><br><span class="line">       computer.Add(<span class="string">&quot;组装垃圾CPU&quot;</span>)</span><br><span class="line">    &#125;  </span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span>  BuildMainboard（）&#123;  </span><br><span class="line">       computer.Add(<span class="string">&quot;组装垃圾主板&quot;</span>)</span><br><span class="line">    &#125;  </span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span>  BuildHD（）&#123;  </span><br><span class="line">       computer.Add(<span class="string">&quot;组装垃圾硬盘&quot;</span>)</span><br><span class="line">    &#125;  </span><br><span class="line"></span><br><span class="line">    <span class="comment">//返回组装成功的电脑</span></span><br><span class="line">     <span class="meta">@Override</span></span><br><span class="line">      <span class="keyword">public</span>  Computer GetComputer（）&#123;  </span><br><span class="line">      <span class="keyword">return</span> computer</span><br><span class="line">    &#125;  </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><strong>步骤4</strong>：定义具体产品类（Product）：电脑</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Computer</span></span>&#123;</span><br><span class="line">    </span><br><span class="line">    <span class="comment">//电脑组件的集合</span></span><br><span class="line">    <span class="keyword">private</span> List&lt;String&gt; parts = <span class="keyword">new</span> ArrayList&lt;String&gt;()；</span><br><span class="line">     </span><br><span class="line">    <span class="comment">//用于将组件组装到电脑里</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">Add</span><span class="params">(String part)</span></span>&#123;</span><br><span class="line">    parts.add(part);</span><br><span class="line">&#125;</span><br><span class="line">    </span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">Show</span><span class="params">()</span></span>&#123;</span><br><span class="line">          <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>;i&lt;parts.size();i++)&#123;    </span><br><span class="line">          System.out.println(“组件”+parts.get(i)+“装好了”);</span><br><span class="line">          &#125;</span><br><span class="line">          System.out.println(“电脑组装完成，请验收”);</span><br><span class="line">&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><strong>步骤5</strong>：客户端调用-小成到电脑城找老板买电脑</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Builder</span> <span class="title">Pattern</span></span>&#123;</span><br><span class="line">  <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span></span>&#123;</span><br><span class="line"></span><br><span class="line"><span class="comment">//逛了很久终于发现一家合适的电脑店</span></span><br><span class="line"><span class="comment">//找到该店的老板和装机人员</span></span><br><span class="line">  Director director = <span class="keyword">new</span> Director();</span><br><span class="line">  Builder builder = <span class="keyword">new</span> ConcreteBuilder()<span class="comment">// Builder builder = new ConcreteBuilder2() ;</span></span><br><span class="line">    </span><br><span class="line"><span class="comment">//沟通需求后，老板叫装机人员去装电脑</span></span><br><span class="line">director.Construct(builder);</span><br><span class="line"></span><br><span class="line"><span class="comment">//装完后，组装人员搬来组装好的电脑</span></span><br><span class="line">Computer computer = builder.GetComputer();</span><br><span class="line"></span><br><span class="line"><span class="comment">//组装人员展示电脑给小成看</span></span><br><span class="line">computer.Show()；</span><br><span class="line">    &#125;       </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="使用场景"><a href="#使用场景" class="headerlink" title="使用场景"></a>使用场景</h3><ul>
+<li><p>需要生成的产品对象有复杂的内部结构，这些产品对象具备共性；</p>
+</li>
+<li><p>隔离复杂对象的创建和使用，并使得相同的创建过程可以创建不同的产品。</p>
+</li>
+</ul>
+<h3 id="优点"><a href="#优点" class="headerlink" title="优点"></a>优点</h3><ul>
+<li>易于解耦<br>将产品本身与产品创建过程进行解耦，可以使用相同的创建过程来得到不同的产品。也就说细节依赖抽象。</li>
+<li>易于精确控制对象的创建<br>将复杂产品的创建步骤分解在不同的方法中，使得创建过程更加清晰</li>
+<li>易于拓展<br>增加新的具体建造者无需修改原有类库的代码，易于拓展，符合“开闭原则“。</li>
+</ul>
+<h3 id="缺点"><a href="#缺点" class="headerlink" title="缺点"></a>缺点</h3><ul>
+<li><p>建造者模式所创建的产品一般具有较多的共同点，其组成部分相似；如果产品之间的差异性很大，则不适合使用建造者模式，因此其使用范围受到一定的限制。</p>
+</li>
+<li><p>如果产品的内部变化复杂，可能会导致需要定义很多具体建造者类来实现这种变化，导致系统变得很庞大。</p>
+</li>
+</ul>
+<hr>
+<h1 id="行为型模式"><a href="#行为型模式" class="headerlink" title="行为型模式"></a>行为型模式</h1><ul>
+<li>不仅仅关注类和对象的结构，而且重点关注它们之间的相互作用。</li>
+</ul>
+<h2 id="模板方法模式（Template-Method-Pattern）"><a href="#模板方法模式（Template-Method-Pattern）" class="headerlink" title="模板方法模式（Template Method Pattern）"></a>模板方法模式（Template Method Pattern）</h2><ul>
+<li>定义一个操作中的算法的框架，而将一些步骤延迟到子类中，使得子类可以不改变一个算法的结构即可重定义该算法的某些特定步骤。</li>
+<li>抽象模板中包含三种类型的方法： <strong>基本方法</strong>、<strong>模板方法</strong>和<strong>钩子方法</strong>(Hook Method）</li>
+<li>基本方法——基本方法也叫做基本操作，是由子类实现的方法，并且在模板方法被调用。</li>
+<li>模板方法<strong>——核心方法，不允许子类重写，所以都会</strong>加上final修饰符，可以有一个或几个，一般是一个具体方法框架，按照固定的流程对基本方法的调度</li>
+<li>钩子方法——为了让模板方法的执行结果的更好地适应因外界条件改变。比如说银行办理业务为例，办理业务是个模板方法，普通人要经历排队、取号、等待、办理四个基本流程，而Vip则不需要排队、取号、等待，那么在设计的时候我们的抽象模板类需要考虑到，于是乎你得需要在模板方法各基本方法调用之前增加条件判断，那么用于设置这个条件的方法就是，钩子方法（Hook Method），钩子方法也可以是抽象的还可以由子类的一个方法返回值决定公共部分的执行结果</li>
+</ul>
+<h3 id="实现"><a href="#实现" class="headerlink" title="实现"></a>实现</h3><ul>
+<li>定义抽象模板类</li>
+</ul>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">abstract</span> <span class="class"><span class="keyword">class</span> <span class="title">AbstractClass</span> </span>&#123;</span><br><span class="line">    <span class="comment">//基本方法1</span></span><br><span class="line">    <span class="function"><span class="keyword">protected</span> <span class="keyword">abstract</span> <span class="keyword">void</span> <span class="title">doOneStep</span><span class="params">()</span></span>;</span><br><span class="line">    <span class="comment">//基本方法2</span></span><br><span class="line">    <span class="function"><span class="keyword">protected</span> <span class="keyword">abstract</span> <span class="keyword">void</span> <span class="title">doSecStep</span><span class="params">()</span></span>;</span><br><span class="line">    <span class="comment">//基本方法3</span></span><br><span class="line">    <span class="function"><span class="keyword">protected</span> <span class="keyword">abstract</span> <span class="keyword">void</span> <span class="title">doThirdStep</span><span class="params">()</span></span>;</span><br><span class="line">    </span><br><span class="line">    <span class="comment">//模板方法,为了避免被子类覆写改变模板方法的算法骨架一般使用final修饰，可以有N个模板方法</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">final</span> <span class="keyword">void</span> <span class="title">work</span><span class="params">()</span></span>&#123;</span><br><span class="line">        <span class="comment">/*</span></span><br><span class="line"><span class="comment">        * 调用基本方法，完成相关的逻辑</span></span><br><span class="line"><span class="comment">        */</span></span><br><span class="line">        <span class="keyword">if</span>(oneStepNeedRun)&#123;<span class="comment">//钩子方法控制基本方法是否执行</span></span><br><span class="line">            <span class="keyword">this</span>.doOneStep();</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">this</span>.doSecStep();</span><br><span class="line">        </span><br><span class="line">        <span class="keyword">this</span>.doThirdStep();</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="comment">//钩子方法它在抽象类中不做事或者是默认的事情，子类可以选择覆盖它，可以有N个</span></span><br><span class="line">    <span class="function"><span class="keyword">protected</span> <span class="keyword">boolean</span> <span class="title">oneStepNeedRun</span><span class="params">()</span></span>&#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">true</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<ul>
+<li><h3 id="继承抽象模板类实现具体模板类"><a href="#继承抽象模板类实现具体模板类" class="headerlink" title="继承抽象模板类实现具体模板类"></a>继承抽象模板类实现具体模板类</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">ConcreteClass</span> <span class="keyword">extends</span> <span class="title">AbstractClass</span> </span>&#123;</span><br><span class="line">    <span class="comment">//实现基本方法</span></span><br><span class="line">    <span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">doOneStep</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="comment">//业务逻辑处理</span></span><br><span class="line">    &#125;</span><br><span class="line">    <span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">doSecStep</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="comment">//业务逻辑处理</span></span><br><span class="line">    &#125;</span><br><span class="line">    <span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">doThirdStep</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="comment">//业务逻辑处理</span></span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+</ul>
+<h3 id="调用"><a href="#调用" class="headerlink" title="调用"></a>调用</h3><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">TemplateMethod</span> &#123;</span>    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;        AbstractClass obj = <span class="keyword">new</span> <span class="built_in">ConcreteClass</span>();<span class="comment">//多态构建        //调用模板方法        obj.work();    &#125;&#125;</span></span><br></pre></td></tr></table></figure>
+<h3 id="实例讲解-1"><a href="#实例讲解-1" class="headerlink" title="实例讲解"></a>实例讲解</h3><ul>
+<li>背景：直播流程，需要集成多家直播SDK</li>
+<li>用户看直播是有一套固定的模板流程的：<strong>登录—进入房间—获取音视频流—观看—停止音视频流—退出房间</strong> 虽然两套SDK每一个步骤的实现方式不同，但是基本都是遵循同一套流程</li>
+</ul>
+<ol>
+<li><p>定义直播模板类</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">abstract</span> <span class="class"><span class="keyword">class</span> <span class="title">LivePlay</span> </span>&#123;    <span class="comment">//模板方法    public final void seeLivePlay() &#123;        login();        openRoom();        startAudioAndVideoStream();        pushVideoStream();        stopAudioAndVideoStream();        closeRoom();    &#125;    //实体方法，这个方法实现通用的业务逻辑    private void login() &#123;        System.out.println(&quot;用户登录&quot;);    &#125;        /*抽象方法*/    //打开房间    public abstract void openRoom();    //打开音视频流    public abstract void startAudioAndVideoStream();    //关闭音视频流    public abstract void stopAudioAndVideoStream();    //关闭房间    public abstract void closeRoom();    /*钩子方法，可以被需要的子类overwrite*/    //旁路推流，可以通过视频链接在浏览器中查看视频    public void pushVideoStream() &#123;    &#125;&#125;</span></span><br></pre></td></tr></table></figure>
+</li>
+</ol>
+<ol start="2">
+<li><p>定义具体的实体类，根据情况<code>overwrite</code>相应的抽象方法和钩子方法。</p>
+<pre><code>```java//腾讯直播类public class TencentLivePlay extends LivePlay  &#123;    @Override    public void openRoom() &#123;        System.out.println(&quot;腾讯打开房间&quot;);    &#125;    @Override    public void startAudioAndVideoStream() &#123;        System.out.println(&quot;腾讯打开音视频流&quot;);    &#125;    @Override    public void stopAudioAndVideoStream() &#123;        System.out.println(&quot;腾讯关闭音视频流&quot;);    &#125;    @Override    public void closeRoom() &#123;        System.out.println(&quot;腾讯关闭房间&quot;);    &#125;    //覆写钩子方法，提供旁路推流功能    @Override    public void pushVideoStream() &#123;        super.pushVideoStream();        System.out.println(&quot;腾讯进行旁路推流&quot;);    &#125;&#125;```
+</code></pre><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//金山直播类public class JinShanLivePlay extends LivePlay  &#123;    @Override    public void openRoom() &#123;        System.out.println(&quot;金山打开房间&quot;);    &#125;    @Override    public void startAudioAndVideoStream() &#123;        System.out.println(&quot;金山打开音视频流&quot;);    &#125;    @Override    public void stopAudioAndVideoStream() &#123;        System.out.println(&quot;金山关闭音视频流&quot;);    &#125;    @Override    public void closeRoom() &#123;        System.out.println(&quot;金山关闭房间&quot;);    &#125;&#125;</span></span><br></pre></td></tr></table></figure>
+</li>
+</ol>
+<ol start="3">
+<li><p>客户端调用<br>我们根据后端返回的结果来决定使用哪家的SDK</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;                <span class="comment">//此处省略若干代码         ...        LivePlay tencentLive=new TencentLivePlay();        tencentLive.seeLivePlay();                System.out.println(&quot;&quot;);                LivePlay jinShanLive=new JinShanLivePlay();        jinShanLive.seeLivePlay();    &#125;</span></span><br></pre></td></tr></table></figure>
+</li>
+</ol>
+<h3 id="使用场景-1"><a href="#使用场景-1" class="headerlink" title="使用场景"></a>使用场景</h3><ul>
+<li>多个子类有公有的方法，并且逻辑基本相同时。</li>
+<li>重要、复杂的算法，可以把核心算法设计为模板方法，周边的相关细节功能则由各个 子类实现。</li>
+<li>重构时，模板方法模式是一个经常使用的模式，把相同的代码抽取到父类中，然后通过钩子方法约束其行为。</li>
+</ul>
+<h3 id="优点-1"><a href="#优点-1" class="headerlink" title="优点"></a>优点</h3><ul>
+<li>主要是提高了代码的复用度，而且很好的符合的“开闭原则”。</li>
+</ul>
+<h3 id="缺点-1"><a href="#缺点-1" class="headerlink" title="缺点"></a>缺点</h3><ul>
+<li>设计模式的通病：类增多了</li>
+<li>调用控制反转：一般情况下，程序的执行流是子类调用父类的方法，模板方法模式使得程序流程变成了父类调用子类方法，这个使得程序比较难以理解和跟踪</li>
+</ul>
+<hr>
+<h1 id="设计模式原则"><a href="#设计模式原则" class="headerlink" title="设计模式原则"></a>设计模式原则</h1><ul>
+<li>单一职责 ： 类要职责单一</li>
+<li>里氏替换 ： 不要破坏继承体系</li>
+<li>依赖倒置 ： 面向接口编程</li>
+<li>接口隔离 ： 接口设计要精简单一</li>
+<li>迪米特 ： 降低耦合</li>
+<li>开闭原则 ： 对扩展开放，对修改关闭</li>
+</ul>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+
+        
+  <div class="post-widgets">
+    <div class="wpac-rating-container">
+      <div id="wpac-rating"></div>
+    </div>
+  </div>
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2020/09/18/new-article/" rel="prev" title="今天又重新把之前搞了一半的hexo博客给复习了一遍,一堆坑坑">
+                  <i class="fa fa-chevron-left"></i> 今天又重新把之前搞了一半的hexo博客给复习了一遍,一堆坑坑
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/2021/09/23/HTTP%E5%8D%8F%E8%AE%AE/" rel="next" title="你可能不知道的HTTP协议">
+                  你可能不知道的HTTP协议 <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+    <div class="comments" id="waline-comments"></div>
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+
+<div class="copyright">
+  &copy; 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">boomery</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/mist/" rel="noopener" target="_blank">NexT.Mist</a>
+  </div>
+
+
+<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <script>
+var _hmt = _hmt || [];
+(function() {
+  var hm = document.createElement("script");
+  hm.src = "https://hm.baidu.com/hm.js?249cf312fe9ea622e7e5efa7ab712e94";
+  var s = document.getElementsByTagName("script")[0]; 
+  s.parentNode.insertBefore(hm, s);
+})();
+</script>
+
+
+
+    </div>
+  </footer>
+
+  
+  <script src="https://cdn.jsdelivr.net/npm/animejs@3.2.1/lib/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous"></script>
+<script src="/js/comments.js"></script><script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/schemes/muse.js"></script><script src="/js/next-boot.js"></script>
+
+  
+  <script src="https://embed.widgetpack.com/widget.js" async></script>
+  <script class="next-config" data-name="rating" type="application/json">{"enable":true,"id":null,"color":"#fc6423"}</script>
+  <script src="/js/third-party/rating.js"></script>
+
+
+
+
+
+  
+
+
+  <script class="next-config" data-name="leancloud_visitors" type="application/json">{"enable":true,"app_id":"8iVuhdsvdG5CLJKfOMallNii-gzGzoHsz","app_key":"x2JQVvIJrw9lPEpS6xsEfLSa","security":false,"server_url":"https://boomery.github.io","betterPerformance":false}</script>
+  <script src="/js/third-party/statistics/lean-analytics.js"></script>
+
+
+<script class="next-config" data-name="waline" type="application/json">{"lang":"zh-cn","enable":true,"serverURL":"https://blog-comment-a-9hwfrezs5-boomery.vercel.app","placeholder":"Just go","avatar":"mm","pageSize":10,"visitor":false,"comment_count":true,"requiredFields":[],"meta":["nick","mail","link"],"requiredMeta":[],"libUrl":"https://cdn.jsdelivr.net/npm/@waline/client/dist/Waline.min.js","el":"#waline-comments","path":"/2021/09/23/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/"}</script>
+<script>
+document.addEventListener('page:loaded', () => {
+  NexT.utils.loadComments(CONFIG.waline.el).then(() => 
+    NexT.utils.getScript(CONFIG.waline.libUrl, { condition: window.Waline })
+  ).then(() => {
+    new Waline(CONFIG.waline);
+  });
+});
+</script>
+</body>
+</html>
