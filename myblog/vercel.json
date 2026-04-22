@@ -1,0 +1,6 @@
+{
+  "buildCommand": "npx hexo generate",
+  "outputDirectory": "public",
+  "installCommand": "npm install",
+  "framework": null
+}
