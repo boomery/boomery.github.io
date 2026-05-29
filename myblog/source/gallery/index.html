@@ -25,7 +25,7 @@
 
     /* ── 粒子背景 ── */
     #starfield {
-      position: fixed;
+      position: absolute;
       inset: 0;
       pointer-events: none;
       z-index: 0;
@@ -88,7 +88,7 @@
 
     /* ── 雪花飘落场景 ── */
     #scene {
-      position: fixed;
+      position: absolute;
       inset: 0;
       z-index: 1;
       pointer-events: none;
@@ -120,7 +120,7 @@
 
     /* ── 空状态提示 ── */
     .empty-state {
-      position: fixed;
+      position: absolute;
       inset: 0;
       display: flex;
       flex-direction: column;
@@ -137,9 +137,16 @@
     }
     .empty-state p span { color: var(--accent); }
 
+    /* ── 飘落场景容器限定在首屏 ── */
+    .gallery-screen {
+      position: relative;
+      height: 100vh;
+      overflow: hidden;
+    }
+
     /* ── 底部渐变遮罩 ── */
     .fade-bottom {
-      position: fixed;
+      position: absolute;
       bottom: 0; left: 0; right: 0;
       height: 120px;
       background: linear-gradient(to top, var(--bg) 30%, transparent);
@@ -149,7 +156,7 @@
 
     /* ── 数量统计 ── */
     .counter {
-      position: fixed;
+      position: absolute;
       bottom: 28px;
       left: 50%;
       transform: translateX(-50%);
@@ -158,8 +165,50 @@
       color: var(--muted);
       letter-spacing: 0.1em;
       text-transform: uppercase;
+      white-space: nowrap;
     }
     .counter span { color: var(--accent); font-weight: 700; }
+
+    /* ── 向下滚动提示 ── */
+    .scroll-hint {
+      position: absolute;
+      bottom: 14px;
+      right: 40px;
+      z-index: 20;
+      font-size: 0.72rem;
+      color: var(--muted);
+      letter-spacing: 0.08em;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      animation: hintBob 2s ease-in-out infinite;
+    }
+    @keyframes hintBob {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(4px); }
+    }
+
+    /* ── 评论区板块 ── */
+    .comment-section {
+      position: relative;
+      z-index: 50;
+      background: var(--bg);
+      padding: 60px 40px 80px;
+      max-width: 860px;
+      margin: 0 auto;
+    }
+
+    .comment-section h2 {
+      font-size: 1rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 32px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid #1e1e1e;
+    }
+    .comment-section h2 span { color: var(--accent); }
 
     /* ── 灯箱 ── */
     .lightbox {
@@ -266,6 +315,9 @@
 </head>
 <body>
 
+<!-- 飘落场景 + 首屏容器 -->
+<div class="gallery-screen">
+
 <canvas id="starfield"></canvas>
 
 <!-- Header -->
@@ -278,19 +330,33 @@
   </div>
 </div>
 
-<!-- 飘落场景 -->
-<div id="scene"></div>
+<!-- 飘落场景 + 首屏容器 -->
+<div class="gallery-screen">
+  <canvas id="starfield"></canvas>
 
-<!-- 空状态 -->
-<div class="empty-state" id="emptyState" style="display:none">
-  <p>点击右上角 <span>+ 上传图片</span> 开始你的展示墙</p>
+  <!-- 飘落场景 -->
+  <div id="scene"></div>
+
+  <!-- 空状态 -->
+  <div class="empty-state" id="emptyState" style="display:none">
+    <p>点击右上角 <span>+ 上传图片</span> 开始你的展示墙</p>
+  </div>
+
+  <!-- 底部遮罩 -->
+  <div class="fade-bottom"></div>
+
+  <!-- 计数器 -->
+  <div class="counter" id="counter"></div>
+
+  <!-- 向下滚动提示 -->
+  <div class="scroll-hint">留言 ↓</div>
 </div>
 
-<!-- 底部遮罩 -->
-<div class="fade-bottom"></div>
-
-<!-- 计数器 -->
-<div class="counter" id="counter"></div>
+<!-- 评论区 -->
+<div class="comment-section">
+  <h2>留言 <span>/</span> Comments</h2>
+  <div id="waline-comment"></div>
+</div>
 
 <!-- 拖拽覆盖层 -->
 <div class="drag-overlay" id="dragOverlay">DROP TO ADD</div>
@@ -582,6 +648,17 @@ window.addEventListener('resize', () => {
     f.x = Math.min(f.x, W() - f.size / 2);
   });
 });
+</script>
+
+<!-- Waline 评论 -->
+<script type="module">
+  import { init } from 'https://unpkg.com/@waline/client@v3/dist/waline.js';
+  init({
+    el: '#waline-comment',
+    serverURL: 'https://walinecomment-ten.vercel.app',
+    lang: 'zh-CN',
+    dark: true,
+  });
 </script>
 </body>
 </html>
