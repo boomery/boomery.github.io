@@ -8,13 +8,11 @@
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      --bg: #0d0d0d;
-      --surface: #161616;
+      --bg: #080810;
       --accent: #c8ff00;
       --text: #f0f0f0;
-      --muted: #666;
-      --radius: 12px;
-      --gap: 14px;
+      --muted: #555;
+      --radius: 10px;
     }
 
     body {
@@ -22,57 +20,54 @@
       color: var(--text);
       font-family: 'Inter', 'PingFang SC', system-ui, sans-serif;
       min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ── 粒子背景 ── */
+    #starfield {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
     }
 
     /* ── Header ── */
     .page-header {
-      padding: 60px 40px 40px;
-      max-width: 1400px;
-      margin: 0 auto;
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      padding: 24px 40px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: linear-gradient(to bottom, rgba(8,8,16,0.95) 60%, transparent);
     }
 
-    .page-header h1 {
-      font-size: clamp(2rem, 5vw, 4rem);
+    .logo {
+      font-size: 1.1rem;
       font-weight: 800;
-      letter-spacing: -0.03em;
-      line-height: 1;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
     }
-
-    .page-header h1 span {
-      color: var(--accent);
-    }
-
-    .page-header p {
-      margin-top: 12px;
-      color: var(--muted);
-      font-size: 0.95rem;
-      letter-spacing: 0.05em;
-    }
+    .logo span { color: var(--accent); }
 
     .back-link {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      margin-bottom: 24px;
       color: var(--muted);
       text-decoration: none;
-      font-size: 0.85rem;
+      font-size: 0.82rem;
+      letter-spacing: 0.05em;
       transition: color 0.2s;
     }
     .back-link:hover { color: var(--accent); }
 
-    /* ── Filter bar ── */
-    .filter-bar {
+    .header-actions {
       display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      padding: 0 40px 36px;
-      max-width: 1400px;
-      margin: 0 auto;
+      align-items: center;
+      gap: 12px;
     }
 
-    .filter-btn {
-      padding: 6px 18px;
+    .upload-btn {
+      padding: 7px 20px;
       border-radius: 999px;
       border: 1px solid #333;
       background: transparent;
@@ -82,70 +77,98 @@
       transition: all 0.2s;
       letter-spacing: 0.04em;
     }
-    .filter-btn:hover, .filter-btn.active {
+    .upload-btn:hover {
       background: var(--accent);
       border-color: var(--accent);
       color: #000;
       font-weight: 600;
     }
 
-    /* ── Masonry grid ── */
-    .masonry {
-      columns: 4 280px;
-      column-gap: var(--gap);
-      padding: 0 40px 80px;
-      max-width: 1400px;
-      margin: 0 auto;
+    #fileInput { display: none; }
+
+    /* ── 雪花飘落场景 ── */
+    #scene {
+      position: fixed;
+      inset: 0;
+      z-index: 1;
+      pointer-events: none;
     }
 
-    .card {
-      break-inside: avoid;
-      margin-bottom: var(--gap);
+    .flake {
+      position: absolute;
+      pointer-events: all;
+      cursor: pointer;
+      will-change: transform;
       border-radius: var(--radius);
       overflow: hidden;
-      background: var(--surface);
-      cursor: pointer;
-      position: relative;
-      transition: transform 0.3s cubic-bezier(.22,.68,0,1.2);
+      box-shadow: 0 4px 24px rgba(0,0,0,0.6);
+      transition: box-shadow 0.3s, filter 0.3s;
     }
-    .card:hover { transform: translateY(-4px); }
-
-    .card img {
+    .flake:hover {
+      box-shadow: 0 0 0 2px var(--accent), 0 8px 40px rgba(200,255,0,0.25);
+      filter: brightness(1.15);
+      z-index: 50 !important;
+    }
+    .flake img {
       width: 100%;
+      height: 100%;
+      object-fit: cover;
       display: block;
-      transition: transform 0.5s ease;
+      pointer-events: none;
+      user-select: none;
     }
-    .card:hover img { transform: scale(1.04); }
 
-    .card-overlay {
-      position: absolute;
+    /* ── 空状态提示 ── */
+    .empty-state {
+      position: fixed;
       inset: 0;
-      background: linear-gradient(to top, rgba(0,0,0,0.75) 0%, transparent 55%);
-      opacity: 0;
-      transition: opacity 0.3s;
       display: flex;
-      align-items: flex-end;
-      padding: 18px;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      z-index: 2;
+      pointer-events: none;
     }
-    .card:hover .card-overlay { opacity: 1; }
+    .empty-state p {
+      color: var(--muted);
+      font-size: 0.9rem;
+      letter-spacing: 0.04em;
+    }
+    .empty-state p span { color: var(--accent); }
 
-    .card-meta { display: flex; flex-direction: column; gap: 4px; }
-    .card-title { font-size: 0.9rem; font-weight: 600; color: #fff; }
-    .card-tag {
-      font-size: 0.72rem;
-      color: var(--accent);
-      letter-spacing: 0.06em;
+    /* ── 底部渐变遮罩 ── */
+    .fade-bottom {
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      height: 120px;
+      background: linear-gradient(to top, var(--bg) 30%, transparent);
+      z-index: 10;
+      pointer-events: none;
+    }
+
+    /* ── 数量统计 ── */
+    .counter {
+      position: fixed;
+      bottom: 28px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 20;
+      font-size: 0.75rem;
+      color: var(--muted);
+      letter-spacing: 0.1em;
       text-transform: uppercase;
     }
+    .counter span { color: var(--accent); font-weight: 700; }
 
-    /* ── Lightbox ── */
+    /* ── 灯箱 ── */
     .lightbox {
       display: none;
       position: fixed;
       inset: 0;
       z-index: 1000;
       background: rgba(0,0,0,0.92);
-      backdrop-filter: blur(12px);
+      backdrop-filter: blur(16px);
       align-items: center;
       justify-content: center;
       padding: 20px;
@@ -156,42 +179,40 @@
       position: relative;
       max-width: 90vw;
       max-height: 90vh;
-      animation: lbIn 0.3s cubic-bezier(.22,.68,0,1.2);
+      animation: lbIn 0.35s cubic-bezier(.22,.68,0,1.2);
     }
 
     @keyframes lbIn {
-      from { opacity: 0; transform: scale(0.88); }
-      to   { opacity: 1; transform: scale(1); }
+      from { opacity: 0; transform: scale(0.85) rotate(-3deg); }
+      to   { opacity: 1; transform: scale(1) rotate(0deg); }
     }
 
     .lightbox-inner img {
-      max-width: 90vw;
-      max-height: 82vh;
+      max-width: 88vw;
+      max-height: 80vh;
       border-radius: var(--radius);
       display: block;
       object-fit: contain;
     }
 
     .lightbox-caption {
-      margin-top: 14px;
+      margin-top: 16px;
       text-align: center;
+      font-size: 0.82rem;
       color: var(--muted);
-      font-size: 0.85rem;
-      letter-spacing: 0.04em;
+      letter-spacing: 0.06em;
     }
-    .lightbox-caption strong { color: var(--text); }
+    .lightbox-caption strong { color: var(--text); margin-right: 8px; }
 
     .lightbox-close {
       position: absolute;
-      top: -14px;
-      right: -14px;
-      width: 36px;
-      height: 36px;
+      top: -16px; right: -16px;
+      width: 36px; height: 36px;
       border-radius: 50%;
-      background: #222;
-      border: 1px solid #444;
+      background: #1a1a1a;
+      border: 1px solid #333;
       color: #fff;
-      font-size: 1.1rem;
+      font-size: 1rem;
       cursor: pointer;
       display: flex;
       align-items: center;
@@ -202,15 +223,13 @@
 
     .lightbox-nav {
       position: absolute;
-      top: 50%;
-      transform: translateY(-50%);
-      width: 40px;
-      height: 40px;
-      background: rgba(255,255,255,0.08);
-      border: 1px solid #444;
+      top: 50%; transform: translateY(-50%);
+      width: 42px; height: 42px;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid #333;
       border-radius: 50%;
       color: #fff;
-      font-size: 1.1rem;
+      font-size: 1.3rem;
       cursor: pointer;
       display: flex;
       align-items: center;
@@ -218,39 +237,28 @@
       transition: background 0.2s;
     }
     .lightbox-nav:hover { background: var(--accent); color: #000; }
-    .lightbox-prev { left: -54px; }
-    .lightbox-next { right: -54px; }
+    .lightbox-prev { left: -58px; }
+    .lightbox-next { right: -58px; }
 
-    /* ── Upload zone ── */
-    .upload-zone {
-      margin: 0 40px 40px;
-      max-width: 1400px;
-      border: 2px dashed #333;
-      border-radius: var(--radius);
-      padding: 32px;
-      text-align: center;
-      cursor: pointer;
-      transition: border-color 0.2s;
-    }
-    .upload-zone:hover, .upload-zone.drag-over {
-      border-color: var(--accent);
-    }
-    .upload-zone p { color: var(--muted); font-size: 0.88rem; }
-    .upload-zone p span { color: var(--accent); }
-    #fileInput { display: none; }
-
-    /* ── Empty state ── */
-    .empty-hint {
-      text-align: center;
-      padding: 60px 20px;
-      color: var(--muted);
-      font-size: 0.9rem;
+    /* ── 拖拽覆盖层 ── */
+    .drag-overlay {
       display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 500;
+      background: rgba(200,255,0,0.06);
+      border: 3px dashed var(--accent);
+      align-items: center;
+      justify-content: center;
+      font-size: 1.4rem;
+      color: var(--accent);
+      letter-spacing: 0.1em;
+      pointer-events: none;
     }
+    .drag-overlay.show { display: flex; }
 
     @media (max-width: 600px) {
-      .page-header, .filter-bar, .masonry { padding-left: 16px; padding-right: 16px; }
-      .masonry { columns: 2 140px; }
+      .page-header { padding: 16px 16px; }
       .lightbox-prev { left: -10px; }
       .lightbox-next { right: -10px; }
     }
@@ -258,30 +266,38 @@
 </head>
 <body>
 
+<canvas id="starfield"></canvas>
+
+<!-- Header -->
 <div class="page-header">
   <a href="/" class="back-link">← 返回博客</a>
-  <h1>Photo<span>Wall</span></h1>
-  <p>GALLERY · MOMENTS · AESTHETICS</p>
+  <div class="logo">Photo<span>Wall</span></div>
+  <div class="header-actions">
+    <button class="upload-btn" id="uploadBtn">+ 上传图片</button>
+    <input type="file" id="fileInput" accept="image/*" multiple />
+  </div>
 </div>
 
-<!-- 筛选标签 -->
-<div class="filter-bar" id="filterBar">
-  <button class="filter-btn active" data-tag="all">All</button>
+<!-- 飘落场景 -->
+<div id="scene"></div>
+
+<!-- 空状态 -->
+<div class="empty-state" id="emptyState" style="display:none">
+  <p>点击右上角 <span>+ 上传图片</span> 开始你的展示墙</p>
 </div>
 
-<!-- 上传区域 -->
-<div class="upload-zone" id="uploadZone">
-  <input type="file" id="fileInput" accept="image/*" multiple />
-  <p>点击或拖拽图片到此处上传 &nbsp;·&nbsp; <span>支持 JPG / PNG / WEBP / GIF</span></p>
-</div>
+<!-- 底部遮罩 -->
+<div class="fade-bottom"></div>
 
-<!-- 瀑布流 -->
-<div class="masonry" id="masonry"></div>
-<div class="empty-hint" id="emptyHint">还没有图片，上传第一张吧 ↑</div>
+<!-- 计数器 -->
+<div class="counter" id="counter"></div>
+
+<!-- 拖拽覆盖层 -->
+<div class="drag-overlay" id="dragOverlay">DROP TO ADD</div>
 
 <!-- 灯箱 -->
 <div class="lightbox" id="lightbox">
-  <div class="lightbox-inner" id="lightboxInner">
+  <div class="lightbox-inner">
     <button class="lightbox-close" id="lbClose">✕</button>
     <button class="lightbox-nav lightbox-prev" id="lbPrev">‹</button>
     <button class="lightbox-nav lightbox-next" id="lbNext">›</button>
@@ -294,154 +310,278 @@
 </div>
 
 <script>
-  const STORAGE_KEY = 'boomery_gallery_v1';
-  const TAG_COLORS  = ['风景','人像','建筑','街拍','抽象','其他'];
+/* ══════════════════════════════
+   星空背景 canvas
+══════════════════════════════ */
+(function () {
+  const canvas = document.getElementById('starfield');
+  const ctx = canvas.getContext('2d');
+  let stars = [];
 
-  let items   = [];
-  let current = 0;
-  let activeTag = 'all';
-
-  // ── 持久化 ──
-  function save() {
-    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(items)); } catch(e) {}
-  }
-  function load() {
-    try {
-      const d = localStorage.getItem(STORAGE_KEY);
-      if (d) items = JSON.parse(d);
-    } catch(e) { items = []; }
+  function resize() {
+    canvas.width  = window.innerWidth;
+    canvas.height = window.innerHeight;
   }
 
-  // ── 上传 ──
-  const uploadZone = document.getElementById('uploadZone');
-  const fileInput  = document.getElementById('fileInput');
+  function initStars() {
+    stars = Array.from({ length: 120 }, () => ({
+      x: Math.random() * canvas.width,
+      y: Math.random() * canvas.height,
+      r: Math.random() * 1.2 + 0.2,
+      a: Math.random(),
+      da: (Math.random() - 0.5) * 0.008,
+    }));
+  }
 
-  uploadZone.addEventListener('click', () => fileInput.click());
-  fileInput.addEventListener('change', e => handleFiles(e.target.files));
-
-  uploadZone.addEventListener('dragover', e => {
-    e.preventDefault();
-    uploadZone.classList.add('drag-over');
-  });
-  uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('drag-over'));
-  uploadZone.addEventListener('drop', e => {
-    e.preventDefault();
-    uploadZone.classList.remove('drag-over');
-    handleFiles(e.dataTransfer.files);
-  });
-
-  function handleFiles(files) {
-    [...files].forEach(file => {
-      if (!file.type.startsWith('image/')) return;
-      const reader = new FileReader();
-      reader.onload = ev => {
-        const tag = TAG_COLORS[Math.floor(Math.random() * TAG_COLORS.length)];
-        items.unshift({ src: ev.target.result, title: file.name.replace(/\.[^.]+$/, ''), tag });
-        save();
-        render();
-      };
-      reader.readAsDataURL(file);
+  function drawStars() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    stars.forEach(s => {
+      s.a = Math.max(0.05, Math.min(0.8, s.a + s.da));
+      if (s.a <= 0.05 || s.a >= 0.8) s.da *= -1;
+      ctx.beginPath();
+      ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(255,255,255,${s.a})`;
+      ctx.fill();
     });
+    requestAnimationFrame(drawStars);
   }
 
-  // ── 渲染瀑布流 ──
-  function render() {
-    const masonry   = document.getElementById('masonry');
-    const emptyHint = document.getElementById('emptyHint');
-    const filtered  = activeTag === 'all' ? items : items.filter(i => i.tag === activeTag);
+  resize();
+  initStars();
+  drawStars();
+  window.addEventListener('resize', () => { resize(); initStars(); });
+})();
 
-    masonry.innerHTML = '';
-    emptyHint.style.display = filtered.length === 0 ? 'block' : 'none';
+/* ══════════════════════════════
+   核心数据
+══════════════════════════════ */
+const STORAGE_KEY = 'boomery_gallery_v2';
+let items = [];
 
-    filtered.forEach((item, idx) => {
-      const card = document.createElement('div');
-      card.className = 'card';
-      card.innerHTML = `
-        <img src="${item.src}" alt="${item.title}" loading="lazy" />
-        <div class="card-overlay">
-          <div class="card-meta">
-            <span class="card-title">${item.title}</span>
-            <span class="card-tag">${item.tag}</span>
-          </div>
-        </div>`;
-      card.addEventListener('click', () => openLightbox(idx, filtered));
-      masonry.appendChild(card);
-    });
+const DEMOS = [
+  { src: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=600', title: '山间云海', tag: '风景' },
+  { src: 'https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=500', title: '晨雾森林', tag: '风景' },
+  { src: 'https://images.unsplash.com/photo-1519125323398-675f0ddb6308?w=500', title: '街角光影', tag: '街拍' },
+  { src: 'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?w=600', title: '城市夜景', tag: '建筑' },
+  { src: 'https://images.unsplash.com/photo-1545569341-9eb8b30979d9?w=500', title: '东京街道', tag: '街拍' },
+  { src: 'https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=600', title: '旅途', tag: '风景' },
+  { src: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=600', title: '海边黄昏', tag: '风景' },
+  { src: 'https://images.unsplash.com/photo-1511884642898-4c92249e20b6?w=500', title: '抽象光线', tag: '抽象' },
+  { src: 'https://images.unsplash.com/photo-1431440869543-efaf3388c585?w=500', title: '雪山', tag: '风景' },
+  { src: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=500', title: '秋色', tag: '风景' },
+];
 
-    buildFilterBar();
-  }
+function save() {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(items)); } catch(e) {}
+}
+function load() {
+  try {
+    const d = localStorage.getItem(STORAGE_KEY);
+    if (d) items = JSON.parse(d);
+  } catch(e) { items = []; }
+}
 
-  // ── 筛选标签 ──
-  function buildFilterBar() {
-    const bar  = document.getElementById('filterBar');
-    const tags = ['all', ...new Set(items.map(i => i.tag))];
-    bar.innerHTML = '';
-    tags.forEach(tag => {
-      const btn = document.createElement('button');
-      btn.className = 'filter-btn' + (tag === activeTag ? ' active' : '');
-      btn.dataset.tag = tag;
-      btn.textContent = tag === 'all' ? 'All' : tag;
-      btn.addEventListener('click', () => { activeTag = tag; render(); });
-      bar.appendChild(btn);
-    });
-  }
+/* ══════════════════════════════
+   雪花飘落引擎
+══════════════════════════════ */
+const scene = document.getElementById('scene');
+let flakes  = [];   // { el, x, y, vy, angle, vAngle, size, idx }
+let rafId   = null;
 
-  // ── 灯箱 ──
-  let lbItems = [];
-  function openLightbox(idx, filtered) {
-    lbItems  = filtered;
-    current  = idx;
-    showLb();
-    document.getElementById('lightbox').classList.add('open');
-  }
+const W = () => window.innerWidth;
+const H = () => window.innerHeight;
 
-  function showLb() {
-    const item = lbItems[current];
-    document.getElementById('lbImg').src    = item.src;
-    document.getElementById('lbTitle').textContent = item.title + ' ';
-    document.getElementById('lbTag').textContent   = '· ' + item.tag;
-  }
+function randBetween(a, b) { return a + Math.random() * (b - a); }
 
-  document.getElementById('lbClose').addEventListener('click', () =>
-    document.getElementById('lightbox').classList.remove('open'));
-  document.getElementById('lightbox').addEventListener('click', e => {
-    if (e.target === document.getElementById('lightbox'))
-      document.getElementById('lightbox').classList.remove('open');
+function createFlake(item, itemIdx, initialY) {
+  const size    = randBetween(90, 190);
+  const x       = randBetween(size / 2, W() - size / 2);
+  const y       = initialY !== undefined ? initialY : randBetween(-200, -size);
+  const vy      = randBetween(0.4, 1.1);
+  const angle   = randBetween(-25, 25);
+  const vAngle  = randBetween(-0.18, 0.18);
+
+  const el = document.createElement('div');
+  el.className = 'flake';
+  el.style.width  = size + 'px';
+  el.style.height = size + 'px';
+  el.style.zIndex = Math.floor(randBetween(2, 20));
+
+  const img = document.createElement('img');
+  img.src = item.src;
+  img.alt = item.title;
+  img.draggable = false;
+  el.appendChild(img);
+
+  el.addEventListener('click', () => openLightbox(itemIdx));
+
+  scene.appendChild(el);
+
+  return { el, x, y, vy, angle, vAngle, size, idx: itemIdx };
+}
+
+function spawnFlakes() {
+  scene.innerHTML = '';
+  flakes = [];
+  if (items.length === 0) return;
+
+  // 初始时分散在屏幕各处
+  items.forEach((item, i) => {
+    const copies = Math.ceil(3 + Math.random() * 2); // 每张图产生 3-4 个副本
+    for (let c = 0; c < copies; c++) {
+      const initY = randBetween(-H(), H() * 0.8); // 初始随机散布
+      flakes.push(createFlake(item, i, initY));
+    }
   });
-  document.getElementById('lbPrev').addEventListener('click', e => {
-    e.stopPropagation();
-    current = (current - 1 + lbItems.length) % lbItems.length;
-    showLb();
-  });
-  document.getElementById('lbNext').addEventListener('click', e => {
-    e.stopPropagation();
-    current = (current + 1) % lbItems.length;
-    showLb();
-  });
-  document.addEventListener('keydown', e => {
-    if (!document.getElementById('lightbox').classList.contains('open')) return;
-    if (e.key === 'Escape')      document.getElementById('lightbox').classList.remove('open');
-    if (e.key === 'ArrowLeft')  { current = (current - 1 + lbItems.length) % lbItems.length; showLb(); }
-    if (e.key === 'ArrowRight') { current = (current + 1) % lbItems.length; showLb(); }
-  });
+}
 
-  // ── 初始化 ──
-  load();
+function tick() {
+  const w = W(), h = H();
+  flakes.forEach(f => {
+    f.y     += f.vy;
+    f.angle += f.vAngle;
+    // 轻微横向漂移（模拟风）
+    f.x += Math.sin(f.y * 0.008) * 0.4;
+
+    // 超出底部则重置到顶部（保持循环）
+    if (f.y > h + f.size + 20) {
+      f.y = randBetween(-f.size * 3, -f.size);
+      f.x = randBetween(f.size / 2, w - f.size / 2);
+    }
+    // 横向越界修正
+    if (f.x < -f.size) f.x = w + f.size / 2;
+    if (f.x > w + f.size) f.x = -f.size / 2;
+
+    f.el.style.transform = `translate(${f.x - f.size / 2}px, ${f.y}px) rotate(${f.angle}deg)`;
+  });
+  rafId = requestAnimationFrame(tick);
+}
+
+function startAnimation() {
+  if (rafId) cancelAnimationFrame(rafId);
+  spawnFlakes();
+  if (flakes.length > 0) tick();
+}
+
+/* ══════════════════════════════
+   上传
+══════════════════════════════ */
+const TAGS = ['风景','人像','建筑','街拍','抽象','其他'];
+
+document.getElementById('uploadBtn').addEventListener('click', () =>
+  document.getElementById('fileInput').click());
+
+document.getElementById('fileInput').addEventListener('change', e => {
+  handleFiles(e.target.files);
+  e.target.value = '';
+});
+
+// 全页面拖拽
+let dragCount = 0;
+document.addEventListener('dragenter', e => {
+  if (e.dataTransfer.types.includes('Files')) {
+    dragCount++;
+    document.getElementById('dragOverlay').classList.add('show');
+  }
+});
+document.addEventListener('dragleave', () => {
+  dragCount--;
+  if (dragCount <= 0) { dragCount = 0; document.getElementById('dragOverlay').classList.remove('show'); }
+});
+document.addEventListener('dragover', e => e.preventDefault());
+document.addEventListener('drop', e => {
+  e.preventDefault();
+  dragCount = 0;
+  document.getElementById('dragOverlay').classList.remove('show');
+  handleFiles(e.dataTransfer.files);
+});
+
+function handleFiles(files) {
+  [...files].forEach(file => {
+    if (!file.type.startsWith('image/')) return;
+    const reader = new FileReader();
+    reader.onload = ev => {
+      const tag = TAGS[Math.floor(Math.random() * TAGS.length)];
+      items.unshift({ src: ev.target.result, title: file.name.replace(/\.[^.]+$/, ''), tag });
+      save();
+      updateUI();
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+/* ══════════════════════════════
+   灯箱
+══════════════════════════════ */
+let lbCurrent = 0;
+
+function openLightbox(idx) {
+  lbCurrent = idx;
+  showLb();
+  document.getElementById('lightbox').classList.add('open');
+}
+
+function showLb() {
+  const item = items[lbCurrent];
+  document.getElementById('lbImg').src           = item.src;
+  document.getElementById('lbTitle').textContent = item.title + ' ';
+  document.getElementById('lbTag').textContent   = '· ' + item.tag;
+}
+
+document.getElementById('lbClose').addEventListener('click', () =>
+  document.getElementById('lightbox').classList.remove('open'));
+document.getElementById('lightbox').addEventListener('click', e => {
+  if (e.target === document.getElementById('lightbox'))
+    document.getElementById('lightbox').classList.remove('open');
+});
+document.getElementById('lbPrev').addEventListener('click', e => {
+  e.stopPropagation();
+  lbCurrent = (lbCurrent - 1 + items.length) % items.length;
+  showLb();
+});
+document.getElementById('lbNext').addEventListener('click', e => {
+  e.stopPropagation();
+  lbCurrent = (lbCurrent + 1) % items.length;
+  showLb();
+});
+document.addEventListener('keydown', e => {
+  if (!document.getElementById('lightbox').classList.contains('open')) return;
+  if (e.key === 'Escape')      document.getElementById('lightbox').classList.remove('open');
+  if (e.key === 'ArrowLeft')  { lbCurrent = (lbCurrent - 1 + items.length) % items.length; showLb(); }
+  if (e.key === 'ArrowRight') { lbCurrent = (lbCurrent + 1) % items.length; showLb(); }
+});
+
+/* ══════════════════════════════
+   UI 状态更新
+══════════════════════════════ */
+function updateUI() {
+  const empty = document.getElementById('emptyState');
+  const counter = document.getElementById('counter');
+
   if (items.length === 0) {
-    // 预置几张演示图（Unsplash）
-    const demos = [
-      { src: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800', title: '山间云海', tag: '风景' },
-      { src: 'https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=600', title: '晨雾森林', tag: '风景' },
-      { src: 'https://images.unsplash.com/photo-1519125323398-675f0ddb6308?w=600', title: '街角光影', tag: '街拍' },
-      { src: 'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?w=800', title: '城市夜景', tag: '建筑' },
-      { src: 'https://images.unsplash.com/photo-1545569341-9eb8b30979d9?w=600', title: '东京街道', tag: '街拍' },
-      { src: 'https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=800', title: '旅途', tag: '风景' },
-      { src: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800', title: '海边黄昏', tag: '风景' },
-      { src: 'https://images.unsplash.com/photo-1511884642898-4c92249e20b6?w=600', title: '抽象光线', tag: '抽象' },
-    ];
-    items = demos;
+    empty.style.display = 'flex';
+    counter.innerHTML = '';
+  } else {
+    empty.style.display = 'none';
+    counter.innerHTML = `<span>${items.length}</span> photos`;
   }
-  render();
+
+  startAnimation();
+}
+
+/* ══════════════════════════════
+   初始化
+══════════════════════════════ */
+load();
+if (items.length === 0) items = DEMOS;
+updateUI();
+
+window.addEventListener('resize', () => {
+  // 重新布局
+  flakes.forEach(f => {
+    f.x = Math.min(f.x, W() - f.size / 2);
+  });
+});
 </script>
 </body>
 </html>
