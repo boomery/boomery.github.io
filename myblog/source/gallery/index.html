@@ -23,7 +23,13 @@
       overflow-x: hidden;
     }
 
-    /* ── 粒子背景 ── */
+    /* ── 首屏飘落区 ── */
+    .gallery-screen {
+      position: relative;
+      height: 100vh;
+      overflow: hidden;
+    }
+
     #starfield {
       position: absolute;
       inset: 0;
@@ -33,7 +39,7 @@
 
     /* ── Header ── */
     .page-header {
-      position: fixed;
+      position: absolute;
       top: 0; left: 0; right: 0;
       z-index: 100;
       padding: 24px 40px 20px;
@@ -59,32 +65,6 @@
       transition: color 0.2s;
     }
     .back-link:hover { color: var(--accent); }
-
-    .header-actions {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-
-    .upload-btn {
-      padding: 7px 20px;
-      border-radius: 999px;
-      border: 1px solid #333;
-      background: transparent;
-      color: var(--muted);
-      font-size: 0.82rem;
-      cursor: pointer;
-      transition: all 0.2s;
-      letter-spacing: 0.04em;
-    }
-    .upload-btn:hover {
-      background: var(--accent);
-      border-color: var(--accent);
-      color: #000;
-      font-weight: 600;
-    }
-
-    #fileInput { display: none; }
 
     /* ── 雪花飘落场景 ── */
     #scene {
@@ -116,32 +96,6 @@
       display: block;
       pointer-events: none;
       user-select: none;
-    }
-
-    /* ── 空状态提示 ── */
-    .empty-state {
-      position: absolute;
-      inset: 0;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 12px;
-      z-index: 2;
-      pointer-events: none;
-    }
-    .empty-state p {
-      color: var(--muted);
-      font-size: 0.9rem;
-      letter-spacing: 0.04em;
-    }
-    .empty-state p span { color: var(--accent); }
-
-    /* ── 飘落场景容器限定在首屏 ── */
-    .gallery-screen {
-      position: relative;
-      height: 100vh;
-      overflow: hidden;
     }
 
     /* ── 底部渐变遮罩 ── */
@@ -178,17 +132,14 @@
       font-size: 0.72rem;
       color: var(--muted);
       letter-spacing: 0.08em;
-      display: flex;
-      align-items: center;
-      gap: 6px;
       animation: hintBob 2s ease-in-out infinite;
     }
     @keyframes hintBob {
       0%, 100% { transform: translateY(0); }
-      50% { transform: translateY(4px); }
+      50%       { transform: translateY(4px); }
     }
 
-    /* ── 评论区板块 ── */
+    /* ── 评论区 ── */
     .comment-section {
       position: relative;
       z-index: 50;
@@ -289,25 +240,9 @@
     .lightbox-prev { left: -58px; }
     .lightbox-next { right: -58px; }
 
-    /* ── 拖拽覆盖层 ── */
-    .drag-overlay {
-      display: none;
-      position: fixed;
-      inset: 0;
-      z-index: 500;
-      background: rgba(200,255,0,0.06);
-      border: 3px dashed var(--accent);
-      align-items: center;
-      justify-content: center;
-      font-size: 1.4rem;
-      color: var(--accent);
-      letter-spacing: 0.1em;
-      pointer-events: none;
-    }
-    .drag-overlay.show { display: flex; }
-
     @media (max-width: 600px) {
-      .page-header { padding: 16px 16px; }
+      .page-header { padding: 16px; }
+      .comment-section { padding: 40px 16px 60px; }
       .lightbox-prev { left: -10px; }
       .lightbox-next { right: -10px; }
     }
@@ -315,40 +250,26 @@
 </head>
 <body>
 
-<!-- 飘落场景 + 首屏容器 -->
-<div class="gallery-screen">
-
-<canvas id="starfield"></canvas>
-
-<!-- Header -->
-<div class="page-header">
-  <a href="/" class="back-link">← 返回博客</a>
-  <div class="logo">Photo<span>Wall</span></div>
-  <div class="header-actions">
-    <button class="upload-btn" id="uploadBtn">+ 上传图片</button>
-    <input type="file" id="fileInput" accept="image/*" multiple />
-  </div>
-</div>
-
-<!-- 飘落场景 + 首屏容器 -->
+<!-- 首屏飘落区 -->
 <div class="gallery-screen">
   <canvas id="starfield"></canvas>
+
+  <!-- Header -->
+  <div class="page-header">
+    <a href="/" class="back-link">← 返回博客</a>
+    <div class="logo">Photo<span>Wall</span></div>
+  </div>
 
   <!-- 飘落场景 -->
   <div id="scene"></div>
 
-  <!-- 空状态 -->
-  <div class="empty-state" id="emptyState" style="display:none">
-    <p>点击右上角 <span>+ 上传图片</span> 开始你的展示墙</p>
-  </div>
-
   <!-- 底部遮罩 -->
   <div class="fade-bottom"></div>
 
-  <!-- 计数器 -->
+  <!-- 图片数量 -->
   <div class="counter" id="counter"></div>
 
-  <!-- 向下滚动提示 -->
+  <!-- 滚动提示 -->
   <div class="scroll-hint">留言 ↓</div>
 </div>
 
@@ -357,9 +278,6 @@
   <h2>留言 <span>/</span> Comments</h2>
   <div id="waline-comment"></div>
 </div>
-
-<!-- 拖拽覆盖层 -->
-<div class="drag-overlay" id="dragOverlay">DROP TO ADD</div>
 
 <!-- 灯箱 -->
 <div class="lightbox" id="lightbox">
@@ -377,7 +295,24 @@
 
 <script>
 /* ══════════════════════════════
-   星空背景 canvas
+   ★ 修改这里来更新图片 ★
+   格式：{ src: '图片URL', title: '标题', tag: '分类' }
+══════════════════════════════ */
+const PHOTOS = [
+  { src: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=600', title: '山间云海', tag: '风景' },
+  { src: 'https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=500', title: '晨雾森林', tag: '风景' },
+  { src: 'https://images.unsplash.com/photo-1519125323398-675f0ddb6308?w=500', title: '街角光影', tag: '街拍' },
+  { src: 'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?w=600', title: '城市夜景', tag: '建筑' },
+  { src: 'https://images.unsplash.com/photo-1545569341-9eb8b30979d9?w=500', title: '东京街道', tag: '街拍' },
+  { src: 'https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=600', title: '旅途',     tag: '风景' },
+  { src: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=600', title: '海边黄昏', tag: '风景' },
+  { src: 'https://images.unsplash.com/photo-1511884642898-4c92249e20b6?w=500', title: '抽象光线', tag: '抽象' },
+  { src: 'https://images.unsplash.com/photo-1431440869543-efaf3388c585?w=500', title: '雪山',     tag: '风景' },
+  { src: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=500', title: '秋色',     tag: '风景' },
+];
+
+/* ══════════════════════════════
+   星空背景
 ══════════════════════════════ */
 (function () {
   const canvas = document.getElementById('starfield');
@@ -388,7 +323,6 @@
     canvas.width  = window.innerWidth;
     canvas.height = window.innerHeight;
   }
-
   function initStars() {
     stars = Array.from({ length: 120 }, () => ({
       x: Math.random() * canvas.width,
@@ -398,7 +332,6 @@
       da: (Math.random() - 0.5) * 0.008,
     }));
   }
-
   function drawStars() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     stars.forEach(s => {
@@ -411,92 +344,48 @@
     });
     requestAnimationFrame(drawStars);
   }
-
-  resize();
-  initStars();
-  drawStars();
+  resize(); initStars(); drawStars();
   window.addEventListener('resize', () => { resize(); initStars(); });
 })();
-
-/* ══════════════════════════════
-   核心数据
-══════════════════════════════ */
-const STORAGE_KEY = 'boomery_gallery_v2';
-let items = [];
-
-const DEMOS = [
-  { src: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=600', title: '山间云海', tag: '风景' },
-  { src: 'https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=500', title: '晨雾森林', tag: '风景' },
-  { src: 'https://images.unsplash.com/photo-1519125323398-675f0ddb6308?w=500', title: '街角光影', tag: '街拍' },
-  { src: 'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?w=600', title: '城市夜景', tag: '建筑' },
-  { src: 'https://images.unsplash.com/photo-1545569341-9eb8b30979d9?w=500', title: '东京街道', tag: '街拍' },
-  { src: 'https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=600', title: '旅途', tag: '风景' },
-  { src: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=600', title: '海边黄昏', tag: '风景' },
-  { src: 'https://images.unsplash.com/photo-1511884642898-4c92249e20b6?w=500', title: '抽象光线', tag: '抽象' },
-  { src: 'https://images.unsplash.com/photo-1431440869543-efaf3388c585?w=500', title: '雪山', tag: '风景' },
-  { src: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=500', title: '秋色', tag: '风景' },
-];
-
-function save() {
-  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(items)); } catch(e) {}
-}
-function load() {
-  try {
-    const d = localStorage.getItem(STORAGE_KEY);
-    if (d) items = JSON.parse(d);
-  } catch(e) { items = []; }
-}
 
 /* ══════════════════════════════
    雪花飘落引擎
 ══════════════════════════════ */
 const scene = document.getElementById('scene');
-let flakes  = [];   // { el, x, y, vy, angle, vAngle, size, idx }
-let rafId   = null;
+let flakes = [], rafId = null;
 
 const W = () => window.innerWidth;
 const H = () => window.innerHeight;
+const rand = (a, b) => a + Math.random() * (b - a);
 
-function randBetween(a, b) { return a + Math.random() * (b - a); }
-
-function createFlake(item, itemIdx, initialY) {
-  const size    = randBetween(90, 190);
-  const x       = randBetween(size / 2, W() - size / 2);
-  const y       = initialY !== undefined ? initialY : randBetween(-200, -size);
-  const vy      = randBetween(0.4, 1.1);
-  const angle   = randBetween(-25, 25);
-  const vAngle  = randBetween(-0.18, 0.18);
-
-  const el = document.createElement('div');
+function createFlake(item, idx, initY) {
+  const size   = rand(90, 190);
+  const el     = document.createElement('div');
   el.className = 'flake';
-  el.style.width  = size + 'px';
-  el.style.height = size + 'px';
-  el.style.zIndex = Math.floor(randBetween(2, 20));
+  el.style.cssText = `width:${size}px;height:${size}px;z-index:${Math.floor(rand(2,20))}`;
 
   const img = document.createElement('img');
-  img.src = item.src;
-  img.alt = item.title;
-  img.draggable = false;
+  img.src = item.src; img.alt = item.title; img.draggable = false;
   el.appendChild(img);
-
-  el.addEventListener('click', () => openLightbox(itemIdx));
-
+  el.addEventListener('click', () => openLightbox(idx));
   scene.appendChild(el);
 
-  return { el, x, y, vy, angle, vAngle, size, idx: itemIdx };
+  return {
+    el, size, idx,
+    x: rand(size / 2, W() - size / 2),
+    y: initY !== undefined ? initY : rand(-200, -size),
+    vy: rand(0.4, 1.1),
+    angle: rand(-25, 25),
+    vAngle: rand(-0.18, 0.18),
+  };
 }
 
 function spawnFlakes() {
-  scene.innerHTML = '';
-  flakes = [];
-  if (items.length === 0) return;
-
-  // 初始时分散在屏幕各处
-  items.forEach((item, i) => {
-    const copies = Math.ceil(3 + Math.random() * 2); // 每张图产生 3-4 个副本
+  scene.innerHTML = ''; flakes = [];
+  PHOTOS.forEach((item, i) => {
+    const copies = Math.ceil(3 + Math.random() * 2);
     for (let c = 0; c < copies; c++) {
-      const initY = randBetween(-H(), H() * 0.8); // 初始随机散布
-      flakes.push(createFlake(item, i, initY));
+      flakes.push(createFlake(item, i, rand(-H(), H() * 0.8)));
     }
   });
 }
@@ -504,76 +393,15 @@ function spawnFlakes() {
 function tick() {
   const w = W(), h = H();
   flakes.forEach(f => {
-    f.y     += f.vy;
+    f.y += f.vy;
     f.angle += f.vAngle;
-    // 轻微横向漂移（模拟风）
     f.x += Math.sin(f.y * 0.008) * 0.4;
-
-    // 超出底部则重置到顶部（保持循环）
-    if (f.y > h + f.size + 20) {
-      f.y = randBetween(-f.size * 3, -f.size);
-      f.x = randBetween(f.size / 2, w - f.size / 2);
-    }
-    // 横向越界修正
+    if (f.y > h + f.size + 20) { f.y = rand(-f.size * 3, -f.size); f.x = rand(f.size/2, w - f.size/2); }
     if (f.x < -f.size) f.x = w + f.size / 2;
     if (f.x > w + f.size) f.x = -f.size / 2;
-
-    f.el.style.transform = `translate(${f.x - f.size / 2}px, ${f.y}px) rotate(${f.angle}deg)`;
+    f.el.style.transform = `translate(${f.x - f.size/2}px,${f.y}px) rotate(${f.angle}deg)`;
   });
   rafId = requestAnimationFrame(tick);
-}
-
-function startAnimation() {
-  if (rafId) cancelAnimationFrame(rafId);
-  spawnFlakes();
-  if (flakes.length > 0) tick();
-}
-
-/* ══════════════════════════════
-   上传
-══════════════════════════════ */
-const TAGS = ['风景','人像','建筑','街拍','抽象','其他'];
-
-document.getElementById('uploadBtn').addEventListener('click', () =>
-  document.getElementById('fileInput').click());
-
-document.getElementById('fileInput').addEventListener('change', e => {
-  handleFiles(e.target.files);
-  e.target.value = '';
-});
-
-// 全页面拖拽
-let dragCount = 0;
-document.addEventListener('dragenter', e => {
-  if (e.dataTransfer.types.includes('Files')) {
-    dragCount++;
-    document.getElementById('dragOverlay').classList.add('show');
-  }
-});
-document.addEventListener('dragleave', () => {
-  dragCount--;
-  if (dragCount <= 0) { dragCount = 0; document.getElementById('dragOverlay').classList.remove('show'); }
-});
-document.addEventListener('dragover', e => e.preventDefault());
-document.addEventListener('drop', e => {
-  e.preventDefault();
-  dragCount = 0;
-  document.getElementById('dragOverlay').classList.remove('show');
-  handleFiles(e.dataTransfer.files);
-});
-
-function handleFiles(files) {
-  [...files].forEach(file => {
-    if (!file.type.startsWith('image/')) return;
-    const reader = new FileReader();
-    reader.onload = ev => {
-      const tag = TAGS[Math.floor(Math.random() * TAGS.length)];
-      items.unshift({ src: ev.target.result, title: file.name.replace(/\.[^.]+$/, ''), tag });
-      save();
-      updateUI();
-    };
-    reader.readAsDataURL(file);
-  });
 }
 
 /* ══════════════════════════════
@@ -582,71 +410,36 @@ function handleFiles(files) {
 let lbCurrent = 0;
 
 function openLightbox(idx) {
-  lbCurrent = idx;
-  showLb();
+  lbCurrent = idx; showLb();
   document.getElementById('lightbox').classList.add('open');
 }
-
 function showLb() {
-  const item = items[lbCurrent];
-  document.getElementById('lbImg').src           = item.src;
-  document.getElementById('lbTitle').textContent = item.title + ' ';
-  document.getElementById('lbTag').textContent   = '· ' + item.tag;
+  const p = PHOTOS[lbCurrent];
+  document.getElementById('lbImg').src = p.src;
+  document.getElementById('lbTitle').textContent = p.title + ' ';
+  document.getElementById('lbTag').textContent = '· ' + p.tag;
 }
 
-document.getElementById('lbClose').addEventListener('click', () =>
-  document.getElementById('lightbox').classList.remove('open'));
-document.getElementById('lightbox').addEventListener('click', e => {
-  if (e.target === document.getElementById('lightbox'))
-    document.getElementById('lightbox').classList.remove('open');
-});
-document.getElementById('lbPrev').addEventListener('click', e => {
-  e.stopPropagation();
-  lbCurrent = (lbCurrent - 1 + items.length) % items.length;
-  showLb();
-});
-document.getElementById('lbNext').addEventListener('click', e => {
-  e.stopPropagation();
-  lbCurrent = (lbCurrent + 1) % items.length;
-  showLb();
-});
+document.getElementById('lbClose').onclick = () => document.getElementById('lightbox').classList.remove('open');
+document.getElementById('lightbox').onclick = e => { if (e.target === document.getElementById('lightbox')) document.getElementById('lightbox').classList.remove('open'); };
+document.getElementById('lbPrev').onclick = e => { e.stopPropagation(); lbCurrent = (lbCurrent - 1 + PHOTOS.length) % PHOTOS.length; showLb(); };
+document.getElementById('lbNext').onclick = e => { e.stopPropagation(); lbCurrent = (lbCurrent + 1) % PHOTOS.length; showLb(); };
 document.addEventListener('keydown', e => {
   if (!document.getElementById('lightbox').classList.contains('open')) return;
-  if (e.key === 'Escape')      document.getElementById('lightbox').classList.remove('open');
-  if (e.key === 'ArrowLeft')  { lbCurrent = (lbCurrent - 1 + items.length) % items.length; showLb(); }
-  if (e.key === 'ArrowRight') { lbCurrent = (lbCurrent + 1) % items.length; showLb(); }
+  if (e.key === 'Escape') document.getElementById('lightbox').classList.remove('open');
+  if (e.key === 'ArrowLeft')  { lbCurrent = (lbCurrent - 1 + PHOTOS.length) % PHOTOS.length; showLb(); }
+  if (e.key === 'ArrowRight') { lbCurrent = (lbCurrent + 1) % PHOTOS.length; showLb(); }
 });
-
-/* ══════════════════════════════
-   UI 状态更新
-══════════════════════════════ */
-function updateUI() {
-  const empty = document.getElementById('emptyState');
-  const counter = document.getElementById('counter');
-
-  if (items.length === 0) {
-    empty.style.display = 'flex';
-    counter.innerHTML = '';
-  } else {
-    empty.style.display = 'none';
-    counter.innerHTML = `<span>${items.length}</span> photos`;
-  }
-
-  startAnimation();
-}
 
 /* ══════════════════════════════
    初始化
 ══════════════════════════════ */
-load();
-if (items.length === 0) items = DEMOS;
-updateUI();
+document.getElementById('counter').innerHTML = `<span>${PHOTOS.length}</span> photos`;
+spawnFlakes();
+tick();
 
 window.addEventListener('resize', () => {
-  // 重新布局
-  flakes.forEach(f => {
-    f.x = Math.min(f.x, W() - f.size / 2);
-  });
+  flakes.forEach(f => { f.x = Math.min(f.x, W() - f.size / 2); });
 });
 </script>
 
