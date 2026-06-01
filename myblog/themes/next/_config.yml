@@ -616,7 +616,7 @@ livere_uid: # <your_uid>
 # For more information: https://waline.js.org, https://github.com/lizheming/waline
 waline:
   enable: true
-  serverURL: https://walinecomment-ten.vercel.app                     # Waline server address url
+  serverURL: https://comment.boomery.top                     # Waline server address url
   placeholder: 'Just go'                                    # Comment box placeholder
   avatar: mm                                                # Gravatar style
   meta: [nick, mail, link]                                  # Custom comment header
