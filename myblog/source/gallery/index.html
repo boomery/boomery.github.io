@@ -657,21 +657,45 @@ document.getElementById('uploadFab').onclick = () => {
   setTimeout(() => document.getElementById('authPassword').focus(), 80);
 };
 
-// 密码验证
-document.getElementById('authSubmit').onclick = () => {
-  const pw = document.getElementById('authPassword').value.trim();
+// 密码验证（调用 /api/auth 提前校验）
+document.getElementById('authSubmit').onclick = async () => {
+  const pw  = document.getElementById('authPassword').value.trim();
+  const err = document.getElementById('authError');
+  const btn = document.getElementById('authSubmit');
   if (!pw) return;
-  // 直接把密码缓存到前端，由服务端验证真正的正确性；
-  // 这里我们先暂存，打开上传框时再由服务端告知是否正确。
-  verifiedPassword = pw;
-  document.getElementById('authModal').classList.remove('open');
-  document.getElementById('photoTitle').value = '';
-  document.getElementById('photoTag').value   = '';
-  document.getElementById('previewImg').style.display = 'none';
-  document.getElementById('pickerHint').style.display = '';
-  document.getElementById('uploadError').classList.remove('show');
-  document.getElementById('uploadSuccess').classList.remove('show');
-  document.getElementById('uploadModal').classList.add('open');
+
+  err.classList.remove('show');
+  btn.disabled = true;
+  btn.textContent = '验证中…';
+
+  try {
+    const res = await fetch(`${API_BASE}/api/auth`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ password: pw }),
+    });
+
+    if (!res.ok) {
+      err.classList.add('show');
+      btn.disabled = false;
+      btn.textContent = '验证';
+      return;
+    }
+
+    verifiedPassword = pw;
+    document.getElementById('authModal').classList.remove('open');
+    document.getElementById('photoTitle').value = '';
+    document.getElementById('photoTag').value   = '';
+    document.getElementById('previewImg').style.display = 'none';
+    document.getElementById('pickerHint').style.display = '';
+    document.getElementById('uploadError').classList.remove('show');
+    document.getElementById('uploadSuccess').classList.remove('show');
+    document.getElementById('uploadModal').classList.add('open');
+  } catch {
+    err.classList.add('show');
+    btn.disabled = false;
+    btn.textContent = '验证';
+  }
 };
 document.getElementById('authPassword').addEventListener('keydown', e => {
   if (e.key === 'Enter') document.getElementById('authSubmit').click();
