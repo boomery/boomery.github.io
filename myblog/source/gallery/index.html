@@ -186,6 +186,7 @@
       max-width: 90vw;
       max-height: 90vh;
       animation: lbIn 0.35s cubic-bezier(.22,.68,0,1.2);
+      will-change: transform;
     }
 
     @keyframes lbIn {
@@ -626,6 +627,9 @@ let lbCurrent = 0;
 
 function openLightbox(idx) {
   lbCurrent = idx; showLb();
+  const inner = document.querySelector('.lightbox-inner');
+  inner.style.transition = 'none';
+  inner.style.transform  = 'translateX(0)';
   document.getElementById('lightbox').classList.add('open');
 }
 function showLb() {
@@ -650,20 +654,64 @@ document.addEventListener('keydown', e => {
   if (e.key === 'ArrowRight')  lbNext();
 });
 
-/* 触摸滑动 */
+/* 触摸滑动（跟随手指 + 切换动画） */
 (function () {
-  let startX = 0, startY = 0;
-  const lb = document.getElementById('lightbox');
+  let startX = 0, startY = 0, curX = 0, dragging = false;
+  const lb    = document.getElementById('lightbox');
+  const inner = lb.querySelector('.lightbox-inner');
+  const THRESHOLD = 60;
+
+  function setX(x, animated) {
+    inner.style.transition = animated ? 'transform 0.3s cubic-bezier(.25,.8,.25,1)' : 'none';
+    inner.style.transform  = `translateX(${x}px)`;
+  }
+
+  function slideSwitch(dir) {
+    const W = window.innerWidth;
+    // 滑出
+    setX(dir * -W, true);
+    setTimeout(() => {
+      if (dir > 0) lbNext(); else lbPrev();
+      // 新图片从反方向进入，无动画定位
+      setX(dir * W, false);
+      // 强制重排后滑回中心
+      inner.getBoundingClientRect();
+      setX(0, true);
+    }, 300);
+  }
+
   lb.addEventListener('touchstart', e => {
-    startX = e.touches[0].clientX;
-    startY = e.touches[0].clientY;
+    if (e.touches.length !== 1) return;
+    startX  = e.touches[0].clientX;
+    startY  = e.touches[0].clientY;
+    curX    = 0;
+    dragging = true;
+    setX(0, false);
   }, { passive: true });
-  lb.addEventListener('touchend', e => {
-    const dx = e.changedTouches[0].clientX - startX;
-    const dy = e.changedTouches[0].clientY - startY;
-    if (Math.abs(dx) < 40 || Math.abs(dx) < Math.abs(dy)) return;
-    if (dx < 0) lbNext(); else lbPrev();
+
+  lb.addEventListener('touchmove', e => {
+    if (!dragging || e.touches.length !== 1) return;
+    const dx = e.touches[0].clientX - startX;
+    const dy = e.touches[0].clientY - startY;
+    // 纵向滑动优先，不拦截
+    if (!curX && Math.abs(dy) > Math.abs(dx)) { dragging = false; return; }
+    curX = dx;
+    // 阻尼：超过阈值后移动变慢
+    const damped = Math.abs(dx) > THRESHOLD
+      ? THRESHOLD + (Math.abs(dx) - THRESHOLD) * 0.3
+      : Math.abs(dx);
+    setX(Math.sign(dx) * damped, false);
   }, { passive: true });
+
+  lb.addEventListener('touchend', () => {
+    if (!dragging) return;
+    dragging = false;
+    if (Math.abs(curX) >= THRESHOLD) {
+      slideSwitch(curX > 0 ? -1 : 1);
+    } else {
+      setX(0, true);
+    }
+  });
 })();
 
 /* ══════════════════════════════
