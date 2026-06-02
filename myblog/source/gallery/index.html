@@ -178,6 +178,9 @@
 
     .lightbox-inner {
       position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
       max-width: 90vw;
       max-height: 90vh;
       animation: lbIn 0.35s cubic-bezier(.22,.68,0,1.2);
@@ -190,14 +193,14 @@
 
     .lightbox-inner img {
       max-width: 88vw;
-      max-height: 80vh;
+      max-height: 78vh;
       border-radius: var(--radius);
       display: block;
       object-fit: contain;
     }
 
     .lightbox-caption {
-      margin-top: 16px;
+      margin-top: 14px;
       text-align: center;
       font-size: 0.82rem;
       color: var(--muted);
@@ -222,9 +225,13 @@
     }
     .lightbox-close:hover { background: var(--accent); color: #000; }
 
+    .lightbox-controls {
+      display: flex;
+      gap: 16px;
+      margin-top: 20px;
+    }
+
     .lightbox-nav {
-      position: absolute;
-      top: 50%; transform: translateY(-50%);
       width: 42px; height: 42px;
       background: rgba(255,255,255,0.06);
       border: 1px solid #333;
@@ -236,10 +243,9 @@
       align-items: center;
       justify-content: center;
       transition: background 0.2s;
+      flex-shrink: 0;
     }
     .lightbox-nav:hover { background: var(--accent); color: #000; }
-    .lightbox-prev { left: -58px; }
-    .lightbox-next { right: -58px; }
 
     /* ── 上传按钮（悬浮右下角） ── */
     .upload-fab {
@@ -387,8 +393,6 @@
     @media (max-width: 600px) {
       .page-header { padding: 16px; }
       .comment-section { padding: 40px 16px 60px; }
-      .lightbox-prev { left: -10px; }
-      .lightbox-next { right: -10px; }
       .upload-fab { bottom: 20px; right: 20px; }
     }
   </style>
@@ -428,12 +432,14 @@
 <div class="lightbox" id="lightbox">
   <div class="lightbox-inner">
     <button class="lightbox-close" id="lbClose">✕</button>
-    <button class="lightbox-nav lightbox-prev" id="lbPrev">‹</button>
-    <button class="lightbox-nav lightbox-next" id="lbNext">›</button>
     <img id="lbImg" src="" alt="" />
     <div class="lightbox-caption">
       <strong id="lbTitle"></strong>
       <span id="lbTag"></span>
+    </div>
+    <div class="lightbox-controls">
+      <button class="lightbox-nav lightbox-prev" id="lbPrev">‹</button>
+      <button class="lightbox-nav lightbox-next" id="lbNext">›</button>
     </div>
   </div>
 </div>
