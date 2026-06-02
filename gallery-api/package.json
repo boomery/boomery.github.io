@@ -1,0 +1,9 @@
+{
+  "name": "gallery-api",
+  "version": "1.0.0",
+  "private": true,
+  "dependencies": {
+    "@neondatabase/serverless": "^0.10.4",
+    "cloudinary": "^2.6.1"
+  }
+}

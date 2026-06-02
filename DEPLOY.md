@@ -156,15 +156,66 @@ git add . && git commit -m "update" && git push
 
 路径：`myblog/source/gallery/index.html`
 
-更新图片只需编辑文件中的 `PHOTOS` 数组：
+图片数据现在通过 **API 动态加载**，不再硬编码。页面右下角有悬浮「＋」按钮，输入管理员密码后即可在线上传图片。
 
-```javascript
-const PHOTOS = [
-  { src: '图片URL', title: '标题', tag: '分类' },
-  // 新增一行 = 新增一张图
-];
+### 架构
+
+```
+gallery/index.html（浏览器）
+    ↓ GET /api/photos（读取列表）
+    ↓ POST /api/upload（上传图片）
+gallery-api/（Vercel Serverless Functions 项目）
+    ├── 图片文件  → Cloudinary Storage
+    └── 图片元数据 → Neon gallery_photos 表
 ```
 
-图片地址可以是：
-- 任意公开图床 URL
-- 本地图片放在 `source/images/` 下，用 `/images/xxx.jpg`
+### gallery-api Vercel 项目
+
+源码位于仓库的 `gallery-api/` 子目录，作为独立 Vercel 项目部署。
+
+**Vercel 环境变量（gallery-api 项目）**
+
+| 变量名 | 说明 |
+|--------|------|
+| `DATABASE_URL` | Neon 连接字符串（同 Waline 用的数据库，或单独） |
+| `UPLOAD_PASSWORD` | 上传时需要的管理员密码（自行设定） |
+| `CLOUDINARY_CLOUD_NAME` | Cloudinary 控制台 Cloud Name |
+| `CLOUDINARY_API_KEY` | Cloudinary API Key |
+| `CLOUDINARY_API_SECRET` | Cloudinary API Secret |
+
+**Cloudflare DNS 配置**
+
+| 类型 | 名称 | 目标 | 代理状态 |
+|------|------|------|---------|
+| CNAME | `gallery-api` | Vercel 提供的 DNS 地址 | **DNS only（灰色云朵）** |
+
+> `gallery-api.boomery.top` 同样需要设为 DNS only，避免 SSL 525。
+
+**gallery/index.html 中的 API 地址**
+
+```javascript
+const API_BASE = 'https://gallery-api.boomery.top'; // 顶部常量，按需修改
+```
+
+### Neon 初始化 SQL
+
+在 Neon 控制台执行一次：
+
+```sql
+CREATE TABLE IF NOT EXISTS gallery_photos (
+  id         SERIAL PRIMARY KEY,
+  src        TEXT         NOT NULL,
+  title      VARCHAR(100) NOT NULL DEFAULT '',
+  tag        VARCHAR(50)  NOT NULL DEFAULT '',
+  created_at TIMESTAMPTZ  NOT NULL DEFAULT NOW()
+);
+```
+
+### 部署步骤（首次）
+
+1. 注册 [Cloudinary](https://cloudinary.com)，获取 Cloud Name / API Key / API Secret
+2. 在 Neon 控制台执行上方建表 SQL
+3. 在 Vercel 新建项目 → 选仓库 `hexoBlog` → **Root Directory 设为 `gallery-api`**
+4. 填写以上 5 个环境变量，部署
+5. 在 Cloudflare 添加 CNAME `gallery-api` → Vercel DNS，设为 DNS only
+6. `git push` 触发主博客重新部署（gallery 页面会自动用新 API 地址）

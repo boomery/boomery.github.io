@@ -241,11 +241,155 @@
     .lightbox-prev { left: -58px; }
     .lightbox-next { right: -58px; }
 
+    /* ── 上传按钮（悬浮右下角） ── */
+    .upload-fab {
+      position: fixed;
+      bottom: 32px;
+      right: 32px;
+      z-index: 500;
+      width: 48px; height: 48px;
+      border-radius: 50%;
+      background: var(--accent);
+      color: #000;
+      border: none;
+      font-size: 1.5rem;
+      line-height: 1;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 20px rgba(200,255,0,0.35);
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .upload-fab:hover { transform: scale(1.1); box-shadow: 0 6px 28px rgba(200,255,0,0.55); }
+
+    /* ── 上传模态框 ── */
+    .modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 2000;
+      background: rgba(0,0,0,0.88);
+      backdrop-filter: blur(14px);
+      align-items: center;
+      justify-content: center;
+    }
+    .modal.open { display: flex; }
+
+    .modal-box {
+      background: #0f0f1a;
+      border: 1px solid #2a2a3a;
+      border-radius: 16px;
+      padding: 32px;
+      width: min(420px, 92vw);
+      animation: lbIn 0.28s cubic-bezier(.22,.68,0,1.2);
+    }
+
+    .modal-box h3 {
+      font-size: 0.85rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 24px;
+    }
+    .modal-box h3 span { color: var(--accent); }
+
+    .form-group { margin-bottom: 14px; }
+    .form-group label {
+      display: block;
+      font-size: 0.72rem;
+      color: var(--muted);
+      margin-bottom: 6px;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+    .form-group input[type="text"],
+    .form-group input[type="password"] {
+      width: 100%;
+      background: #080810;
+      border: 1px solid #2a2a3a;
+      border-radius: 8px;
+      padding: 10px 12px;
+      color: var(--text);
+      font-size: 0.9rem;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .form-group input:focus { border-color: var(--accent); }
+
+    /* 图片预览区 */
+    .img-picker {
+      width: 100%;
+      height: 120px;
+      border: 1.5px dashed #2a2a3a;
+      border-radius: 8px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.8rem;
+      color: var(--muted);
+      overflow: hidden;
+      transition: border-color 0.2s;
+      position: relative;
+    }
+    .img-picker:hover { border-color: var(--accent); }
+    .img-picker img {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: 8px;
+    }
+    .img-picker input[type="file"] {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      cursor: pointer;
+      width: 100%;
+      height: 100%;
+    }
+
+    .btn-submit {
+      width: 100%;
+      background: var(--accent);
+      color: #000;
+      border: none;
+      border-radius: 8px;
+      padding: 12px;
+      font-weight: 700;
+      font-size: 0.88rem;
+      letter-spacing: 0.06em;
+      cursor: pointer;
+      margin-top: 8px;
+      transition: opacity 0.2s;
+    }
+    .btn-submit:hover:not(:disabled) { opacity: 0.85; }
+    .btn-submit:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    .modal-error {
+      color: #ff5555;
+      font-size: 0.78rem;
+      margin-top: 10px;
+      display: none;
+    }
+    .modal-error.show { display: block; }
+    .modal-success {
+      color: var(--accent);
+      font-size: 0.78rem;
+      margin-top: 10px;
+      display: none;
+    }
+    .modal-success.show { display: block; }
+
     @media (max-width: 600px) {
       .page-header { padding: 16px; }
       .comment-section { padding: 40px 16px 60px; }
       .lightbox-prev { left: -10px; }
       .lightbox-next { right: -10px; }
+      .upload-fab { bottom: 20px; right: 20px; }
     }
   </style>
 </head>
@@ -294,23 +438,53 @@
   </div>
 </div>
 
+<!-- 上传悬浮按钮 -->
+<button class="upload-fab" id="uploadFab" title="上传图片">＋</button>
+
+<!-- 密码验证模态框 -->
+<div class="modal" id="authModal">
+  <div class="modal-box">
+    <h3><span>/</span> 管理员验证</h3>
+    <div class="form-group">
+      <label>密码</label>
+      <input type="password" id="authPassword" placeholder="输入上传密码" autocomplete="off" />
+    </div>
+    <button class="btn-submit" id="authSubmit">验证</button>
+    <div class="modal-error" id="authError">密码错误，请重试</div>
+  </div>
+</div>
+
+<!-- 上传图片模态框 -->
+<div class="modal" id="uploadModal">
+  <div class="modal-box">
+    <h3><span>/</span> 上传图片</h3>
+    <div class="form-group">
+      <label>选择图片</label>
+      <div class="img-picker" id="imgPicker">
+        <span id="pickerHint">点击选择图片</span>
+        <img id="previewImg" src="" alt="" style="display:none" />
+        <input type="file" id="fileInput" accept="image/*" />
+      </div>
+    </div>
+    <div class="form-group">
+      <label>标题</label>
+      <input type="text" id="photoTitle" placeholder="给这张图起个名字" maxlength="50" />
+    </div>
+    <div class="form-group">
+      <label>分类标签</label>
+      <input type="text" id="photoTag" placeholder="例如：风景、街拍、旅途" maxlength="20" />
+    </div>
+    <button class="btn-submit" id="uploadSubmit">上传</button>
+    <div class="modal-error" id="uploadError"></div>
+    <div class="modal-success" id="uploadSuccess">上传成功！</div>
+  </div>
+</div>
+
 <script>
-/* ══════════════════════════════
-   ★ 修改这里来更新图片 ★
-   格式：{ src: '图片URL', title: '标题', tag: '分类' }
-══════════════════════════════ */
-const PHOTOS = [
-  { src: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=600', title: '山间云海', tag: '风景' },
-  { src: 'https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=500', title: '晨雾森林', tag: '风景' },
-  { src: 'https://images.unsplash.com/photo-1519125323398-675f0ddb6308?w=500', title: '街角光影', tag: '街拍' },
-  { src: 'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?w=600', title: '城市夜景', tag: '建筑' },
-  { src: 'https://images.unsplash.com/photo-1545569341-9eb8b30979d9?w=500', title: '东京街道', tag: '街拍' },
-  { src: 'https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=600', title: '旅途',     tag: '风景' },
-  { src: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=600', title: '海边黄昏', tag: '风景' },
-  { src: 'https://images.unsplash.com/photo-1511884642898-4c92249e20b6?w=500', title: '抽象光线', tag: '抽象' },
-  { src: 'https://images.unsplash.com/photo-1431440869543-efaf3388c585?w=500', title: '雪山',     tag: '风景' },
-  { src: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=500', title: '秋色',     tag: '风景' },
-];
+/* ═══════════════════════════════════════
+   配置：部署后将 API_BASE 替换为实际地址
+   ═══════════════════════════════════════ */
+const API_BASE = 'https://gallery-api.boomery.top';
 
 /* ══════════════════════════════
    星空背景
@@ -353,6 +527,7 @@ const PHOTOS = [
    雪花飘落引擎
 ══════════════════════════════ */
 const scene = document.getElementById('scene');
+let PHOTOS = [];
 let flakes = [], rafId = null;
 
 const W = () => window.innerWidth;
@@ -382,6 +557,7 @@ function createFlake(item, idx, initY) {
 }
 
 function spawnFlakes() {
+  if (rafId) cancelAnimationFrame(rafId);
   scene.innerHTML = ''; flakes = [];
   PHOTOS.forEach((item, i) => {
     const copies = Math.ceil(3 + Math.random() * 2);
@@ -403,6 +579,20 @@ function tick() {
     f.el.style.transform = `translate(${f.x - f.size/2}px,${f.y}px) rotate(${f.angle}deg)`;
   });
   rafId = requestAnimationFrame(tick);
+}
+
+/* ══════════════════════════════
+   加载图片（从 API）
+══════════════════════════════ */
+async function loadPhotos() {
+  try {
+    const res = await fetch(`${API_BASE}/api/photos`);
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    return await res.json();
+  } catch (err) {
+    console.error('图片加载失败:', err);
+    return [];
+  }
 }
 
 /* ══════════════════════════════
@@ -433,11 +623,139 @@ document.addEventListener('keydown', e => {
 });
 
 /* ══════════════════════════════
+   上传功能
+══════════════════════════════ */
+let verifiedPassword = '';
+
+// 图片压缩（客户端，控制上传体积）
+function compressImage(file, maxWidth = 1200) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = reject;
+    reader.onload = e => {
+      const img = new Image();
+      img.onerror = reject;
+      img.onload = () => {
+        const ratio = Math.min(maxWidth / img.width, 1);
+        const canvas = document.createElement('canvas');
+        canvas.width  = Math.round(img.width  * ratio);
+        canvas.height = Math.round(img.height * ratio);
+        canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+        resolve(canvas.toDataURL('image/jpeg', 0.85));
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+// 上传 FAB → 打开密码框
+document.getElementById('uploadFab').onclick = () => {
+  document.getElementById('authPassword').value = '';
+  document.getElementById('authError').classList.remove('show');
+  document.getElementById('authModal').classList.add('open');
+  setTimeout(() => document.getElementById('authPassword').focus(), 80);
+};
+
+// 密码验证
+document.getElementById('authSubmit').onclick = () => {
+  const pw = document.getElementById('authPassword').value.trim();
+  if (!pw) return;
+  // 直接把密码缓存到前端，由服务端验证真正的正确性；
+  // 这里我们先暂存，打开上传框时再由服务端告知是否正确。
+  verifiedPassword = pw;
+  document.getElementById('authModal').classList.remove('open');
+  document.getElementById('photoTitle').value = '';
+  document.getElementById('photoTag').value   = '';
+  document.getElementById('previewImg').style.display = 'none';
+  document.getElementById('pickerHint').style.display = '';
+  document.getElementById('uploadError').classList.remove('show');
+  document.getElementById('uploadSuccess').classList.remove('show');
+  document.getElementById('uploadModal').classList.add('open');
+};
+document.getElementById('authPassword').addEventListener('keydown', e => {
+  if (e.key === 'Enter') document.getElementById('authSubmit').click();
+});
+
+// 关闭模态框（点击遮罩）
+['authModal', 'uploadModal'].forEach(id => {
+  document.getElementById(id).addEventListener('click', e => {
+    if (e.target === document.getElementById(id)) {
+      document.getElementById(id).classList.remove('open');
+    }
+  });
+});
+
+// 图片预览
+document.getElementById('fileInput').addEventListener('change', e => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const url = URL.createObjectURL(file);
+  const preview = document.getElementById('previewImg');
+  preview.src = url;
+  preview.style.display = 'block';
+  document.getElementById('pickerHint').style.display = 'none';
+});
+
+// 提交上传
+document.getElementById('uploadSubmit').onclick = async () => {
+  const file  = document.getElementById('fileInput').files[0];
+  const title = document.getElementById('photoTitle').value.trim();
+  const tag   = document.getElementById('photoTag').value.trim();
+  const errEl = document.getElementById('uploadError');
+  const sucEl = document.getElementById('uploadSuccess');
+
+  errEl.classList.remove('show');
+  sucEl.classList.remove('show');
+
+  if (!file)  { errEl.textContent = '请选择一张图片'; errEl.classList.add('show'); return; }
+  if (!title) { errEl.textContent = '请填写标题';   errEl.classList.add('show'); return; }
+
+  const btn = document.getElementById('uploadSubmit');
+  btn.disabled = true;
+  btn.textContent = '上传中…';
+
+  try {
+    const imageData = await compressImage(file);
+    const res = await fetch(`${API_BASE}/api/upload`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ password: verifiedPassword, imageData, title, tag }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || '上传失败');
+
+    sucEl.textContent = `「${title}」已上传！`;
+    sucEl.classList.add('show');
+    btn.textContent = '上传';
+    btn.disabled = false;
+
+    // 刷新图片墙
+    PHOTOS = await loadPhotos();
+    document.getElementById('counter').innerHTML = `<span>${PHOTOS.length}</span> photos`;
+    spawnFlakes();
+    tick();
+
+    setTimeout(() => document.getElementById('uploadModal').classList.remove('open'), 1500);
+  } catch (err) {
+    errEl.textContent = err.message;
+    errEl.classList.add('show');
+    btn.textContent = '上传';
+    btn.disabled = false;
+  }
+};
+
+/* ══════════════════════════════
    初始化
 ══════════════════════════════ */
-document.getElementById('counter').innerHTML = `<span>${PHOTOS.length}</span> photos`;
-spawnFlakes();
-tick();
+(async () => {
+  PHOTOS = await loadPhotos();
+  document.getElementById('counter').innerHTML = `<span>${PHOTOS.length}</span> photos`;
+  if (PHOTOS.length > 0) {
+    spawnFlakes();
+    tick();
+  }
+})();
 
 window.addEventListener('resize', () => {
   flakes.forEach(f => { f.x = Math.min(f.x, W() - f.size / 2); });
