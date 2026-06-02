@@ -226,9 +226,13 @@
     .lightbox-close:hover { background: var(--accent); color: #000; }
 
     .lightbox-controls {
+      position: absolute;
+      bottom: 32px;
+      left: 50%;
+      transform: translateX(-50%);
       display: flex;
       gap: 16px;
-      margin-top: 20px;
+      z-index: 10;
     }
 
     .lightbox-nav {
@@ -437,10 +441,10 @@
       <strong id="lbTitle"></strong>
       <span id="lbTag"></span>
     </div>
-    <div class="lightbox-controls">
-      <button class="lightbox-nav lightbox-prev" id="lbPrev">‹</button>
-      <button class="lightbox-nav lightbox-next" id="lbNext">›</button>
-    </div>
+  </div>
+  <div class="lightbox-controls">
+    <button class="lightbox-nav lightbox-prev" id="lbPrev">‹</button>
+    <button class="lightbox-nav lightbox-next" id="lbNext">›</button>
   </div>
 </div>
 
