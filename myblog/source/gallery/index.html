@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>Gallery · boomery</title>
   <link rel="stylesheet" href="https://unpkg.com/@waline/client@v3/dist/waline.css" />
   <style>
@@ -231,9 +231,20 @@
       left: 50%;
       transform: translateX(-50%);
       display: flex;
+      align-items: center;
       gap: 16px;
       z-index: 10;
     }
+
+    .lightbox-counter {
+      font-size: 0.78rem;
+      color: var(--muted);
+      letter-spacing: 0.08em;
+      min-width: 48px;
+      text-align: center;
+      white-space: nowrap;
+    }
+    .lightbox-counter span { color: var(--text); }
 
     .lightbox-nav {
       width: 42px; height: 42px;
@@ -444,6 +455,7 @@
   </div>
   <div class="lightbox-controls">
     <button class="lightbox-nav lightbox-prev" id="lbPrev">‹</button>
+    <span class="lightbox-counter" id="lbCounter"></span>
     <button class="lightbox-nav lightbox-next" id="lbNext">›</button>
   </div>
 </div>
@@ -618,19 +630,39 @@ function showLb() {
   const p = PHOTOS[lbCurrent];
   document.getElementById('lbImg').src = p.src;
   document.getElementById('lbTitle').textContent = p.title + ' ';
-  document.getElementById('lbTag').textContent = '· ' + p.tag;
+  document.getElementById('lbTag').textContent = p.tag ? '· ' + p.tag : '';
+  document.getElementById('lbCounter').innerHTML = `<span>${lbCurrent + 1}</span> / ${PHOTOS.length}`;
 }
+
+function lbPrev() { lbCurrent = (lbCurrent - 1 + PHOTOS.length) % PHOTOS.length; showLb(); }
+function lbNext() { lbCurrent = (lbCurrent + 1) % PHOTOS.length; showLb(); }
 
 document.getElementById('lbClose').onclick = () => document.getElementById('lightbox').classList.remove('open');
 document.getElementById('lightbox').onclick = e => { if (e.target === document.getElementById('lightbox')) document.getElementById('lightbox').classList.remove('open'); };
-document.getElementById('lbPrev').onclick = e => { e.stopPropagation(); lbCurrent = (lbCurrent - 1 + PHOTOS.length) % PHOTOS.length; showLb(); };
-document.getElementById('lbNext').onclick = e => { e.stopPropagation(); lbCurrent = (lbCurrent + 1) % PHOTOS.length; showLb(); };
+document.getElementById('lbPrev').onclick = e => { e.stopPropagation(); lbPrev(); };
+document.getElementById('lbNext').onclick = e => { e.stopPropagation(); lbNext(); };
 document.addEventListener('keydown', e => {
   if (!document.getElementById('lightbox').classList.contains('open')) return;
-  if (e.key === 'Escape') document.getElementById('lightbox').classList.remove('open');
-  if (e.key === 'ArrowLeft')  { lbCurrent = (lbCurrent - 1 + PHOTOS.length) % PHOTOS.length; showLb(); }
-  if (e.key === 'ArrowRight') { lbCurrent = (lbCurrent + 1) % PHOTOS.length; showLb(); }
+  if (e.key === 'Escape')      document.getElementById('lightbox').classList.remove('open');
+  if (e.key === 'ArrowLeft')   lbPrev();
+  if (e.key === 'ArrowRight')  lbNext();
 });
+
+/* 触摸滑动 */
+(function () {
+  let startX = 0, startY = 0;
+  const lb = document.getElementById('lightbox');
+  lb.addEventListener('touchstart', e => {
+    startX = e.touches[0].clientX;
+    startY = e.touches[0].clientY;
+  }, { passive: true });
+  lb.addEventListener('touchend', e => {
+    const dx = e.changedTouches[0].clientX - startX;
+    const dy = e.changedTouches[0].clientY - startY;
+    if (Math.abs(dx) < 40 || Math.abs(dx) < Math.abs(dy)) return;
+    if (dx < 0) lbNext(); else lbPrev();
+  }, { passive: true });
+})();
 
 /* ══════════════════════════════
    上传功能
