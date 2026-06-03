@@ -631,6 +631,12 @@ function openLightbox(idx) {
   inner.style.transition = 'none';
   inner.style.transform  = 'translateX(0)';
   document.getElementById('lightbox').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeLightbox() {
+  document.getElementById('lightbox').classList.remove('open');
+  document.body.style.overflow = '';
 }
 function showLb() {
   const p = PHOTOS[lbCurrent];
@@ -643,13 +649,13 @@ function showLb() {
 function lbPrev() { lbCurrent = (lbCurrent - 1 + PHOTOS.length) % PHOTOS.length; showLb(); }
 function lbNext() { lbCurrent = (lbCurrent + 1) % PHOTOS.length; showLb(); }
 
-document.getElementById('lbClose').onclick = () => document.getElementById('lightbox').classList.remove('open');
-document.getElementById('lightbox').onclick = e => { if (e.target === document.getElementById('lightbox')) document.getElementById('lightbox').classList.remove('open'); };
+document.getElementById('lbClose').onclick = () => closeLightbox();
+document.getElementById('lightbox').onclick = e => { if (e.target === document.getElementById('lightbox')) closeLightbox(); };
 document.getElementById('lbPrev').onclick = e => { e.stopPropagation(); lbPrev(); };
 document.getElementById('lbNext').onclick = e => { e.stopPropagation(); lbNext(); };
 document.addEventListener('keydown', e => {
   if (!document.getElementById('lightbox').classList.contains('open')) return;
-  if (e.key === 'Escape')      document.getElementById('lightbox').classList.remove('open');
+  if (e.key === 'Escape')      closeLightbox();
   if (e.key === 'ArrowLeft')   lbPrev();
   if (e.key === 'ArrowRight')  lbNext();
 });
