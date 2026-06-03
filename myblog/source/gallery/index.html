@@ -585,10 +585,7 @@ function spawnFlakes() {
   if (rafId) cancelAnimationFrame(rafId);
   scene.innerHTML = ''; flakes = [];
   PHOTOS.forEach((item, i) => {
-    const copies = Math.ceil(3 + Math.random() * 2);
-    for (let c = 0; c < copies; c++) {
-      flakes.push(createFlake(item, i, rand(-H(), H() * 0.8)));
-    }
+    flakes.push(createFlake(item, i, rand(-H(), H() * 0.8)));
   });
 }
 
