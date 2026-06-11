@@ -49,16 +49,17 @@ body
 // ── Header / Nav ──
 $header-height = 60px
 
+html
+  overflow-x: hidden
+
 .header
   background: rgba(255, 255, 255, 0.94) !important
   border-bottom: 1px solid rgba(255, 255, 255, 0.6)
   box-shadow: 0 2px 16px rgba(100, 120, 180, 0.08)
   margin-bottom: 32px
-  margin-left: calc(50% - 50vw)
-  margin-right: calc(50% - 50vw)
   position: sticky
   top: 0
-  width: 100vw
+  width: 100%
   z-index: 1300
 
 .header-inner
@@ -67,12 +68,7 @@ $header-height = 60px
   margin: 0 !important
   max-width: none !important
   padding: 16px 40px !important
-  transition: padding-left 0.3s ease
   width: 100% !important
-
-// 侧边栏展开时，导航内容右移与正文对齐，顶栏背景仍铺满全屏
-body.sidebar-active .header-inner
-  padding-left: ($sidebar-desktop + 40px) !important
 
 .brand
   border-bottom: none !important
@@ -118,8 +114,15 @@ body.sidebar-active .header-inner
 .main-inner
   padding-top: 4px
 
-// ── Sidebar / TOC（文章详情目录） ──
-// 侧边栏从顶部铺满，顶栏 z-index 更高覆盖其上；目录内容从顶栏下方开始
+// ── Sidebar / TOC（overlay 模式，不推挤页面） ──
++desktop()
+  .sidebar-active
+    padding-left: 0 !important
+
+  .sidebar-dimmer
+    display: block
+    z-index: 1190
+
 .sidebar
   background: rgba(255, 255, 255, 0.78) !important
   backdrop-filter: blur(24px) saturate(1.5)
