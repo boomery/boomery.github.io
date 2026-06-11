@@ -206,10 +206,31 @@ body
   border-bottom: none !important
   padding: 0 !important
 
+.site-brand-link
+  align-items: center !important
+  display: inline-flex !important
+  gap: 10px !important
+  text-decoration: none !important
+
+.site-logo
+  display: inline-flex
+  flex-shrink: 0
+  height: 34px
+  width: 34px
+
+  svg
+    display: block
+    height: 100%
+    width: 100%
+
 .site-title
   font-weight: 800 !important
   font-size: 1.2rem !important
   letter-spacing: -0.03em
+  margin: 0 !important
+
+.site-brand-link .site-title
+  color: #1a1a2e !important
 
 .site-subtitle
   color: #888 !important
@@ -624,12 +645,25 @@ body.sidebar-active .sidebar
 
 .home-hero__title
   animation: hero-fade-up 0.75s ease 0.18s both
+  align-items: center
   color: #1a1a2e
+  display: flex
+  flex-wrap: wrap
   font-size: 2rem
   font-weight: 800
+  gap: 12px
   letter-spacing: -0.03em
   line-height: 1.25
   margin: 0 0 16px
+
+.home-hero__logo
+  display: block
+  flex-shrink: 0
+  height: 44px
+  width: 44px
+
+.home-hero__title-text
+  min-width: 0
 
 .home-hero__accent
   background: linear-gradient(90deg, #4a5fd4, #8b5cf6, #4a9fd4, #4a5fd4)

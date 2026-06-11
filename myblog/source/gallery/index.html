@@ -3,7 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>Gallery · boomery</title>
+  <title>boomery Gallery</title>
+  <link rel="icon" href="/images/boomery-logo.svg" type="image/svg+xml" />
   <link rel="stylesheet" href="https://unpkg.com/@waline/client@v3/dist/waline.css" />
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -11,11 +12,40 @@
     html, body { touch-action: manipulation; }
 
     :root {
-      --bg: #080810;
-      --accent: #c8ff00;
-      --text: #f0f0f0;
-      --muted: #555;
-      --radius: 10px;
+      --bg: #f5f7f9;
+      --accent: #4a5fd4;
+      --accent-2: #8b5cf6;
+      --text: #1a1a2e;
+      --text-secondary: #555;
+      --muted: #888;
+      --glass: rgba(255, 255, 255, 0.88);
+      --glass-border: rgba(255, 255, 255, 0.65);
+      --shadow: rgba(100, 120, 180, 0.14);
+      --radius: 12px;
+    }
+
+    @keyframes fluid-drift-a {
+      0%, 100% { transform: translate(0, 0) scale(1); }
+      25% { transform: translate(6%, -4%) scale(1.08); }
+      50% { transform: translate(-4%, 5%) scale(0.96); }
+      75% { transform: translate(3%, 3%) scale(1.04); }
+    }
+    @keyframes fluid-drift-b {
+      0%, 100% { transform: translate(0, 0) scale(1); }
+      33% { transform: translate(-5%, 4%) scale(1.06); }
+      66% { transform: translate(4%, -3%) scale(0.98); }
+    }
+    @keyframes grid-drift {
+      0% { background-position: 0 0; }
+      100% { background-position: 48px 48px; }
+    }
+    @keyframes shimmer {
+      0% { background-position: 0% 50%; }
+      100% { background-position: 200% 50%; }
+    }
+    @keyframes pulse-dot {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(74, 95, 212, 0.45); }
+      50% { box-shadow: 0 0 0 7px rgba(74, 95, 212, 0); }
     }
 
     body {
@@ -25,6 +55,30 @@
       min-height: 100vh;
       overflow-x: hidden;
     }
+    body::before,
+    body::after {
+      content: '';
+      position: fixed;
+      inset: 0;
+      z-index: -1;
+      pointer-events: none;
+      filter: blur(90px);
+    }
+    body::before {
+      background:
+        radial-gradient(ellipse 55% 45% at 25% 35%, rgba(180, 200, 255, 0.55) 0%, transparent 70%),
+        radial-gradient(ellipse 50% 40% at 75% 65%, rgba(220, 190, 255, 0.45) 0%, transparent 70%),
+        radial-gradient(ellipse 45% 50% at 50% 90%, rgba(255, 210, 190, 0.35) 0%, transparent 70%);
+      animation: fluid-drift-a 22s ease-in-out infinite;
+      opacity: 0.85;
+    }
+    body::after {
+      background:
+        radial-gradient(ellipse 50% 45% at 80% 25%, rgba(190, 230, 255, 0.4) 0%, transparent 70%),
+        radial-gradient(ellipse 55% 40% at 15% 75%, rgba(200, 180, 255, 0.35) 0%, transparent 70%);
+      animation: fluid-drift-b 28s ease-in-out infinite;
+      opacity: 0.7;
+    }
 
     /* ── 首屏飘落区 ── */
     .gallery-screen {
@@ -33,11 +87,37 @@
       overflow: hidden;
     }
 
-    #starfield {
+    .gallery-bg {
       position: absolute;
       inset: 0;
       pointer-events: none;
       z-index: 0;
+      overflow: hidden;
+    }
+    #galleryParticles {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      opacity: 0.85;
+    }
+    .gallery-bg__grid {
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(74, 95, 212, 0.07) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(74, 95, 212, 0.07) 1px, transparent 1px);
+      background-size: 48px 48px;
+      animation: grid-drift 24s linear infinite;
+      mask-image: radial-gradient(ellipse 80% 70% at 50% 30%, black 20%, transparent 75%);
+      -webkit-mask-image: radial-gradient(ellipse 80% 70% at 50% 30%, black 20%, transparent 75%);
+    }
+    .gallery-bg__glow {
+      position: absolute;
+      inset: -20%;
+      background:
+        radial-gradient(ellipse 70% 60% at 30% 20%, rgba(74, 95, 212, 0.18) 0%, transparent 70%),
+        radial-gradient(ellipse 50% 50% at 80% 80%, rgba(140, 100, 255, 0.14) 0%, transparent 70%);
     }
 
     /* ── Header ── */
@@ -45,43 +125,79 @@
       position: absolute;
       top: 0; left: 0; right: 0;
       z-index: 100;
-      padding: 24px 40px 20px;
+      padding: 16px 40px;
       display: grid;
       grid-template-columns: 1fr auto 1fr;
-      align-items: start;
-      background: linear-gradient(to bottom, rgba(8,8,16,0.95) 60%, transparent);
+      align-items: center;
+      background: rgba(255, 255, 255, 0.94);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.6);
+      box-shadow: 0 2px 16px rgba(100, 120, 180, 0.08);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
     }
 
-    .logo {
-      font-size: 1.1rem;
-      font-weight: 800;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
+    .gallery-brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+      color: inherit;
     }
-    .logo span { color: var(--accent); }
+    .site-logo {
+      display: inline-flex;
+      flex-shrink: 0;
+      width: 36px;
+      height: 36px;
+    }
+    .site-logo svg {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+    .logo {
+      font-size: 1.2rem;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      color: var(--text);
+      line-height: 1;
+    }
+    .logo span {
+      background: linear-gradient(90deg, #4a5fd4, #8b5cf6, #4a9fd4, #4a5fd4);
+      background-size: 200% auto;
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      animation: shimmer 4s linear infinite;
+    }
 
     .back-link {
       color: var(--muted);
       text-decoration: none;
-      font-size: 0.82rem;
-      letter-spacing: 0.05em;
-      transition: color 0.2s;
+      font-size: 0.88rem;
+      font-weight: 500;
+      letter-spacing: 0.02em;
+      padding: 8px 14px;
+      border-radius: 8px;
+      transition: background 0.2s, color 0.2s;
     }
-    .back-link:hover { color: var(--accent); }
+    .back-link:hover {
+      background: rgba(74, 95, 212, 0.08);
+      color: var(--accent);
+    }
 
     .header-center {
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 12px;
+      gap: 10px;
     }
 
     /* ── 模式切换 ── */
     .mode-switcher {
       display: flex;
       gap: 4px;
-      background: rgba(255,255,255,0.04);
-      border: 1px solid #1e1e2e;
+      background: rgba(74, 95, 212, 0.06);
+      border: 1px solid rgba(74, 95, 212, 0.12);
       border-radius: 999px;
       padding: 3px;
     }
@@ -91,17 +207,18 @@
       border-radius: 999px;
       color: var(--muted);
       cursor: pointer;
-      font-size: 0.68rem;
+      font-size: 0.72rem;
       font-weight: 600;
-      letter-spacing: 0.06em;
-      padding: 6px 12px;
-      transition: background 0.2s, color 0.2s;
+      letter-spacing: 0.04em;
+      padding: 6px 14px;
+      transition: background 0.2s, color 0.2s, box-shadow 0.2s;
       white-space: nowrap;
     }
-    .mode-btn:hover { color: var(--text); }
+    .mode-btn:hover { color: var(--accent); }
     .mode-btn.active {
-      background: var(--accent);
-      color: #000;
+      background: linear-gradient(135deg, #4a5fd4, #5a4fd4);
+      color: #fff;
+      box-shadow: 0 4px 16px rgba(74, 95, 212, 0.28);
     }
 
     /* ── 视图容器 ── */
@@ -125,12 +242,13 @@
       will-change: transform;
       border-radius: var(--radius);
       overflow: hidden;
-      box-shadow: 0 4px 24px rgba(0,0,0,0.6);
-      transition: box-shadow 0.3s, filter 0.3s;
+      border: 1px solid rgba(255, 255, 255, 0.7);
+      box-shadow: 0 4px 24px rgba(100, 120, 180, 0.18);
+      transition: box-shadow 0.3s, transform 0.3s;
     }
     .flake:hover {
-      box-shadow: 0 0 0 2px var(--accent), 0 8px 40px rgba(200,255,0,0.25);
-      filter: brightness(1.15);
+      box-shadow: 0 0 0 2px var(--accent), 0 8px 32px rgba(74, 95, 212, 0.28);
+      transform: scale(1.04);
       z-index: 50 !important;
     }
     .flake img {
@@ -183,7 +301,7 @@
       50%       { transform: translateY(4px); }
     }
 
-    /* ── 柱廊：多柱分段滚动 ── */
+    /* ── 柱廊：多柱 3D 自转 ── */
     .colonnade-view {
       position: absolute;
       inset: 0;
@@ -192,104 +310,104 @@
       touch-action: none;
       cursor: grab;
       user-select: none;
+      perspective: 1100px;
     }
     .colonnade-view.is-dragging { cursor: grabbing; }
 
     .colonnade-arena {
       display: flex;
       justify-content: center;
-      align-items: stretch;
-      gap: clamp(8px, 2vw, 16px);
+      align-items: center;
+      gap: clamp(12px, 3vw, 28px);
       height: 100%;
-      max-width: 920px;
+      max-width: 960px;
       margin: 0 auto;
+      transform-style: preserve-3d;
     }
 
     .colonnade-column {
       flex: 1;
-      max-width: 172px;
+      max-width: 180px;
       min-width: 0;
-      height: 100%;
-      overflow: hidden;
+      height: min(72vh, 520px);
       position: relative;
-      border-radius: 12px;
-      background:
-        linear-gradient(180deg, rgba(200,255,0,0.04) 0%, transparent 18%, transparent 82%, rgba(200,255,0,0.03) 100%),
-        rgba(255,255,255,0.02);
-      box-shadow:
-        inset 1px 0 0 rgba(200,255,0,0.1),
-        inset -1px 0 0 rgba(200,255,0,0.06),
-        0 8px 32px rgba(0,0,0,0.35);
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
-    .colonnade-column::before,
-    .colonnade-column::after {
-      content: '';
+
+    /* 中心棍身 */
+    .colonnade-rod {
+      position: absolute;
+      left: 50%;
+      top: 4%;
+      bottom: 4%;
+      width: 10px;
+      margin-left: -5px;
+      border-radius: 5px;
+      background: linear-gradient(
+        90deg,
+        rgba(74,95,212,0.12) 0%,
+        rgba(74,95,212,0.45) 45%,
+        rgba(255,255,255,0.5) 50%,
+        rgba(74,95,212,0.45) 55%,
+        rgba(74,95,212,0.12) 100%
+      );
+      box-shadow:
+        inset 0 0 6px rgba(74, 95, 212, 0.15),
+        0 0 18px rgba(74, 95, 212, 0.12);
+      pointer-events: none;
+      z-index: 0;
+    }
+    .colonnade-rod-cap {
       position: absolute;
       left: 50%;
       transform: translateX(-50%);
-      width: 72%;
-      height: 6px;
+      width: 28px;
+      height: 8px;
       border-radius: 999px;
-      background: linear-gradient(90deg, transparent, rgba(200,255,0,0.35), transparent);
-      z-index: 2;
+      background: linear-gradient(90deg, transparent, rgba(74,95,212,0.45), transparent);
       pointer-events: none;
+      z-index: 1;
     }
-    .colonnade-column::before { top: 6px; opacity: 0.55; }
-    .colonnade-column::after  { bottom: 6px; opacity: 0.35; }
+    .colonnade-rod-cap--top { top: 2%; opacity: 0.6; }
+    .colonnade-rod-cap--bot { bottom: 2%; opacity: 0.35; }
 
-    .colonnade-track {
-      will-change: transform;
-      padding: 14px 8px 20px;
-    }
-
-    .colonnade-segment {
-      padding: 8px 6px 10px;
-      margin-bottom: 10px;
-      border-radius: 10px;
-      background: rgba(8,8,16,0.55);
-      border: 1px solid rgba(255,255,255,0.06);
-      box-shadow: inset 0 1px 0 rgba(255,255,255,0.04);
-    }
-    .colonnade-segment-ring {
-      height: 3px;
-      margin: 0 4px 8px;
-      border-radius: 999px;
-      background: linear-gradient(90deg, transparent, rgba(200,255,0,0.45), transparent);
-      opacity: 0.7;
-    }
-
-    .colonnade-cell {
-      display: block;
+    .colonnade-cylinder {
+      position: relative;
       width: 100%;
-      aspect-ratio: 1;
-      margin-bottom: 6px;
+      height: 88%;
+      transform-style: preserve-3d;
+      will-change: transform;
+      z-index: 2;
+    }
+
+    .colonnade-face {
+      position: absolute;
+      left: 50%;
+      top: 50%;
       padding: 0;
       border: none;
-      border-radius: 7px;
+      border-radius: 10px;
       overflow: hidden;
       cursor: pointer;
-      background: #0e0e16;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.35);
-      transition: transform 0.22s, box-shadow 0.22s;
+      background: var(--glass);
+      border: 1px solid var(--glass-border);
+      box-shadow: 0 4px 20px var(--shadow);
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
+      transition: box-shadow 0.22s;
     }
-    .colonnade-cell:last-child { margin-bottom: 0; }
-    .colonnade-cell:hover {
-      transform: scale(1.03);
-      box-shadow: 0 0 0 1px var(--accent), 0 6px 18px rgba(200,255,0,0.15);
+    .colonnade-face:hover {
+      box-shadow: 0 0 0 1px var(--accent), 0 8px 24px rgba(74, 95, 212, 0.22);
     }
-    .colonnade-cell img {
+    .colonnade-face img {
       width: 100%;
       height: 100%;
       object-fit: cover;
       display: block;
       pointer-events: none;
       user-select: none;
-    }
-    .colonnade-cell--empty {
-      opacity: 0.12;
-      background: #0a0a12;
-      pointer-events: none;
-      box-shadow: none;
     }
 
     .colonnade-hint {
@@ -324,11 +442,11 @@
       width: 100%;
       padding: 0 max(24px, calc(50vw - 130px));
       scrollbar-width: thin;
-      scrollbar-color: #333 transparent;
+      scrollbar-color: rgba(74, 95, 212, 0.25) transparent;
     }
     .filmstrip-track::-webkit-scrollbar { height: 4px; }
     .filmstrip-track::-webkit-scrollbar-thumb {
-      background: #333;
+      background: rgba(74, 95, 212, 0.25);
       border-radius: 4px;
     }
     .filmstrip-item {
@@ -336,15 +454,18 @@
       width: min(260px, 74vw);
       scroll-snap-align: center;
       cursor: pointer;
-      border-radius: var(--radius);
+      border-radius: 16px;
       overflow: hidden;
-      background: #111;
-      box-shadow: 0 6px 28px rgba(0,0,0,0.45);
+      background: var(--glass);
+      backdrop-filter: blur(20px) saturate(1.4);
+      -webkit-backdrop-filter: blur(20px) saturate(1.4);
+      border: 1px solid var(--glass-border);
+      box-shadow: 0 6px 28px var(--shadow);
       transition: transform 0.25s, box-shadow 0.25s;
     }
     .filmstrip-item:hover {
       transform: translateY(-4px);
-      box-shadow: 0 0 0 1px var(--accent), 0 12px 36px rgba(200,255,0,0.15);
+      box-shadow: 0 0 0 1px var(--accent), 0 12px 36px rgba(74, 95, 212, 0.18);
     }
     .filmstrip-item img {
       width: 100%;
@@ -356,12 +477,13 @@
     }
     .filmstrip-meta {
       padding: 12px 14px 14px;
-      border-top: 1px solid #1a1a1a;
+      border-top: 1px solid rgba(74, 95, 212, 0.08);
     }
     .filmstrip-meta strong {
       display: block;
       color: var(--text);
       font-size: 0.82rem;
+      font-weight: 600;
       margin-bottom: 4px;
       overflow: hidden;
       text-overflow: ellipsis;
@@ -382,11 +504,11 @@
       -webkit-overflow-scrolling: touch;
       padding: 88px 24px 100px;
       scrollbar-width: thin;
-      scrollbar-color: #333 transparent;
+      scrollbar-color: rgba(74, 95, 212, 0.25) transparent;
     }
     .grid-view::-webkit-scrollbar { width: 4px; }
     .grid-view::-webkit-scrollbar-thumb {
-      background: #333;
+      background: rgba(74, 95, 212, 0.25);
       border-radius: 4px;
     }
     .grid-layout {
@@ -397,16 +519,19 @@
       margin: 0 auto;
     }
     .grid-item {
-      border-radius: var(--radius);
+      border-radius: 14px;
       overflow: hidden;
       cursor: pointer;
-      background: #111;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.35);
+      background: var(--glass);
+      backdrop-filter: blur(20px) saturate(1.4);
+      -webkit-backdrop-filter: blur(20px) saturate(1.4);
+      border: 1px solid var(--glass-border);
+      box-shadow: 0 4px 20px var(--shadow);
       transition: transform 0.22s, box-shadow 0.22s;
     }
     .grid-item:hover {
       transform: translateY(-3px);
-      box-shadow: 0 0 0 1px var(--accent), 0 10px 28px rgba(200,255,0,0.12);
+      box-shadow: 0 0 0 1px var(--accent), 0 10px 28px rgba(74, 95, 212, 0.16);
     }
     .grid-item img {
       width: 100%;
@@ -418,7 +543,7 @@
     }
     .grid-item-meta {
       padding: 10px 12px 12px;
-      border-top: 1px solid #1a1a1a;
+      border-top: 1px solid rgba(74, 95, 212, 0.08);
     }
     .grid-item-meta strong {
       display: block;
@@ -450,23 +575,45 @@
     .comment-section {
       position: relative;
       z-index: 50;
-      background: var(--bg);
+      background: transparent;
       padding: 60px 40px 80px;
       max-width: 860px;
       margin: 0 auto;
     }
 
     .comment-section h2 {
-      font-size: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.72rem;
       font-weight: 700;
-      letter-spacing: 0.12em;
+      letter-spacing: 0.14em;
       text-transform: uppercase;
-      color: var(--muted);
-      margin-bottom: 32px;
-      padding-bottom: 16px;
-      border-bottom: 1px solid #1e1e1e;
+      color: #999;
+      margin-bottom: 28px;
+      padding-bottom: 0;
+      border-bottom: none;
+    }
+    .comment-section h2::before {
+      content: '';
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--accent);
+      animation: pulse-dot 2.2s ease infinite;
+      flex-shrink: 0;
     }
     .comment-section h2 span { color: var(--accent); }
+
+    .comment-card {
+      background: var(--glass);
+      backdrop-filter: blur(20px) saturate(1.4);
+      -webkit-backdrop-filter: blur(20px) saturate(1.4);
+      border: 1px solid var(--glass-border);
+      border-radius: 16px;
+      box-shadow: 0 4px 24px var(--shadow);
+      padding: 28px 32px;
+    }
 
     /* ── 灯箱 ── */
     .lightbox {
@@ -510,27 +657,28 @@
       margin-top: 14px;
       text-align: center;
       font-size: 0.82rem;
-      color: var(--muted);
+      color: #aaa;
       letter-spacing: 0.06em;
     }
-    .lightbox-caption strong { color: var(--text); margin-right: 8px; }
+    .lightbox-caption strong { color: #f0f0f0; margin-right: 8px; }
 
     .lightbox-close {
       position: absolute;
       top: -16px; right: -16px;
       width: 36px; height: 36px;
       border-radius: 50%;
-      background: #1a1a1a;
-      border: 1px solid #333;
-      color: #fff;
+      background: rgba(255, 255, 255, 0.92);
+      border: 1px solid rgba(74, 95, 212, 0.2);
+      color: var(--text);
       font-size: 1rem;
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
-      transition: background 0.2s;
+      transition: background 0.2s, color 0.2s;
+      box-shadow: 0 4px 16px rgba(100, 120, 180, 0.2);
     }
-    .lightbox-close:hover { background: var(--accent); color: #000; }
+    .lightbox-close:hover { background: var(--accent); color: #fff; border-color: var(--accent); }
 
     .lightbox-controls {
       position: absolute;
@@ -545,29 +693,30 @@
 
     .lightbox-counter {
       font-size: 0.78rem;
-      color: var(--muted);
+      color: #aaa;
       letter-spacing: 0.08em;
       min-width: 48px;
       text-align: center;
       white-space: nowrap;
     }
-    .lightbox-counter span { color: var(--text); }
+    .lightbox-counter span { color: #f0f0f0; }
 
     .lightbox-nav {
       width: 42px; height: 42px;
-      background: rgba(255,255,255,0.06);
-      border: 1px solid #333;
+      background: rgba(255, 255, 255, 0.92);
+      border: 1px solid rgba(74, 95, 212, 0.2);
       border-radius: 50%;
-      color: #fff;
+      color: var(--text);
       font-size: 1.3rem;
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
-      transition: background 0.2s;
+      transition: background 0.2s, color 0.2s;
       flex-shrink: 0;
+      box-shadow: 0 4px 16px rgba(100, 120, 180, 0.2);
     }
-    .lightbox-nav:hover { background: var(--accent); color: #000; }
+    .lightbox-nav:hover { background: var(--accent); color: #fff; border-color: var(--accent); }
 
     /* ── 上传按钮（悬浮右下角） ── */
     .upload-fab {
@@ -577,19 +726,22 @@
       z-index: 500;
       width: 48px; height: 48px;
       border-radius: 50%;
-      background: var(--accent);
-      color: #000;
-      border: none;
+      background: linear-gradient(135deg, #4a5fd4, #5a4fd4);
+      color: #fff;
+      border: 1px solid rgba(74, 95, 212, 0.5);
       font-size: 1.5rem;
       line-height: 1;
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
-      box-shadow: 0 4px 20px rgba(200,255,0,0.35);
+      box-shadow: 0 4px 20px rgba(74, 95, 212, 0.32);
       transition: transform 0.2s, box-shadow 0.2s;
     }
-    .upload-fab:hover { transform: scale(1.1); box-shadow: 0 6px 28px rgba(200,255,0,0.55); }
+    .upload-fab:hover {
+      transform: scale(1.08);
+      box-shadow: 0 6px 28px rgba(74, 95, 212, 0.42);
+    }
 
     /* ── 上传模态框 ── */
     .modal {
@@ -605,11 +757,14 @@
     .modal.open { display: flex; }
 
     .modal-box {
-      background: #0f0f1a;
-      border: 1px solid #2a2a3a;
-      border-radius: 16px;
+      background: rgba(255, 255, 255, 0.94);
+      backdrop-filter: blur(24px) saturate(1.5);
+      -webkit-backdrop-filter: blur(24px) saturate(1.5);
+      border: 1px solid var(--glass-border);
+      border-radius: 20px;
       padding: 32px;
       width: min(420px, 92vw);
+      box-shadow: 0 8px 40px rgba(74, 95, 212, 0.14), 0 2px 8px rgba(0, 0, 0, 0.04);
       animation: lbIn 0.28s cubic-bezier(.22,.68,0,1.2);
     }
 
@@ -635,23 +790,26 @@
     .form-group input[type="text"],
     .form-group input[type="password"] {
       width: 100%;
-      background: #080810;
-      border: 1px solid #2a2a3a;
-      border-radius: 8px;
+      background: rgba(74, 95, 212, 0.04);
+      border: 1px solid rgba(74, 95, 212, 0.15);
+      border-radius: 10px;
       padding: 10px 12px;
       color: var(--text);
       font-size: 0.9rem;
       outline: none;
-      transition: border-color 0.2s;
+      transition: border-color 0.2s, background 0.2s;
     }
-    .form-group input:focus { border-color: var(--accent); }
+    .form-group input:focus {
+      border-color: var(--accent);
+      background: rgba(74, 95, 212, 0.07);
+    }
 
     /* 图片预览区 */
     .img-picker {
       width: 100%;
       height: 120px;
-      border: 1.5px dashed #2a2a3a;
-      border-radius: 8px;
+      border: 1.5px dashed rgba(74, 95, 212, 0.25);
+      border-radius: 10px;
       cursor: pointer;
       display: flex;
       align-items: center;
@@ -659,10 +817,14 @@
       font-size: 0.8rem;
       color: var(--muted);
       overflow: hidden;
-      transition: border-color 0.2s;
+      transition: border-color 0.2s, background 0.2s;
       position: relative;
+      background: rgba(74, 95, 212, 0.03);
     }
-    .img-picker:hover { border-color: var(--accent); }
+    .img-picker:hover {
+      border-color: var(--accent);
+      background: rgba(74, 95, 212, 0.06);
+    }
     .img-picker img {
       position: absolute;
       inset: 0;
@@ -682,19 +844,23 @@
 
     .btn-submit {
       width: 100%;
-      background: var(--accent);
-      color: #000;
-      border: none;
-      border-radius: 8px;
+      background: linear-gradient(135deg, #4a5fd4, #5a4fd4);
+      color: #fff;
+      border: 1px solid rgba(74, 95, 212, 0.5);
+      border-radius: 10px;
       padding: 12px;
       font-weight: 700;
       font-size: 0.88rem;
-      letter-spacing: 0.06em;
+      letter-spacing: 0.04em;
       cursor: pointer;
       margin-top: 8px;
-      transition: opacity 0.2s;
+      box-shadow: 0 4px 20px rgba(74, 95, 212, 0.24);
+      transition: opacity 0.2s, box-shadow 0.2s;
     }
-    .btn-submit:hover:not(:disabled) { opacity: 0.85; }
+    .btn-submit:hover:not(:disabled) {
+      opacity: 0.92;
+      box-shadow: 0 6px 28px rgba(74, 95, 212, 0.34);
+    }
     .btn-submit:disabled { opacity: 0.4; cursor: not-allowed; }
 
     .modal-error {
@@ -722,8 +888,8 @@
       .back-link { justify-self: start; width: 100%; }
       .mode-btn { font-size: 0.62rem; padding: 5px 10px; }
       .colonnade-view { padding: 92px 6px 88px; }
-      .colonnade-arena { gap: 6px; }
-      .colonnade-column { max-width: none; border-radius: 8px; }
+      .colonnade-arena { gap: 8px; }
+      .colonnade-column { max-width: none; height: min(62vh, 420px); }
       .colonnade-hint { bottom: 12px; font-size: 0.6rem; }
       .grid-view { padding: 96px 14px 88px; }
       .grid-layout { grid-template-columns: repeat(auto-fill, minmax(128px, 1fr)); gap: 10px; }
@@ -736,13 +902,42 @@
 
 <!-- 首屏飘落区 -->
 <div class="gallery-screen">
-  <canvas id="starfield"></canvas>
+  <div class="gallery-bg" aria-hidden="true">
+    <canvas id="galleryParticles"></canvas>
+    <div class="gallery-bg__grid"></div>
+    <div class="gallery-bg__glow"></div>
+  </div>
 
   <!-- Header -->
   <div class="page-header">
     <a href="/" class="back-link">← 返回博客</a>
     <div class="header-center">
-      <div class="logo">Photo<span>Wall</span></div>
+      <a href="/" class="gallery-brand" aria-label="boomery 首页">
+        <span class="site-logo" aria-hidden="true">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40" fill="none">
+            <defs>
+              <linearGradient id="bm-bg-g" x1="6" y1="4" x2="34" y2="36" gradientUnits="userSpaceOnUse">
+                <stop stop-color="#4a5fd4"/>
+                <stop offset=".48" stop-color="#8b5cf6"/>
+                <stop offset="1" stop-color="#4a9fd4"/>
+              </linearGradient>
+              <linearGradient id="bm-shine-g" x1="20" y1="2" x2="20" y2="22" gradientUnits="userSpaceOnUse">
+                <stop stop-color="#fff" stop-opacity=".32"/>
+                <stop offset="1" stop-color="#fff" stop-opacity="0"/>
+              </linearGradient>
+            </defs>
+            <rect x="2" y="2" width="36" height="36" rx="11" fill="url(#bm-bg-g)"/>
+            <rect x="2" y="2" width="36" height="36" rx="11" fill="url(#bm-shine-g)"/>
+            <path d="M12.5 11v18" stroke="#fff" stroke-width="3.1" stroke-linecap="round"/>
+            <path d="M12.5 11h7.8c3.8 0 3.8 3.2-.2 3.2H12.5" stroke="#fff" stroke-width="2.7" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M12.5 19.2h9.2c4.6 0 4.2 4.8-1.8 5.6" stroke="#fff" stroke-width="2.7" stroke-linecap="round"/>
+            <path d="M24.5 15.2a8.5 8.5 0 0 1 4.8 2.6" stroke="#fff" stroke-width="2.1" stroke-linecap="round" opacity=".82"/>
+            <path d="M26.8 11.2a13 13 0 0 1 6.2 3.4" stroke="#fff" stroke-width="1.7" stroke-linecap="round" opacity=".48"/>
+            <circle cx="27.8" cy="10.2" r="2.3" fill="#fff"/>
+          </svg>
+        </span>
+        <div class="logo">boomery <span>Gallery</span></div>
+      </a>
       <div class="mode-switcher" id="modeSwitcher">
         <button class="mode-btn active" data-mode="drift">飘落</button>
         <button class="mode-btn" data-mode="colonnade">柱廊</button>
@@ -768,7 +963,9 @@
 <!-- 评论区 -->
 <div class="comment-section">
   <h2>留言 <span>/</span> Comments</h2>
-  <div id="waline-comment"></div>
+  <div class="comment-card">
+    <div id="waline-comment"></div>
+  </div>
 </div>
 
 <!-- 灯箱 -->
@@ -837,40 +1034,68 @@
 const API_BASE = 'https://gallery-api.boomery.top';
 
 /* ══════════════════════════════
-   星空背景
+   背景粒子（与首页 Hero 一致）
 ══════════════════════════════ */
 (function () {
-  const canvas = document.getElementById('starfield');
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  const canvas = document.getElementById('galleryParticles');
+  if (!canvas) return;
   const ctx = canvas.getContext('2d');
-  let stars = [];
+  let dots = [];
+  let w = 0, h = 0;
 
   function resize() {
-    canvas.width  = window.innerWidth;
-    canvas.height = window.innerHeight;
+    const rect = canvas.parentElement.getBoundingClientRect();
+    w = canvas.width = Math.floor(rect.width);
+    h = canvas.height = Math.floor(rect.height);
   }
-  function initStars() {
-    stars = Array.from({ length: 120 }, () => ({
-      x: Math.random() * canvas.width,
-      y: Math.random() * canvas.height,
-      r: Math.random() * 1.2 + 0.2,
-      a: Math.random(),
-      da: (Math.random() - 0.5) * 0.008,
+
+  function init() {
+    resize();
+    const count = Math.min(56, Math.floor(w * h / 8000)) || 28;
+    dots = Array.from({ length: count }, () => ({
+      x: Math.random() * w,
+      y: Math.random() * h,
+      r: Math.random() * 1.4 + 0.4,
+      vx: (Math.random() - 0.5) * 0.35,
+      vy: (Math.random() - 0.5) * 0.35,
+      a: Math.random() * 0.45 + 0.15,
     }));
   }
-  function drawStars() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    stars.forEach(s => {
-      s.a = Math.max(0.05, Math.min(0.8, s.a + s.da));
-      if (s.a <= 0.05 || s.a >= 0.8) s.da *= -1;
+
+  function draw() {
+    ctx.clearRect(0, 0, w, h);
+    for (let i = 0; i < dots.length; i++) {
+      for (let j = i + 1; j < dots.length; j++) {
+        const dx = dots[i].x - dots[j].x;
+        const dy = dots[i].y - dots[j].y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        if (dist < 110) {
+          ctx.beginPath();
+          ctx.strokeStyle = `rgba(74,95,212,${0.12 * (1 - dist / 110)})`;
+          ctx.lineWidth = 0.6;
+          ctx.moveTo(dots[i].x, dots[i].y);
+          ctx.lineTo(dots[j].x, dots[j].y);
+          ctx.stroke();
+        }
+      }
+    }
+    dots.forEach(d => {
+      d.x += d.vx;
+      d.y += d.vy;
+      if (d.x < 0 || d.x > w) d.vx *= -1;
+      if (d.y < 0 || d.y > h) d.vy *= -1;
       ctx.beginPath();
-      ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
-      ctx.fillStyle = `rgba(255,255,255,${s.a})`;
+      ctx.arc(d.x, d.y, d.r, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(74,95,212,${d.a})`;
       ctx.fill();
     });
-    requestAnimationFrame(drawStars);
+    requestAnimationFrame(draw);
   }
-  resize(); initStars(); drawStars();
-  window.addEventListener('resize', () => { resize(); initStars(); });
+
+  init();
+  draw();
+  window.addEventListener('resize', init);
 })();
 
 /* ══════════════════════════════
@@ -999,66 +1224,15 @@ function renderDrift() {
   };
 }
 
-/* ── 柱廊：多柱分段自动滚动 + 惯性拖拽 ── */
+/* ── 柱廊：多柱 3D 绕轴自转 + 惯性拨转 ── */
 function renderColonnade() {
-  const SEG_SIZE = 5;
-  const segments = [];
-  for (let i = 0; i < PHOTOS.length; i += SEG_SIZE) {
-    const photos = PHOTOS.slice(i, i + SEG_SIZE);
-    segments.push({
-      photos,
-      indices: photos.map((_, j) => i + j),
-    });
-  }
-
-  function buildSegmentEl(seg) {
-    const segment = document.createElement('div');
-    segment.className = 'colonnade-segment';
-    const ring = document.createElement('div');
-    ring.className = 'colonnade-segment-ring';
-    segment.appendChild(ring);
-
-    seg.photos.forEach((photo, pi) => {
-      const cell = document.createElement('button');
-      cell.type = 'button';
-      cell.className = 'colonnade-cell';
-      const img = document.createElement('img');
-      img.src = photo.src;
-      img.alt = photo.title;
-      img.loading = 'lazy';
-      img.draggable = false;
-      cell.appendChild(img);
-      const idx = seg.indices[pi];
-      cell.addEventListener('click', e => {
-        if (dragMoved) { e.preventDefault(); return; }
-        openLightbox(idx);
-      });
-      segment.appendChild(cell);
-    });
-
-    for (let k = seg.photos.length; k < SEG_SIZE; k++) {
-      const empty = document.createElement('div');
-      empty.className = 'colonnade-cell colonnade-cell--empty';
-      segment.appendChild(empty);
-    }
-    return segment;
-  }
-
-  function fillTrack(track, segs) {
-    track.innerHTML = '';
-    if (!segs.length) return;
-    [0, 1].forEach(() => {
-      segs.forEach(seg => track.appendChild(buildSegmentEl(seg)));
-    });
-  }
-
   const wrap = document.createElement('div');
   wrap.className = 'colonnade-view';
   const arena = document.createElement('div');
   arena.className = 'colonnade-arena';
   const hint = document.createElement('div');
   hint.className = 'colonnade-hint';
-  hint.textContent = '上下拖动浏览 · 每节 5 张';
+  hint.textContent = '左右拖动拨转 · 自动 360° 旋转';
   wrap.appendChild(arena);
   wrap.appendChild(hint);
   viewport.appendChild(wrap);
@@ -1068,62 +1242,122 @@ function renderColonnade() {
   let dragMoved = false;
   let dragging = false;
   let pointerId = null;
-  let lastPointerY = 0;
+  let lastPointerX = 0;
   let lastPointerT = 0;
-  let velocityY = 0;
+  let velocityRot = 0;
 
-  function distributeSegments() {
-    const count = Math.max(1, Math.min(5, Math.floor(W() / 156), segments.length));
-    const buckets = Array.from({ length: count }, () => []);
-    segments.forEach((seg, i) => buckets[i % count].push(seg));
-    return buckets.filter(b => b.length > 0);
+  function columnCount() {
+    return Math.max(1, Math.min(5, Math.floor(W() / 160), PHOTOS.length));
+  }
+
+  function distributePhotos(count) {
+    const buckets = Array.from({ length: count }, () => ({ photos: [], indices: [] }));
+    PHOTOS.forEach((photo, i) => {
+      const b = buckets[i % count];
+      b.photos.push(photo);
+      b.indices.push(i);
+    });
+    return buckets.filter(b => b.photos.length > 0);
+  }
+
+  function faceSize(colW, colH, n) {
+    const w = Math.min(colW * 0.82, 108);
+    const h = Math.min(colH * 0.55, w * 1.15);
+    if (n <= 2) return { w: Math.min(w, 120), h: Math.min(h, 140) };
+    return { w, h };
+  }
+
+  function cylinderRadius(faceW, n) {
+    if (n <= 1) return 0;
+    return (faceW / 2) / Math.tan(Math.PI / n) + 6;
+  }
+
+  function buildCylinder(colEl, items, ci) {
+    const n = items.photos.length;
+    const colW = colEl.clientWidth || 140;
+    const colH = colEl.clientHeight || 400;
+    const { w: faceW, h: faceH } = faceSize(colW, colH, n);
+    const radius = cylinderRadius(faceW, n);
+    const step = n > 0 ? 360 / n : 0;
+
+    const cylinder = document.createElement('div');
+    cylinder.className = 'colonnade-cylinder';
+
+    items.photos.forEach((photo, fi) => {
+      const face = document.createElement('button');
+      face.type = 'button';
+      face.className = 'colonnade-face';
+      face.style.width = `${faceW}px`;
+      face.style.height = `${faceH}px`;
+      face.style.marginLeft = `${-faceW / 2}px`;
+      face.style.marginTop = `${-faceH / 2}px`;
+      const angle = fi * step;
+      face.style.transform = `rotateY(${angle}deg) translateZ(${radius}px)`;
+
+      const img = document.createElement('img');
+      img.src = photo.src;
+      img.alt = photo.title;
+      img.loading = 'lazy';
+      img.draggable = false;
+      face.appendChild(img);
+
+      const idx = items.indices[fi];
+      face.addEventListener('click', e => {
+        if (dragMoved) { e.preventDefault(); return; }
+        openLightbox(idx);
+      });
+      cylinder.appendChild(face);
+    });
+
+    return {
+      cylinder,
+      rotation: Math.random() * 360,
+      speed: (ci % 2 === 0 ? 1 : -1) * (0.12 + (ci % 3) * 0.05),
+    };
   }
 
   function buildColumns() {
     arena.innerHTML = '';
-    columns = distributeSegments().map((segs, ci) => {
+    const buckets = distributePhotos(columnCount());
+    columns = buckets.map((items, ci) => {
       const col = document.createElement('div');
       col.className = 'colonnade-column';
-      const track = document.createElement('div');
-      track.className = 'colonnade-track';
-      fillTrack(track, segs);
-      col.appendChild(track);
+
+      const rod = document.createElement('div');
+      rod.className = 'colonnade-rod';
+      const capTop = document.createElement('div');
+      capTop.className = 'colonnade-rod-cap colonnade-rod-cap--top';
+      const capBot = document.createElement('div');
+      capBot.className = 'colonnade-rod-cap colonnade-rod-cap--bot';
+      col.appendChild(rod);
+      col.appendChild(capTop);
+      col.appendChild(capBot);
+
       arena.appendChild(col);
-
-      const loopH = () => track.scrollHeight / 2 || 1;
-      return {
-        track,
-        offset: Math.random() * 120,
-        speed: (ci % 2 === 0 ? 1 : -1) * (0.18 + (ci % 3) * 0.06),
-        loopH,
-      };
+      void col.offsetWidth;
+      const state = buildCylinder(col, items, ci);
+      col.appendChild(state.cylinder);
+      return state;
     });
-  }
-
-  function wrapOffset(col) {
-    const h = col.loopH();
-    if (h <= 1) return;
-    while (col.offset >= h) col.offset -= h;
-    while (col.offset < 0) col.offset += h;
   }
 
   function applyTransforms() {
     columns.forEach(col => {
-      wrapOffset(col);
-      col.track.style.transform = `translate3d(0,${-col.offset}px,0)`;
+      col.rotation = ((col.rotation % 360) + 360) % 360;
+      col.cylinder.style.transform = `rotateY(${col.rotation}deg)`;
     });
   }
 
-  function tick(now) {
-    if (!dragging && columns.length) {
-      columns.forEach(col => {
-        col.offset += col.speed;
-      });
-      if (Math.abs(velocityY) > 0.04) {
-        columns.forEach(col => { col.offset += velocityY; });
-        velocityY *= 0.94;
-      } else {
-        velocityY = 0;
+  function tick() {
+    if (columns.length) {
+      if (!dragging) {
+        columns.forEach(col => { col.rotation += col.speed; });
+        if (Math.abs(velocityRot) > 0.02) {
+          columns.forEach(col => { col.rotation += velocityRot; });
+          velocityRot *= 0.94;
+        } else {
+          velocityRot = 0;
+        }
       }
       applyTransforms();
     }
@@ -1135,21 +1369,21 @@ function renderColonnade() {
     dragging = true;
     dragMoved = false;
     pointerId = e.pointerId;
-    lastPointerY = e.clientY;
+    lastPointerX = e.clientX;
     lastPointerT = performance.now();
-    velocityY = 0;
+    velocityRot = 0;
     wrap.classList.add('is-dragging');
     wrap.setPointerCapture(pointerId);
   }
 
   function onPointerMove(e) {
     if (!dragging || e.pointerId !== pointerId) return;
-    const dy = e.clientY - lastPointerY;
+    const dx = e.clientX - lastPointerX;
     const dt = Math.max(performance.now() - lastPointerT, 1);
-    if (Math.abs(dy) > 2) dragMoved = true;
-    columns.forEach(col => { col.offset -= dy; });
-    velocityY = -dy / dt * 16;
-    lastPointerY = e.clientY;
+    if (Math.abs(dx) > 2) dragMoved = true;
+    columns.forEach(col => { col.rotation += dx * 0.45; });
+    velocityRot = dx / dt * 16 * 0.45;
+    lastPointerX = e.clientX;
     lastPointerT = performance.now();
     applyTransforms();
   }
@@ -1537,7 +1771,7 @@ window.addEventListener('resize', () => {
     el: '#waline-comment',
     serverURL: 'https://comment.boomery.top',
     lang: 'zh-CN',
-    dark: true,
+    dark: false,
   });
 </script>
 </body>
