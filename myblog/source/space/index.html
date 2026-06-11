@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>boomery · 数字空间</title>
-  <meta name="description" content="boomery 的人格化数字空间——产品思考、审美表达与 AI 时代个人身份的在线实验。" />
+  <meta name="description" content="boomery 的人格化数字空间——十年开发，第一次做能表达自己的产品。" />
   <link rel="icon" href="/images/boomery-logo.svg" type="image/svg+xml" />
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -90,7 +90,6 @@
       -webkit-mask-image: radial-gradient(ellipse 90% 80% at 50% 40%, black 10%, transparent 80%);
     }
 
-    /* ── 顶栏 ── */
     .space-nav {
       position: fixed;
       top: 0; left: 0; right: 0;
@@ -125,11 +124,7 @@
       -webkit-text-fill-color: transparent;
       animation: shimmer 4s linear infinite;
     }
-    .space-nav__links {
-      display: flex;
-      gap: 6px;
-      align-items: center;
-    }
+    .space-nav__links { display: flex; gap: 6px; align-items: center; }
     .space-nav__links a {
       text-decoration: none;
       color: var(--muted);
@@ -139,10 +134,7 @@
       border-radius: 999px;
       transition: background 0.2s, color 0.2s;
     }
-    .space-nav__links a:hover {
-      background: rgba(74, 95, 212, 0.08);
-      color: var(--accent);
-    }
+    .space-nav__links a:hover { background: rgba(74, 95, 212, 0.08); color: var(--accent); }
     .space-nav__links a.is-active {
       background: linear-gradient(135deg, #4a5fd4, #5a4fd4);
       color: #fff;
@@ -159,7 +151,6 @@
       transition: width 0.1s linear;
     }
 
-    /* ── 通用区块 ── */
     .space-section {
       max-width: 960px;
       margin: 0 auto;
@@ -206,7 +197,6 @@
       box-shadow: 0 4px 24px var(--shadow);
     }
 
-    /* ── ① 人格封面 ── */
     .space-cover {
       min-height: 100vh;
       display: flex;
@@ -263,14 +253,15 @@
     .space-cover__tagline {
       font-size: clamp(1rem, 2.5vw, 1.15rem);
       color: #555;
-      max-width: 520px;
-      margin-bottom: 32px;
+      max-width: 540px;
+      margin-bottom: 16px;
       animation: fade-up 0.8s 0.3s ease both;
     }
     .space-cover__mood {
       font-size: 0.82rem;
       color: var(--muted);
-      letter-spacing: 0.06em;
+      letter-spacing: 0.04em;
+      max-width: 480px;
       margin-bottom: 36px;
       animation: fade-up 0.8s 0.35s ease both;
     }
@@ -308,6 +299,9 @@
       font-size: 0.85rem;
       font-weight: 600;
       text-decoration: none;
+      border: none;
+      cursor: pointer;
+      font-family: inherit;
       transition: transform 0.2s, box-shadow 0.2s;
     }
     .space-btn--primary {
@@ -340,37 +334,134 @@
       animation: fade-up 1s 0.8s ease both;
     }
 
-    /* ── ② 人格简介 ── */
+    /* ── Me 区块 ── */
+    .me-block {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: clamp(24px, 4vw, 40px);
+      align-items: start;
+      padding: clamp(28px, 4vw, 36px);
+    }
+    .me-avatar-wrap {
+      position: relative;
+      flex-shrink: 0;
+    }
+    .me-avatar {
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 3px solid rgba(255, 255, 255, 0.9);
+      box-shadow: 0 8px 32px rgba(74, 95, 212, 0.2);
+      display: block;
+      background: rgba(74, 95, 212, 0.06);
+    }
+    .me-avatar-edit {
+      position: absolute;
+      bottom: 4px;
+      right: 4px;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      border: 2px solid #fff;
+      background: linear-gradient(135deg, #4a5fd4, #5a4fd4);
+      color: #fff;
+      font-size: 0.75rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 12px rgba(74, 95, 212, 0.35);
+      transition: transform 0.2s;
+    }
+    .me-avatar-edit:hover { transform: scale(1.08); }
+    .me-content h2 {
+      font-size: 1.35rem;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      margin-bottom: 16px;
+    }
+    .me-content h2 em {
+      font-style: normal;
+      color: var(--accent);
+    }
+    .me-content p {
+      font-size: 0.92rem;
+      color: #444;
+      line-height: 1.75;
+      margin-bottom: 12px;
+    }
+    .me-content p:last-child { margin-bottom: 0; }
+    .me-content strong { color: var(--text); }
+
+    /* ── Culture 文化坐标 ── */
+    .culture-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 14px;
+    }
+    .culture-card {
+      padding: 22px;
+      border-left: 3px solid var(--culture-accent, var(--accent));
+      transition: transform 0.22s, box-shadow 0.22s;
+    }
+    .culture-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 10px 32px rgba(74, 95, 212, 0.12);
+    }
+    .culture-card--anime { --culture-accent: #e85d75; }
+    .culture-card--game { --culture-accent: #f99e1a; }
+    .culture-card--film { --culture-accent: #4a9fd4; }
+    .culture-card--music { --culture-accent: #8b5cf6; }
+    .culture-card__type {
+      font-size: 0.62rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--culture-accent, var(--accent));
+      margin-bottom: 8px;
+    }
+    .culture-card h3 {
+      font-size: 1.05rem;
+      font-weight: 800;
+      margin-bottom: 10px;
+      letter-spacing: -0.02em;
+    }
+    .culture-card p {
+      font-size: 0.84rem;
+      color: #555;
+      line-height: 1.65;
+      margin-bottom: 12px;
+    }
+    .culture-card__moods {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+    .culture-card__moods span {
+      font-size: 0.68rem;
+      padding: 3px 10px;
+      border-radius: 999px;
+      background: rgba(74, 95, 212, 0.07);
+      color: var(--muted);
+    }
+
     .persona-grid {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
       gap: 16px;
     }
-    .persona-card {
-      padding: 24px 22px;
-    }
-    .persona-card__icon {
-      font-size: 1.4rem;
-      margin-bottom: 12px;
-    }
+    .persona-card { padding: 24px 22px; }
+    .persona-card__icon { font-size: 1.4rem; margin-bottom: 12px; }
     .persona-card h3 {
       font-size: 0.88rem;
       font-weight: 700;
       margin-bottom: 8px;
       color: var(--accent);
     }
-    .persona-card p {
-      font-size: 0.82rem;
-      color: #555;
-      line-height: 1.65;
-    }
+    .persona-card p { font-size: 0.82rem; color: #555; line-height: 1.65; }
 
-    /* ── ④ 世界观标签 ── */
-    .tag-wall {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-    }
+    .tag-wall { display: flex; flex-wrap: wrap; gap: 10px; }
     .tag-wall__item {
       padding: 10px 18px;
       border-radius: 12px;
@@ -398,14 +489,8 @@
       color: var(--muted);
     }
     .tag-legend span { display: flex; align-items: center; gap: 6px; }
-    .tag-legend i {
-      width: 8px;
-      height: 8px;
-      border-radius: 3px;
-      display: inline-block;
-    }
+    .tag-legend i { width: 8px; height: 8px; border-radius: 3px; display: inline-block; }
 
-    /* ── ③ 内容碎片 ── */
     .fragment-bento {
       display: grid;
       grid-template-columns: repeat(12, 1fr);
@@ -436,29 +521,12 @@
       color: var(--muted);
       margin-bottom: 10px;
     }
-    .fragment__body {
-      font-size: 0.88rem;
-      color: var(--text);
-      line-height: 1.55;
-    }
-    .fragment--quote .fragment__body {
-      font-size: 1rem;
-      font-weight: 500;
-      font-style: italic;
-    }
-    .fragment a {
-      color: var(--accent);
-      text-decoration: none;
-      font-weight: 600;
-    }
+    .fragment__body { font-size: 0.88rem; color: var(--text); line-height: 1.55; }
+    .fragment--quote .fragment__body { font-size: 1rem; font-weight: 500; font-style: italic; }
+    .fragment a { color: var(--accent); text-decoration: none; font-weight: 600; }
     .fragment a:hover { text-decoration: underline; }
 
-    /* ── 审美层（Gallery 预览） ── */
-    .visual-room {
-      position: relative;
-      padding: 32px;
-      overflow: hidden;
-    }
+    .visual-room { position: relative; padding: 32px; overflow: hidden; }
     .visual-room__header {
       display: flex;
       align-items: flex-end;
@@ -485,12 +553,7 @@
     .visual-room__tile:hover { transform: scale(1.03); z-index: 2; }
     .visual-room__tile:nth-child(1) { grid-row: span 2; }
     .visual-room__tile:nth-child(4) { grid-column: span 2; }
-    .visual-room__tile img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      display: block;
-    }
+    .visual-room__tile img { width: 100%; height: 100%; object-fit: cover; display: block; }
     .visual-room__tile-cap {
       position: absolute;
       inset: auto 0 0 0;
@@ -510,7 +573,6 @@
       font-size: 0.85rem;
     }
 
-    /* ── ⑤ AI 人格总结 ── */
     .summary-block {
       padding: clamp(32px, 5vw, 48px);
       position: relative;
@@ -540,7 +602,6 @@
       letter-spacing: 0.06em;
     }
 
-    /* ── 探索入口 ── */
     .explore-grid {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
@@ -556,22 +617,9 @@
       transform: translateY(-3px);
       box-shadow: 0 10px 32px rgba(74, 95, 212, 0.14);
     }
-    .explore-card h3 {
-      font-size: 0.92rem;
-      font-weight: 700;
-      margin-bottom: 6px;
-      color: var(--accent);
-    }
-    .explore-card p {
-      font-size: 0.78rem;
-      color: #666;
-      line-height: 1.5;
-    }
-    .explore-card__arrow {
-      margin-top: 12px;
-      font-size: 0.75rem;
-      color: var(--muted);
-    }
+    .explore-card h3 { font-size: 0.92rem; font-weight: 700; margin-bottom: 6px; color: var(--accent); }
+    .explore-card p { font-size: 0.78rem; color: #666; line-height: 1.5; }
+    .explore-card__arrow { margin-top: 12px; font-size: 0.75rem; color: var(--muted); }
 
     .space-footer {
       text-align: center;
@@ -586,22 +634,127 @@
       transform: translateY(20px);
       transition: opacity 0.6s ease, transform 0.6s ease;
     }
-    .reveal.is-visible {
-      opacity: 1;
-      transform: translateY(0);
+    .reveal.is-visible { opacity: 1; transform: translateY(0); }
+
+    /* ── 头像上传 modal ── */
+    .modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 2000;
+      background: rgba(0,0,0,0.75);
+      backdrop-filter: blur(10px);
+      align-items: center;
+      justify-content: center;
     }
+    .modal.open { display: flex; }
+    .modal-box {
+      background: rgba(255, 255, 255, 0.96);
+      border: 1px solid var(--glass-border);
+      border-radius: 20px;
+      padding: 28px;
+      width: min(400px, 92vw);
+      box-shadow: 0 8px 40px rgba(74, 95, 212, 0.14);
+    }
+    .modal-box h3 {
+      font-size: 0.82rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 20px;
+    }
+    .modal-box h3 span { color: var(--accent); }
+    .form-group { margin-bottom: 14px; }
+    .form-group label {
+      display: block;
+      font-size: 0.72rem;
+      color: var(--muted);
+      margin-bottom: 6px;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+    .form-group input[type="password"] {
+      width: 100%;
+      background: rgba(74, 95, 212, 0.04);
+      border: 1px solid rgba(74, 95, 212, 0.15);
+      border-radius: 10px;
+      padding: 10px 12px;
+      color: var(--text);
+      font-size: 0.9rem;
+      outline: none;
+    }
+    .form-group input:focus { border-color: var(--accent); }
+    .img-picker {
+      width: 100%;
+      height: 140px;
+      border: 1.5px dashed rgba(74, 95, 212, 0.25);
+      border-radius: 10px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.8rem;
+      color: var(--muted);
+      overflow: hidden;
+      position: relative;
+      background: rgba(74, 95, 212, 0.03);
+    }
+    .img-picker:hover { border-color: var(--accent); }
+    .img-picker img {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .img-picker input[type="file"] {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      cursor: pointer;
+      width: 100%;
+      height: 100%;
+    }
+    .btn-submit {
+      width: 100%;
+      background: linear-gradient(135deg, #4a5fd4, #5a4fd4);
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      padding: 12px;
+      font-weight: 700;
+      font-size: 0.88rem;
+      cursor: pointer;
+      margin-top: 8px;
+    }
+    .btn-submit:disabled { opacity: 0.4; cursor: not-allowed; }
+    .modal-error {
+      color: #e44;
+      font-size: 0.78rem;
+      margin-top: 10px;
+      display: none;
+    }
+    .modal-error.show { display: block; }
+    .modal-success {
+      color: var(--accent);
+      font-size: 0.78rem;
+      margin-top: 10px;
+      display: none;
+    }
+    .modal-success.show { display: block; }
 
     @media (max-width: 768px) {
+      .me-block { grid-template-columns: 1fr; text-align: center; }
+      .me-avatar-wrap { margin: 0 auto; }
+      .culture-grid { grid-template-columns: 1fr; }
       .persona-grid { grid-template-columns: 1fr; }
       .fragment--quote,
       .fragment--link,
       .fragment--thought,
       .fragment--note,
       .fragment--post { grid-column: span 12; }
-      .visual-room__mosaic {
-        grid-template-columns: repeat(2, 1fr);
-        grid-auto-rows: 120px;
-      }
+      .visual-room__mosaic { grid-template-columns: repeat(2, 1fr); grid-auto-rows: 120px; }
       .visual-room__tile:nth-child(1) { grid-row: span 1; }
       .visual-room__tile:nth-child(4) { grid-column: span 1; }
       .explore-grid { grid-template-columns: 1fr; }
@@ -629,11 +782,10 @@
   </div>
 </nav>
 
-<!-- ① 人格封面 -->
 <section class="space-cover" id="cover">
   <div class="space-cover__badge">
     <span class="space-cover__badge-dot"></span>
-    人格化数字空间 · Live Demo
+    十年开发 · 第一次表达自我
   </div>
   <img class="space-cover__logo" src="/images/boomery-logo.svg" width="72" height="72" alt="boomery" />
   <h1 class="space-cover__title">这是 <em>boomery</em><br/>的在线人格</h1>
@@ -641,25 +793,41 @@
   <p class="space-cover__mood" id="coverMood"></p>
   <ul class="space-cover__tags" id="coverTags"></ul>
   <div class="space-cover__actions">
-    <a class="space-btn space-btn--primary" href="#fragments">浏览空间碎片</a>
-    <a class="space-btn space-btn--ghost" href="/gallery/">进入 Gallery 审美层</a>
+    <a class="space-btn space-btn--primary" href="#me">认识 boomery</a>
+    <a class="space-btn space-btn--ghost" href="#culture">文化坐标</a>
   </div>
   <div class="space-cover__scroll">向下探索 ↓</div>
 </section>
 
-<!-- ② 人格简介 -->
+<section class="space-section reveal" id="me">
+  <div class="space-section__label">Me · 关于 boomery</div>
+  <div class="me-block glass-card">
+    <div class="me-avatar-wrap">
+      <img class="me-avatar" id="meAvatar" src="/images/boomery-logo.svg" width="120" height="120" alt="boomery 头像" />
+      <button class="me-avatar-edit" id="avatarEditBtn" type="button" title="更换头像">✎</button>
+    </div>
+    <div class="me-content" id="meContent"></div>
+  </div>
+</section>
+
+<section class="space-section reveal" id="culture">
+  <div class="space-section__label">Culture · 文化坐标</div>
+  <h2 class="space-section__title">影响我的作品</h2>
+  <p class="space-section__desc">不是收藏清单——每件作品都和我建这个站、做 Gallery、写博客的方式有关。</p>
+  <div class="culture-grid" id="cultureGrid"></div>
+</section>
+
 <section class="space-section reveal" id="persona">
   <div class="space-section__label">Persona · 人格层</div>
-  <h2 class="space-section__title">我是谁，如何表达</h2>
-  <p class="space-section__desc">数字空间不只是页面集合——它是一组可识别的特征：思考方式、审美偏好、表达方式。</p>
+  <h2 class="space-section__title">三个侧面</h2>
+  <p class="space-section__desc">写代码的人、起名开玩笑的人、第一次为自己做产品的人。</p>
   <div class="persona-grid" id="personaGrid"></div>
 </section>
 
-<!-- ④ 世界观标签 -->
 <section class="space-section reveal" id="worldview">
   <div class="space-section__label">Worldview · 世界观</div>
   <h2 class="space-section__title">标签云</h2>
-  <p class="space-section__desc">兴趣、审美、情绪与价值倾向——构成数字人格的坐标系。</p>
+  <p class="space-section__desc">从技术到番剧，从 L4D 到五月天——构成我的坐标系。</p>
   <div class="tag-wall" id="tagWall"></div>
   <div class="tag-legend">
     <span><i style="background:rgba(74,95,212,0.5)"></i> 兴趣</span>
@@ -669,22 +837,20 @@
   </div>
 </section>
 
-<!-- ③ 内容碎片 -->
 <section class="space-section reveal" id="fragments">
   <div class="space-section__label">Fragments · 内容碎片</div>
-  <h2 class="space-section__title">漂浮的想法与链接</h2>
-  <p class="space-section__desc">一句话、一篇文章、一个链接——数字空间里最小的表达单元。</p>
+  <h2 class="space-section__title">一些切片</h2>
+  <p class="space-section__desc">建站动机、命名由来、和这个空间有关的想法。</p>
   <div class="fragment-bento" id="fragmentBento"></div>
 </section>
 
-<!-- 审美层 Gallery 预览 -->
 <section class="space-section reveal" id="visual">
   <div class="space-section__label">Visual · 审美层</div>
   <div class="visual-room glass-card">
     <div class="visual-room__header">
       <div>
         <h2 class="space-section__title" style="margin-bottom:6px">影像与审美</h2>
-        <p class="space-section__desc" style="margin-bottom:0">Gallery 是数字空间的「情绪房间」——四种视图，一种沉淀。</p>
+        <p class="space-section__desc" style="margin-bottom:0">Gallery 是数字空间的「情绪房间」——像守望先锋每位英雄各有风格，四种视图各是一种浏览方式。</p>
       </div>
       <a class="space-btn space-btn--primary" href="/gallery/">打开完整 Gallery →</a>
     </div>
@@ -694,93 +860,161 @@
   </div>
 </section>
 
-<!-- ⑤ AI 人格总结 -->
 <section class="space-section reveal" id="summary">
   <div class="space-section__label">Summary · 人格摘要</div>
-  <h2 class="space-section__title">AI 视角的一句话</h2>
+  <h2 class="space-section__title">写给自己的话</h2>
   <div class="summary-block glass-card">
     <p id="summaryText"></p>
-    <footer>— 基于 boomery 站点内容生成的空间摘要 · 随内容更新而演进</footer>
+    <footer id="summaryFooter"></footer>
   </div>
 </section>
 
-<!-- 探索更多 -->
 <section class="space-section reveal" id="explore">
   <div class="space-section__label">Explore · 继续探索</div>
   <h2 class="space-section__title">从这个空间出发</h2>
   <div class="explore-grid" id="exploreGrid"></div>
 </section>
 
-<footer class="space-footer">
-  boomery · 数字空间实验 · 本页即《AI 人格化数字空间 MVP》的 live demo
-</footer>
+<footer class="space-footer" id="spaceFooter"></footer>
+
+<div class="modal" id="authModal">
+  <div class="modal-box">
+    <h3>验证 <span>密码</span></h3>
+    <div class="form-group">
+      <label>上传密码（与 Gallery 相同）</label>
+      <input type="password" id="authPassword" placeholder="输入密码" autocomplete="off" />
+    </div>
+    <button class="btn-submit" id="authSubmit" type="button">验证</button>
+    <div class="modal-error" id="authError">密码错误，请重试</div>
+  </div>
+</div>
+
+<div class="modal" id="avatarModal">
+  <div class="modal-box">
+    <h3>更换 <span>头像</span></h3>
+    <div class="form-group">
+      <label>选择图片</label>
+      <div class="img-picker" id="avatarPicker">
+        <span id="avatarPickerHint">点击选择图片</span>
+        <input type="file" id="avatarFile" accept="image/*" />
+      </div>
+    </div>
+    <button class="btn-submit" id="avatarSubmit" type="button">上传头像</button>
+    <div class="modal-error" id="avatarError"></div>
+    <div class="modal-success" id="avatarSuccess">头像已更新！</div>
+  </div>
+</div>
 
 <script>
 const API_BASE = 'https://gallery-api.boomery.top';
+const AVATAR_FALLBACK = '/images/boomery-logo.svg';
 
-/* ── 空间数据（编辑此对象即可更新展示内容） ── */
 const SPACE = {
   cover: {
-    tagline: '用 AI 与工程能力，把产品思考、技术笔记和审美影像拼成一个可浏览、可持续更新的在线人格。',
-    mood: '氛围 · 理性 × 浪漫 · 蓝紫玻璃 · 轻科幻',
-    tags: ['AI 产品', '独立开发', '审美实验', '数字身份']
+    tagline: '干了十年开发，做过很多项目，却从未做过一个能表达自己的产品。boomery.top 是第一次——写给自己，也写给路过的人。',
+    mood: '银魂式不着调 × 守望先锋的鲜明 × 《本杰明·巴顿奇事》的时间感 × 五月天《温柔》的底色',
+    tags: ['十年开发', '银魂', '守望先锋', '第一次表达自我']
   },
+  me: {
+    title: '我是 <em>boomery</em>',
+    paragraphs: [
+      '十年 IT 从业，做开发相关工作。帮公司、帮客户写了很多年代码，但<strong>从来没有一个东西是真正「我的」</strong>——直到这个站。',
+      '名字来自《求生之路》里的 <strong>Boomer</strong>（吐胆汁的胖子僵尸）。听起来不太正经，但挺像我：看起来随意，内里较劲儿。Logo 上的扩散弧线，也算一种「boom」的玩笑。',
+      '建站原因很简单：<strong>从业这么多年，想做一个能表达自己的产品。</strong>博客记录思考，Gallery 放审美，数字空间把「我是谁」拼在一起——这是第一次。'
+    ]
+  },
+  culture: [
+    {
+      type: 'anime',
+      title: '银魂',
+      why: '无厘头外壳下是认真的底色。这个站很多实验——改四种 Gallery 模式、重写数字空间——都带着点「银魂式」的 meta：边做边吐槽，但真的在做。',
+      mood: ['无厘头', 'meta', '认真']
+    },
+    {
+      type: 'game',
+      title: '守望先锋',
+      why: '每位英雄机制与视觉语言完全不同。Gallery 的飘落 / 柱廊 / 胶片 / 网格，也是同一种思路：同一批照片，四种进入方式。',
+      mood: ['鲜明', '多元', '团队感']
+    },
+    {
+      type: 'film',
+      title: '本杰明·巴顿奇事',
+      why: '时间倒流的人生——表达不必按「正确顺序」来。这个站从旧博客翻新、从画廊到数字空间，也是在倒着、正着摸索「我是谁」。',
+      mood: ['时间', '逆行', '表达']
+    },
+    {
+      type: 'music',
+      title: '温柔（五月天）',
+      why: '名字来自 Boomer 僵尸，底色却是温柔。蓝紫玻璃、轻科幻动效是外壳，想做的其实是一件柔软的事：让人愿意停下来，认识一个具体的人。',
+      mood: ['温柔', '反差', '底色']
+    }
+  ],
   persona: [
-    { icon: '🧠', title: '思考方式', text: '从产品第一性原理出发——先问「用户真正需要什么」，再决定用什么技术实现。' },
-    { icon: '🎨', title: '审美偏好', text: '浅色玻璃拟态、蓝紫渐变、轻科幻动效。相信视觉是数字人格的第一语言。' },
-    { icon: '⚡', title: '表达方式', text: '长文记录深度思考，Gallery 存放感性碎片，工程把想法变成可分享的链接。' }
+    { icon: '💻', title: '写代码的第十年', text: '开发相关工作做了十年，工具、框架、业务系统都搭过。技术不是目的，是把自己的想法变成可触摸的东西。' },
+    { icon: '💥', title: 'Boomer 的命名', text: 'boomery 来自 L4D 的 Boomer 僵尸——吐出一团绿，场面混乱。名字是玩笑，建站是认真的。' },
+    { icon: '🏠', title: '第一次为自己做产品', text: '以前写的代码属于公司、属于客户。这个站是第一个完全属于 boomery 的东西——产品、设计、内容都是。' }
   ],
   worldview: [
-    { label: 'AI 工具', type: 'interest' },
-    { label: '产品方案', type: 'interest' },
-    { label: '独立开发', type: 'interest' },
+    { label: '十年开发', type: 'interest' },
+    { label: '银魂', type: 'interest' },
+    { label: '守望先锋', type: 'interest' },
+    { label: '求生之路', type: 'interest' },
+    { label: '五月天', type: 'interest' },
     { label: '玻璃拟态', type: 'aesthetic' },
     { label: '蓝紫渐变', type: 'aesthetic' },
     { label: '轻科幻', type: 'aesthetic' },
-    { label: '第一性原理', type: 'value' },
-    { label: '表达自由', type: 'value' },
+    { label: '为自己做产品', type: 'value' },
     { label: '公开构建', type: 'value' },
-    { label: '好奇', type: 'mood' },
-    { label: '克制', type: 'mood' },
-    { label: '探索感', type: 'mood' }
+    { label: '温柔', type: 'mood' },
+    { label: '不着调里的认真', type: 'mood' }
   ],
   fragments: [
-    { type: 'quote', body: '「这个站点本身，就是 AI 人格化数字空间 MVP 方案的一次实践。」' },
-    { type: 'post', body: '<a href="/2026/05/20/AI人格化数字空间MVP/">AI 人格化数字空间：一个 MVP 产品方案</a>——从背景到产品定义、用户流程与数据结构。' },
-    { type: 'thought', body: '当内容平台越来越像信息流，个人表达被算法压缩——我们需要属于自己的空间。' },
-    { type: 'link', body: '<a href="/gallery/">Gallery 审美层</a> · 飘落 / 柱廊 / 胶片 / 网格，四种方式浏览影像。' },
-    { type: 'note', body: '本站由 Hexo + Vercel 构建，Gallery 图片动态加载，持续迭代中。' },
-    { type: 'post', body: '<a href="/about">关于 boomery</a> · 了解这个数字空间实验的来龙去脉。' }
+    { type: 'quote', body: '「干了十年开发，从没做过一个能表达自己的产品——所以有了 boomery.top。」' },
+    { type: 'thought', body: 'Boomer 僵尸吐胆汁，boomery 吐想法。名字是玩笑，表达是认真的。' },
+    { type: 'post', body: '<a href="/2026/05/20/AI人格化数字空间MVP/">AI 人格化数字空间 MVP</a>——这个站本身，就是那篇方案的一次实践。' },
+    { type: 'link', body: '<a href="/gallery/">Gallery</a> · 四种视图，像 OW 每位英雄各有风格。' },
+    { type: 'note', body: '银魂教会我：可以一边 meta 一边把事做成。建站过程就是不断改、不断推翻、不断上线。' },
+    { type: 'post', body: '<a href="/about">关于页</a> · 更多背景与站点结构。' }
   ],
-  summary: 'boomery 是一个在 AI 时代探索「个人数字表达」的在线实验：用产品思维定义空间结构，用工程能力把它搭建出来，用 Gallery 存放审美与情绪。这里既是博客，也是一次把「数字人格」从概念变成可浏览体验的实践。',
+  summary: '我是 boomery，十年开发，第一次做一个完全属于自己的东西。名字来自求生之路的 Boomer，喜欢的却是银魂的无厘头、守望先锋的鲜明、巴顿的时间感、和五月天的温柔。这个站不追求完美，只追求真实——写给自己，也写给愿意停下来看看的人。',
+  summaryFooter: '— boomery · 写给自己，也写给路过的人',
+  footer: 'boomery · 数字空间 · 十年开发，第一次表达自我',
   explore: [
-    { title: 'MVP 方案全文', desc: '产品定义、用户画像、五层空间结构与 AI 能力设计。', href: '/2026/05/20/AI人格化数字空间MVP/' },
-    { title: 'Tech 思考', desc: '产品方案、AI 与工程笔记。', href: '/categories/技术/' },
-    { title: 'Gallery 审美层', desc: '四种视图模式，独立影像空间。', href: '/gallery/' }
+    { title: 'MVP 方案全文', desc: '这个站从哪来——产品定义与空间结构。', href: '/2026/05/20/AI人格化数字空间MVP/' },
+    { title: 'Tech 思考', desc: '工程笔记与 AI 产品思考。', href: '/categories/技术/' },
+    { title: 'Gallery 审美层', desc: '四种视图，影像与情绪。', href: '/gallery/' }
   ]
 };
 
-const FRAGMENT_CLASS = {
-  quote: 'fragment--quote',
-  link: 'fragment--link',
-  thought: 'fragment--thought',
-  note: 'fragment--note',
-  post: 'fragment--post'
-};
+const CULTURE_TYPE = { anime: '动画', game: '游戏', film: '电影', music: '音乐' };
+const FRAGMENT_CLASS = { quote: 'fragment--quote', link: 'fragment--link', thought: 'fragment--thought', note: 'fragment--note', post: 'fragment--post' };
+const FRAGMENT_LABEL = { quote: 'Quote', link: 'Link', thought: 'Thought', note: 'Note', post: 'Article' };
 
-const FRAGMENT_LABEL = {
-  quote: 'Quote',
-  link: 'Link',
-  thought: 'Thought',
-  note: 'Note',
-  post: 'Article'
-};
+let verifiedPassword = '';
+let avatarImageData = '';
 
 function renderCover() {
   document.getElementById('coverTagline').textContent = SPACE.cover.tagline;
   document.getElementById('coverMood').textContent = SPACE.cover.mood;
-  document.getElementById('coverTags').innerHTML = SPACE.cover.tags
-    .map(t => `<li>${t}</li>`).join('');
+  document.getElementById('coverTags').innerHTML = SPACE.cover.tags.map(t => `<li>${t}</li>`).join('');
+}
+
+function renderMe() {
+  document.getElementById('meContent').innerHTML = `
+    <h2>${SPACE.me.title}</h2>
+    ${SPACE.me.paragraphs.map(p => `<p>${p}</p>`).join('')}
+  `;
+}
+
+function renderCulture() {
+  document.getElementById('cultureGrid').innerHTML = SPACE.culture.map(c => `
+    <article class="culture-card glass-card culture-card--${c.type}">
+      <div class="culture-card__type">${CULTURE_TYPE[c.type] || c.type}</div>
+      <h3>${c.title}</h3>
+      <p>${c.why}</p>
+      <div class="culture-card__moods">${c.mood.map(m => `<span>${m}</span>`).join('')}</div>
+    </article>
+  `).join('');
 }
 
 function renderPersona() {
@@ -810,6 +1044,8 @@ function renderFragments() {
 
 function renderSummary() {
   document.getElementById('summaryText').textContent = SPACE.summary;
+  document.getElementById('summaryFooter').textContent = SPACE.summaryFooter;
+  document.getElementById('spaceFooter').textContent = SPACE.footer;
 }
 
 function renderExplore() {
@@ -822,6 +1058,18 @@ function renderExplore() {
   `).join('');
 }
 
+async function loadAvatar() {
+  const img = document.getElementById('meAvatar');
+  try {
+    const res = await fetch(`${API_BASE}/api/avatar`);
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    img.src = data.src || AVATAR_FALLBACK;
+  } catch {
+    img.src = AVATAR_FALLBACK;
+  }
+}
+
 async function renderVisual() {
   const mosaic = document.getElementById('visualMosaic');
   try {
@@ -832,8 +1080,7 @@ async function renderVisual() {
       mosaic.innerHTML = '<div class="visual-room__empty">暂无影像 · 前往 Gallery 上传</div>';
       return;
     }
-    const preview = photos.slice(0, 5);
-    mosaic.innerHTML = preview.map(p => `
+    mosaic.innerHTML = photos.slice(0, 5).map(p => `
       <a class="visual-room__tile" href="/gallery/" title="${p.title || ''}">
         <img src="${p.src}" alt="${p.title || ''}" loading="lazy" draggable="false" />
         ${p.title ? `<span class="visual-room__tile-cap">${p.title}</span>` : ''}
@@ -844,7 +1091,106 @@ async function renderVisual() {
   }
 }
 
-/* 滚动进度 + 入场动画 */
+function initAvatarUpload() {
+  document.getElementById('avatarEditBtn').onclick = () => {
+    document.getElementById('authPassword').value = '';
+    document.getElementById('authError').classList.remove('show');
+    document.getElementById('authModal').classList.add('open');
+    setTimeout(() => document.getElementById('authPassword').focus(), 80);
+  };
+
+  document.getElementById('authSubmit').onclick = async () => {
+    const pw = document.getElementById('authPassword').value.trim();
+    const err = document.getElementById('authError');
+    const btn = document.getElementById('authSubmit');
+    if (!pw) return;
+    btn.disabled = true;
+    btn.textContent = '验证中…';
+    try {
+      const res = await fetch(`${API_BASE}/api/auth`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password: pw }),
+      });
+      if (!res.ok) throw new Error('auth failed');
+      verifiedPassword = pw;
+      document.getElementById('authModal').classList.remove('open');
+      avatarImageData = '';
+      document.getElementById('avatarPickerHint').style.display = '';
+      document.getElementById('avatarPicker').querySelector('img')?.remove();
+      document.getElementById('avatarError').classList.remove('show');
+      document.getElementById('avatarSuccess').classList.remove('show');
+      document.getElementById('avatarModal').classList.add('open');
+    } catch {
+      err.classList.add('show');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = '验证';
+    }
+  };
+
+  document.getElementById('authPassword').addEventListener('keydown', e => {
+    if (e.key === 'Enter') document.getElementById('authSubmit').click();
+  });
+
+  document.getElementById('avatarFile').onchange = e => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = ev => {
+      avatarImageData = ev.target.result;
+      const picker = document.getElementById('avatarPicker');
+      let preview = picker.querySelector('img');
+      if (!preview) {
+        preview = document.createElement('img');
+        picker.appendChild(preview);
+      }
+      preview.src = avatarImageData;
+      document.getElementById('avatarPickerHint').style.display = 'none';
+    };
+    reader.readAsDataURL(file);
+  };
+
+  document.getElementById('avatarSubmit').onclick = async () => {
+    const errEl = document.getElementById('avatarError');
+    const sucEl = document.getElementById('avatarSuccess');
+    errEl.classList.remove('show');
+    sucEl.classList.remove('show');
+    if (!avatarImageData) {
+      errEl.textContent = '请先选择图片';
+      errEl.classList.add('show');
+      return;
+    }
+    const btn = document.getElementById('avatarSubmit');
+    btn.disabled = true;
+    btn.textContent = '上传中…';
+    try {
+      const res = await fetch(`${API_BASE}/api/avatar`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password: verifiedPassword, imageData: avatarImageData }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || '上传失败');
+      document.getElementById('meAvatar').src = data.src;
+      sucEl.classList.add('show');
+      setTimeout(() => document.getElementById('avatarModal').classList.remove('open'), 1200);
+    } catch (e) {
+      errEl.textContent = e.message;
+      errEl.classList.add('show');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = '上传头像';
+    }
+  };
+
+  ['authModal', 'avatarModal'].forEach(id => {
+    document.getElementById(id).addEventListener('click', e => {
+      if (e.target.id === id) e.target.classList.remove('open');
+    });
+  });
+}
+
 function initScroll() {
   const progress = document.getElementById('scrollProgress');
   window.addEventListener('scroll', () => {
@@ -853,21 +1199,23 @@ function initScroll() {
   }, { passive: true });
 
   const observer = new IntersectionObserver(entries => {
-    entries.forEach(e => {
-      if (e.isIntersecting) e.target.classList.add('is-visible');
-    });
+    entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('is-visible'); });
   }, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
 
   document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
 }
 
 renderCover();
+renderMe();
+renderCulture();
 renderPersona();
 renderTags();
 renderFragments();
 renderSummary();
 renderExplore();
+loadAvatar();
 renderVisual();
+initAvatarUpload();
 initScroll();
 </script>
 </body>

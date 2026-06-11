@@ -314,7 +314,23 @@ CREATE TABLE IF NOT EXISTS gallery_photos (
   tag        VARCHAR(50)  NOT NULL DEFAULT '',
   created_at TIMESTAMPTZ  NOT NULL DEFAULT NOW()
 );
+
+CREATE TABLE IF NOT EXISTS site_avatar (
+  id         INT PRIMARY KEY DEFAULT 1 CHECK (id = 1),
+  src        TEXT         NOT NULL,
+  updated_at TIMESTAMPTZ  NOT NULL DEFAULT NOW()
+);
 ```
+
+**API 端点**
+
+| 路径 | 方法 | 说明 |
+|------|------|------|
+| `/api/photos` | GET | Gallery 图片列表 |
+| `/api/upload` | POST | Gallery 上传（需密码） |
+| `/api/auth` | POST | 密码预校验 |
+| `/api/avatar` | GET | 数字空间头像 URL |
+| `/api/avatar` | POST | 上传/更新头像（同 UPLOAD_PASSWORD） |
 
 ### 部署步骤（首次）
 
