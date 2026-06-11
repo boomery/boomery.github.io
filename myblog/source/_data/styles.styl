@@ -50,9 +50,7 @@ body
 $header-height = 60px
 
 .header
-  background: rgba(255, 255, 255, 0.88) !important
-  backdrop-filter: blur(20px) saturate(1.4)
-  -webkit-backdrop-filter: blur(20px) saturate(1.4)
+  background: rgba(255, 255, 255, 0.94) !important
   border-bottom: 1px solid rgba(255, 255, 255, 0.6)
   box-shadow: 0 2px 16px rgba(100, 120, 180, 0.08)
   margin-bottom: 32px
@@ -109,23 +107,44 @@ $header-height = 60px
   padding-top: 4px
 
 // ── Sidebar / TOC（文章详情目录） ──
+// 侧边栏在 .header 内；header 不能用 backdrop-filter，否则 fixed 定位会偏移
 .sidebar
+  background: rgba(255, 255, 255, 0.78) !important
+  backdrop-filter: blur(24px) saturate(1.5)
+  -webkit-backdrop-filter: blur(24px) saturate(1.5)
+  border-right: 1px solid rgba(255, 255, 255, 0.65)
+  box-shadow: 4px 0 28px rgba(100, 120, 180, 0.12) !important
+  left: 0 - $sidebar-desktop !important
   top: $header-height !important
   bottom: 0 !important
   height: auto !important
 
+body.sidebar-active .sidebar
+  left: 0 !important
+
+.sidebar
   a
     border-bottom: none !important
 
   .sidebar-inner
+    color: #666
     max-height: calc(100vh - $header-height - 36px) !important
     padding-top: 14px
 
   .sidebar-nav li
+    color: #888
     font-size: 0.75rem
     font-weight: 600
     letter-spacing: 0.1em
     text-transform: uppercase
+
+    &:hover
+      color: #4a5fd4
+
+  .sidebar-toc-active .sidebar-nav-toc,
+  .sidebar-overview-active .sidebar-nav-overview
+    border-bottom-color: #4a5fd4
+    color: #4a5fd4
 
   .post-toc
     text-align: left
@@ -141,20 +160,20 @@ $header-height = 60px
     a
       border-bottom: none !important
       border-radius: 5px
-      color: rgba(210, 210, 220, 0.9) !important
+      color: #555 !important
       display: block
       font-size: 0.82rem
       padding: 4px 8px
       transition: background 0.15s, color 0.15s
 
       &:hover
-        background: rgba(255, 255, 255, 0.08) !important
-        color: #fff !important
+        background: rgba(74, 95, 212, 0.08) !important
+        color: #4a5fd4 !important
 
     .nav .active > a,
     .nav .active-current > a
-      background: rgba(255, 255, 255, 0.1) !important
-      color: $sidebar-highlight !important
+      background: rgba(74, 95, 212, 0.12) !important
+      color: #4a5fd4 !important
       font-weight: 600
 
 // ── Category / Archive timeline ──
@@ -342,8 +361,33 @@ $header-height = 60px
     background: rgba(22, 22, 32, 0.7) !important
 
   .header
-    background: rgba(22, 22, 32, 0.88) !important
+    background: rgba(22, 22, 32, 0.94) !important
     border-bottom-color: rgba(255, 255, 255, 0.06)
+
+  .sidebar
+    background: rgba(22, 22, 32, 0.82) !important
+    border-right-color: rgba(255, 255, 255, 0.08)
+
+    .sidebar-inner
+      color: #aaa
+
+    .sidebar-nav li
+      color: #777
+
+      &:hover
+        color: #8b9dff
+
+    .post-toc a
+      color: #aaa !important
+
+      &:hover
+        color: #8b9dff !important
+        background: rgba(139, 157, 255, 0.1) !important
+
+    .nav .active > a,
+    .nav .active-current > a
+      color: #8b9dff !important
+      background: rgba(139, 157, 255, 0.12) !important
 
   .site-nav .menu .menu-item a
     color: #aaa !important
