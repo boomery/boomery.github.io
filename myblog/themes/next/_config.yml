@@ -83,7 +83,7 @@ creative_commons:
 # External url should start with http:// or https://
 menu:
   Home: /
-  Now: /now
+  Space: /space/
   Tech: /categories/技术
   Life: /categories/生活
   Gallery: /gallery/

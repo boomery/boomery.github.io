@@ -221,50 +221,6 @@
       box-shadow: 0 4px 16px rgba(74, 95, 212, 0.28);
     }
 
-    /* ── 策展引言 ── */
-    .gallery-intro {
-      position: absolute;
-      top: 112px;
-      left: 50%;
-      transform: translateX(-50%);
-      z-index: 95;
-      width: min(560px, calc(100% - 48px));
-      text-align: center;
-      pointer-events: none;
-    }
-    .gallery-intro__text {
-      font-size: 0.78rem;
-      line-height: 1.55;
-      color: var(--muted);
-      letter-spacing: 0.03em;
-      margin: 0 0 8px;
-    }
-    .gallery-intro__tags {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-      gap: 6px;
-    }
-    .gallery-intro__chip {
-      font-size: 0.62rem;
-      font-weight: 600;
-      letter-spacing: 0.06em;
-      color: var(--accent);
-      background: rgba(74, 95, 212, 0.08);
-      border: 1px solid rgba(74, 95, 212, 0.14);
-      border-radius: 999px;
-      padding: 3px 10px;
-    }
-    .gallery-screen.is-grid-mode .gallery-intro {
-      position: relative;
-      top: auto;
-      left: auto;
-      transform: none;
-      width: auto;
-      padding: 0 24px 8px;
-      margin-top: 88px;
-    }
-
     /* ── 视图容器 ── */
     .gallery-viewport {
       position: absolute;
@@ -965,9 +921,6 @@
       .grid-view { padding: 96px 14px 88px; }
       .gallery-screen.is-grid-mode .grid-view { padding: 16px 14px 24px; }
       .grid-layout { grid-template-columns: repeat(auto-fill, minmax(128px, 1fr)); gap: 10px; }
-      .gallery-intro { top: 148px; width: calc(100% - 28px); }
-      .gallery-intro__text { font-size: 0.72rem; }
-      .gallery-screen.is-grid-mode .gallery-intro { margin-top: 0; padding: 8px 14px 4px; }
       .comment-section { padding: 40px 16px 60px; }
       .upload-fab { bottom: 20px; right: 20px; }
     }
@@ -985,7 +938,7 @@
 
   <!-- Header -->
   <div class="page-header">
-    <a href="/" class="back-link">← 返回博客</a>
+    <a href="/space/" class="back-link">← 数字空间</a>
     <div class="header-center">
       <a href="/" class="gallery-brand" aria-label="boomery 首页">
         <span class="site-logo" aria-hidden="true">
@@ -1020,11 +973,6 @@
         <button class="mode-btn" data-mode="grid">网格</button>
       </div>
     </div>
-  </div>
-
-  <div class="gallery-intro" id="galleryIntro">
-    <p class="gallery-intro__text">Gallery 是 boomery 审美与人格的外显层——每一张图都是表达，不是图床。</p>
-    <div class="gallery-intro__tags" id="galleryIntroTags" hidden></div>
   </div>
 
   <!-- 视图容器（飘落 / 柱廊 / 胶片） -->
@@ -1192,25 +1140,6 @@ const W = () => window.innerWidth;
 const H = () => window.innerHeight;
 const rand = (a, b) => a + Math.random() * (b - a);
 
-function updateGalleryIntro() {
-  const el = document.getElementById('galleryIntroTags');
-  if (!el || !PHOTOS.length) return;
-  const counts = {};
-  PHOTOS.forEach(p => {
-    const t = (p.tag || '').trim() || '未分类';
-    counts[t] = (counts[t] || 0) + 1;
-  });
-  const chips = Object.entries(counts)
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, 6)
-    .map(([tag, n]) => `<span class="gallery-intro__chip">${tag} · ${n}</span>`)
-    .join('');
-  if (chips) {
-    el.innerHTML = chips;
-    el.hidden = false;
-  }
-}
-
 function updateCounter() {
   document.getElementById('counter').innerHTML = `<span>${PHOTOS.length}</span> photos`;
 }
@@ -1236,7 +1165,6 @@ function renderEmpty() {
 function renderGallery() {
   stopMode();
   updateCounter();
-  updateGalleryIntro();
   if (!PHOTOS.length) {
     renderEmpty();
     return;

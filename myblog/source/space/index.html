@@ -1,0 +1,874 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>boomery · 数字空间</title>
+  <meta name="description" content="boomery 的人格化数字空间——产品思考、审美表达与 AI 时代个人身份的在线实验。" />
+  <link rel="icon" href="/images/boomery-logo.svg" type="image/svg+xml" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #f5f7f9;
+      --accent: #4a5fd4;
+      --accent-2: #8b5cf6;
+      --text: #1a1a2e;
+      --muted: #888;
+      --glass: rgba(255, 255, 255, 0.88);
+      --glass-border: rgba(255, 255, 255, 0.65);
+      --shadow: rgba(100, 120, 180, 0.14);
+      --radius: 14px;
+      --nav-h: 56px;
+    }
+
+    @keyframes fluid-a {
+      0%, 100% { transform: translate(0, 0) scale(1); }
+      50% { transform: translate(4%, -3%) scale(1.05); }
+    }
+    @keyframes fluid-b {
+      0%, 100% { transform: translate(0, 0); }
+      50% { transform: translate(-3%, 4%); }
+    }
+    @keyframes shimmer {
+      0% { background-position: 0% 50%; }
+      100% { background-position: 200% 50%; }
+    }
+    @keyframes fade-up {
+      from { opacity: 0; transform: translateY(24px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes pulse-ring {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(74, 95, 212, 0.35); }
+      50% { box-shadow: 0 0 0 10px rgba(74, 95, 212, 0); }
+    }
+    @keyframes grid-drift {
+      0% { background-position: 0 0; }
+      100% { background-position: 48px 48px; }
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Inter', 'PingFang SC', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      overflow-x: hidden;
+    }
+
+    body::before, body::after {
+      content: '';
+      position: fixed;
+      inset: 0;
+      z-index: -2;
+      pointer-events: none;
+      filter: blur(90px);
+    }
+    body::before {
+      background:
+        radial-gradient(ellipse 55% 45% at 20% 30%, rgba(180, 200, 255, 0.5) 0%, transparent 70%),
+        radial-gradient(ellipse 50% 40% at 80% 70%, rgba(220, 190, 255, 0.4) 0%, transparent 70%);
+      animation: fluid-a 24s ease-in-out infinite;
+    }
+    body::after {
+      background: radial-gradient(ellipse 45% 40% at 60% 20%, rgba(190, 230, 255, 0.35) 0%, transparent 70%);
+      animation: fluid-b 30s ease-in-out infinite;
+    }
+
+    .space-grid-bg {
+      position: fixed;
+      inset: 0;
+      z-index: -1;
+      pointer-events: none;
+      background-image:
+        linear-gradient(rgba(74, 95, 212, 0.05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(74, 95, 212, 0.05) 1px, transparent 1px);
+      background-size: 48px 48px;
+      animation: grid-drift 28s linear infinite;
+      mask-image: radial-gradient(ellipse 90% 80% at 50% 40%, black 10%, transparent 80%);
+      -webkit-mask-image: radial-gradient(ellipse 90% 80% at 50% 40%, black 10%, transparent 80%);
+    }
+
+    /* ── 顶栏 ── */
+    .space-nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 200;
+      height: var(--nav-h);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 clamp(16px, 4vw, 40px);
+      background: rgba(255, 255, 255, 0.92);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.7);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      box-shadow: 0 2px 20px rgba(100, 120, 180, 0.06);
+    }
+    .space-nav__brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+      color: var(--text);
+      font-weight: 800;
+      font-size: 0.95rem;
+      letter-spacing: -0.02em;
+    }
+    .space-nav__brand img { width: 32px; height: 32px; }
+    .space-nav__brand span {
+      background: linear-gradient(90deg, #4a5fd4, #8b5cf6, #4a9fd4, #4a5fd4);
+      background-size: 200% auto;
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      animation: shimmer 4s linear infinite;
+    }
+    .space-nav__links {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+    }
+    .space-nav__links a {
+      text-decoration: none;
+      color: var(--muted);
+      font-size: 0.78rem;
+      font-weight: 500;
+      padding: 6px 12px;
+      border-radius: 999px;
+      transition: background 0.2s, color 0.2s;
+    }
+    .space-nav__links a:hover {
+      background: rgba(74, 95, 212, 0.08);
+      color: var(--accent);
+    }
+    .space-nav__links a.is-active {
+      background: linear-gradient(135deg, #4a5fd4, #5a4fd4);
+      color: #fff;
+    }
+
+    .space-progress {
+      position: fixed;
+      top: var(--nav-h);
+      left: 0;
+      height: 2px;
+      width: 0;
+      z-index: 201;
+      background: linear-gradient(90deg, var(--accent), var(--accent-2));
+      transition: width 0.1s linear;
+    }
+
+    /* ── 通用区块 ── */
+    .space-section {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: clamp(48px, 8vw, 88px) clamp(20px, 5vw, 40px);
+    }
+    .space-section__label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.68rem;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 20px;
+    }
+    .space-section__label::before {
+      content: '';
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--accent);
+      animation: pulse-ring 2.5s ease-in-out infinite;
+    }
+    .space-section__title {
+      font-size: clamp(1.4rem, 3vw, 1.85rem);
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      margin-bottom: 12px;
+    }
+    .space-section__desc {
+      color: #555;
+      font-size: 0.92rem;
+      max-width: 560px;
+      margin-bottom: 32px;
+    }
+
+    .glass-card {
+      background: var(--glass);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius);
+      backdrop-filter: blur(20px) saturate(1.4);
+      -webkit-backdrop-filter: blur(20px) saturate(1.4);
+      box-shadow: 0 4px 24px var(--shadow);
+    }
+
+    /* ── ① 人格封面 ── */
+    .space-cover {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      padding: calc(var(--nav-h) + 40px) 24px 80px;
+      position: relative;
+    }
+    .space-cover__badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 14px;
+      border-radius: 999px;
+      background: rgba(74, 95, 212, 0.08);
+      border: 1px solid rgba(74, 95, 212, 0.15);
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      color: var(--accent);
+      margin-bottom: 28px;
+      animation: fade-up 0.8s ease both;
+    }
+    .space-cover__badge-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--accent);
+      animation: pulse-ring 2s ease-in-out infinite;
+    }
+    .space-cover__logo {
+      width: 72px;
+      height: 72px;
+      margin-bottom: 24px;
+      animation: fade-up 0.8s 0.1s ease both;
+    }
+    .space-cover__title {
+      font-size: clamp(2rem, 6vw, 3.2rem);
+      font-weight: 800;
+      letter-spacing: -0.04em;
+      line-height: 1.15;
+      margin-bottom: 16px;
+      animation: fade-up 0.8s 0.2s ease both;
+    }
+    .space-cover__title em {
+      font-style: normal;
+      background: linear-gradient(135deg, #4a5fd4, #8b5cf6);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .space-cover__tagline {
+      font-size: clamp(1rem, 2.5vw, 1.15rem);
+      color: #555;
+      max-width: 520px;
+      margin-bottom: 32px;
+      animation: fade-up 0.8s 0.3s ease both;
+    }
+    .space-cover__mood {
+      font-size: 0.82rem;
+      color: var(--muted);
+      letter-spacing: 0.06em;
+      margin-bottom: 36px;
+      animation: fade-up 0.8s 0.35s ease both;
+    }
+    .space-cover__tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: center;
+      margin-bottom: 40px;
+      animation: fade-up 0.8s 0.4s ease both;
+    }
+    .space-cover__tags li {
+      list-style: none;
+      padding: 5px 14px;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      font-weight: 500;
+      color: var(--accent);
+      background: rgba(74, 95, 212, 0.07);
+      border: 1px solid rgba(74, 95, 212, 0.12);
+    }
+    .space-cover__actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      justify-content: center;
+      animation: fade-up 0.8s 0.5s ease both;
+    }
+    .space-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 11px 22px;
+      border-radius: 10px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      text-decoration: none;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .space-btn--primary {
+      background: linear-gradient(135deg, #4a5fd4, #5a4fd4);
+      color: #fff;
+      box-shadow: 0 4px 20px rgba(74, 95, 212, 0.28);
+    }
+    .space-btn--primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 28px rgba(74, 95, 212, 0.36);
+    }
+    .space-btn--ghost {
+      background: var(--glass);
+      color: var(--text);
+      border: 1px solid var(--glass-border);
+    }
+    .space-btn--ghost:hover {
+      border-color: rgba(74, 95, 212, 0.3);
+      color: var(--accent);
+    }
+    .space-cover__scroll {
+      position: absolute;
+      bottom: 32px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 0.68rem;
+      color: var(--muted);
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      animation: fade-up 1s 0.8s ease both;
+    }
+
+    /* ── ② 人格简介 ── */
+    .persona-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+    }
+    .persona-card {
+      padding: 24px 22px;
+    }
+    .persona-card__icon {
+      font-size: 1.4rem;
+      margin-bottom: 12px;
+    }
+    .persona-card h3 {
+      font-size: 0.88rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+      color: var(--accent);
+    }
+    .persona-card p {
+      font-size: 0.82rem;
+      color: #555;
+      line-height: 1.65;
+    }
+
+    /* ── ④ 世界观标签 ── */
+    .tag-wall {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .tag-wall__item {
+      padding: 10px 18px;
+      border-radius: 12px;
+      font-size: 0.82rem;
+      font-weight: 500;
+      cursor: default;
+      transition: transform 0.2s, box-shadow 0.2s;
+      border: 1px solid transparent;
+    }
+    .tag-wall__item:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px var(--shadow);
+    }
+    .tag-wall__item--interest { background: rgba(74, 95, 212, 0.1); color: #3d4fb8; border-color: rgba(74, 95, 212, 0.15); }
+    .tag-wall__item--aesthetic { background: rgba(139, 92, 246, 0.1); color: #6d42c4; border-color: rgba(139, 92, 246, 0.15); }
+    .tag-wall__item--value { background: rgba(74, 159, 212, 0.1); color: #2d7a9e; border-color: rgba(74, 159, 212, 0.15); }
+    .tag-wall__item--mood { background: rgba(255, 160, 120, 0.12); color: #c45a30; border-color: rgba(255, 160, 120, 0.2); }
+
+    .tag-legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      margin-top: 20px;
+      font-size: 0.72rem;
+      color: var(--muted);
+    }
+    .tag-legend span { display: flex; align-items: center; gap: 6px; }
+    .tag-legend i {
+      width: 8px;
+      height: 8px;
+      border-radius: 3px;
+      display: inline-block;
+    }
+
+    /* ── ③ 内容碎片 ── */
+    .fragment-bento {
+      display: grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap: 14px;
+    }
+    .fragment {
+      padding: 20px 22px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      min-height: 120px;
+      transition: transform 0.22s, box-shadow 0.22s;
+    }
+    .fragment:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 32px rgba(74, 95, 212, 0.12);
+    }
+    .fragment--quote { grid-column: span 7; }
+    .fragment--link { grid-column: span 5; }
+    .fragment--thought { grid-column: span 4; }
+    .fragment--note { grid-column: span 4; }
+    .fragment--post { grid-column: span 4; }
+    .fragment__type {
+      font-size: 0.62rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 10px;
+    }
+    .fragment__body {
+      font-size: 0.88rem;
+      color: var(--text);
+      line-height: 1.55;
+    }
+    .fragment--quote .fragment__body {
+      font-size: 1rem;
+      font-weight: 500;
+      font-style: italic;
+    }
+    .fragment a {
+      color: var(--accent);
+      text-decoration: none;
+      font-weight: 600;
+    }
+    .fragment a:hover { text-decoration: underline; }
+
+    /* ── 审美层（Gallery 预览） ── */
+    .visual-room {
+      position: relative;
+      padding: 32px;
+      overflow: hidden;
+    }
+    .visual-room__header {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+    }
+    .visual-room__mosaic {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      grid-auto-rows: 140px;
+      gap: 10px;
+    }
+    .visual-room__tile {
+      border-radius: 12px;
+      overflow: hidden;
+      position: relative;
+      cursor: pointer;
+      border: 1px solid rgba(255, 255, 255, 0.6);
+      box-shadow: 0 4px 16px var(--shadow);
+      transition: transform 0.25s;
+    }
+    .visual-room__tile:hover { transform: scale(1.03); z-index: 2; }
+    .visual-room__tile:nth-child(1) { grid-row: span 2; }
+    .visual-room__tile:nth-child(4) { grid-column: span 2; }
+    .visual-room__tile img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+    .visual-room__tile-cap {
+      position: absolute;
+      inset: auto 0 0 0;
+      padding: 8px 10px;
+      background: linear-gradient(transparent, rgba(0,0,0,0.55));
+      color: #fff;
+      font-size: 0.68rem;
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+    .visual-room__tile:hover .visual-room__tile-cap { opacity: 1; }
+    .visual-room__empty {
+      grid-column: 1 / -1;
+      text-align: center;
+      padding: 48px;
+      color: var(--muted);
+      font-size: 0.85rem;
+    }
+
+    /* ── ⑤ AI 人格总结 ── */
+    .summary-block {
+      padding: clamp(32px, 5vw, 48px);
+      position: relative;
+      overflow: hidden;
+    }
+    .summary-block::before {
+      content: '"';
+      position: absolute;
+      top: 12px;
+      left: 24px;
+      font-size: 5rem;
+      line-height: 1;
+      color: rgba(74, 95, 212, 0.12);
+      font-family: Georgia, serif;
+    }
+    .summary-block p {
+      font-size: clamp(1rem, 2.5vw, 1.12rem);
+      line-height: 1.75;
+      color: #333;
+      position: relative;
+      z-index: 1;
+    }
+    .summary-block footer {
+      margin-top: 20px;
+      font-size: 0.75rem;
+      color: var(--muted);
+      letter-spacing: 0.06em;
+    }
+
+    /* ── 探索入口 ── */
+    .explore-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+    }
+    .explore-card {
+      padding: 22px;
+      text-decoration: none;
+      color: inherit;
+      transition: transform 0.22s, box-shadow 0.22s;
+    }
+    .explore-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 10px 32px rgba(74, 95, 212, 0.14);
+    }
+    .explore-card h3 {
+      font-size: 0.92rem;
+      font-weight: 700;
+      margin-bottom: 6px;
+      color: var(--accent);
+    }
+    .explore-card p {
+      font-size: 0.78rem;
+      color: #666;
+      line-height: 1.5;
+    }
+    .explore-card__arrow {
+      margin-top: 12px;
+      font-size: 0.75rem;
+      color: var(--muted);
+    }
+
+    .space-footer {
+      text-align: center;
+      padding: 40px 24px 60px;
+      font-size: 0.72rem;
+      color: var(--muted);
+      letter-spacing: 0.06em;
+    }
+
+    .reveal {
+      opacity: 0;
+      transform: translateY(20px);
+      transition: opacity 0.6s ease, transform 0.6s ease;
+    }
+    .reveal.is-visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    @media (max-width: 768px) {
+      .persona-grid { grid-template-columns: 1fr; }
+      .fragment--quote,
+      .fragment--link,
+      .fragment--thought,
+      .fragment--note,
+      .fragment--post { grid-column: span 12; }
+      .visual-room__mosaic {
+        grid-template-columns: repeat(2, 1fr);
+        grid-auto-rows: 120px;
+      }
+      .visual-room__tile:nth-child(1) { grid-row: span 1; }
+      .visual-room__tile:nth-child(4) { grid-column: span 1; }
+      .explore-grid { grid-template-columns: 1fr; }
+      .space-nav__links a:not(.is-active) { display: none; }
+      .space-nav__links a.is-active + a { display: inline-flex; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="space-grid-bg" aria-hidden="true"></div>
+<div class="space-progress" id="scrollProgress"></div>
+
+<nav class="space-nav">
+  <a href="/" class="space-nav__brand">
+    <img src="/images/boomery-logo.svg" width="32" height="32" alt="" />
+    boomery <span>Space</span>
+  </a>
+  <div class="space-nav__links">
+    <a href="/space/" class="is-active">数字空间</a>
+    <a href="/gallery/">Gallery</a>
+    <a href="/categories/技术/">Tech</a>
+    <a href="/about">About</a>
+    <a href="/">博客</a>
+  </div>
+</nav>
+
+<!-- ① 人格封面 -->
+<section class="space-cover" id="cover">
+  <div class="space-cover__badge">
+    <span class="space-cover__badge-dot"></span>
+    人格化数字空间 · Live Demo
+  </div>
+  <img class="space-cover__logo" src="/images/boomery-logo.svg" width="72" height="72" alt="boomery" />
+  <h1 class="space-cover__title">这是 <em>boomery</em><br/>的在线人格</h1>
+  <p class="space-cover__tagline" id="coverTagline"></p>
+  <p class="space-cover__mood" id="coverMood"></p>
+  <ul class="space-cover__tags" id="coverTags"></ul>
+  <div class="space-cover__actions">
+    <a class="space-btn space-btn--primary" href="#fragments">浏览空间碎片</a>
+    <a class="space-btn space-btn--ghost" href="/gallery/">进入 Gallery 审美层</a>
+  </div>
+  <div class="space-cover__scroll">向下探索 ↓</div>
+</section>
+
+<!-- ② 人格简介 -->
+<section class="space-section reveal" id="persona">
+  <div class="space-section__label">Persona · 人格层</div>
+  <h2 class="space-section__title">我是谁，如何表达</h2>
+  <p class="space-section__desc">数字空间不只是页面集合——它是一组可识别的特征：思考方式、审美偏好、表达方式。</p>
+  <div class="persona-grid" id="personaGrid"></div>
+</section>
+
+<!-- ④ 世界观标签 -->
+<section class="space-section reveal" id="worldview">
+  <div class="space-section__label">Worldview · 世界观</div>
+  <h2 class="space-section__title">标签云</h2>
+  <p class="space-section__desc">兴趣、审美、情绪与价值倾向——构成数字人格的坐标系。</p>
+  <div class="tag-wall" id="tagWall"></div>
+  <div class="tag-legend">
+    <span><i style="background:rgba(74,95,212,0.5)"></i> 兴趣</span>
+    <span><i style="background:rgba(139,92,246,0.5)"></i> 审美</span>
+    <span><i style="background:rgba(74,159,212,0.5)"></i> 价值</span>
+    <span><i style="background:rgba(255,160,120,0.5)"></i> 情绪</span>
+  </div>
+</section>
+
+<!-- ③ 内容碎片 -->
+<section class="space-section reveal" id="fragments">
+  <div class="space-section__label">Fragments · 内容碎片</div>
+  <h2 class="space-section__title">漂浮的想法与链接</h2>
+  <p class="space-section__desc">一句话、一篇文章、一个链接——数字空间里最小的表达单元。</p>
+  <div class="fragment-bento" id="fragmentBento"></div>
+</section>
+
+<!-- 审美层 Gallery 预览 -->
+<section class="space-section reveal" id="visual">
+  <div class="space-section__label">Visual · 审美层</div>
+  <div class="visual-room glass-card">
+    <div class="visual-room__header">
+      <div>
+        <h2 class="space-section__title" style="margin-bottom:6px">影像与审美</h2>
+        <p class="space-section__desc" style="margin-bottom:0">Gallery 是数字空间的「情绪房间」——四种视图，一种沉淀。</p>
+      </div>
+      <a class="space-btn space-btn--primary" href="/gallery/">打开完整 Gallery →</a>
+    </div>
+    <div class="visual-room__mosaic" id="visualMosaic">
+      <div class="visual-room__empty">加载影像中…</div>
+    </div>
+  </div>
+</section>
+
+<!-- ⑤ AI 人格总结 -->
+<section class="space-section reveal" id="summary">
+  <div class="space-section__label">Summary · 人格摘要</div>
+  <h2 class="space-section__title">AI 视角的一句话</h2>
+  <div class="summary-block glass-card">
+    <p id="summaryText"></p>
+    <footer>— 基于 boomery 站点内容生成的空间摘要 · 随内容更新而演进</footer>
+  </div>
+</section>
+
+<!-- 探索更多 -->
+<section class="space-section reveal" id="explore">
+  <div class="space-section__label">Explore · 继续探索</div>
+  <h2 class="space-section__title">从这个空间出发</h2>
+  <div class="explore-grid" id="exploreGrid"></div>
+</section>
+
+<footer class="space-footer">
+  boomery · 数字空间实验 · 本页即《AI 人格化数字空间 MVP》的 live demo
+</footer>
+
+<script>
+const API_BASE = 'https://gallery-api.boomery.top';
+
+/* ── 空间数据（编辑此对象即可更新展示内容） ── */
+const SPACE = {
+  cover: {
+    tagline: '用 AI 与工程能力，把产品思考、技术笔记和审美影像拼成一个可浏览、可持续更新的在线人格。',
+    mood: '氛围 · 理性 × 浪漫 · 蓝紫玻璃 · 轻科幻',
+    tags: ['AI 产品', '独立开发', '审美实验', '数字身份']
+  },
+  persona: [
+    { icon: '🧠', title: '思考方式', text: '从产品第一性原理出发——先问「用户真正需要什么」，再决定用什么技术实现。' },
+    { icon: '🎨', title: '审美偏好', text: '浅色玻璃拟态、蓝紫渐变、轻科幻动效。相信视觉是数字人格的第一语言。' },
+    { icon: '⚡', title: '表达方式', text: '长文记录深度思考，Gallery 存放感性碎片，工程把想法变成可分享的链接。' }
+  ],
+  worldview: [
+    { label: 'AI 工具', type: 'interest' },
+    { label: '产品方案', type: 'interest' },
+    { label: '独立开发', type: 'interest' },
+    { label: '玻璃拟态', type: 'aesthetic' },
+    { label: '蓝紫渐变', type: 'aesthetic' },
+    { label: '轻科幻', type: 'aesthetic' },
+    { label: '第一性原理', type: 'value' },
+    { label: '表达自由', type: 'value' },
+    { label: '公开构建', type: 'value' },
+    { label: '好奇', type: 'mood' },
+    { label: '克制', type: 'mood' },
+    { label: '探索感', type: 'mood' }
+  ],
+  fragments: [
+    { type: 'quote', body: '「这个站点本身，就是 AI 人格化数字空间 MVP 方案的一次实践。」' },
+    { type: 'post', body: '<a href="/2026/05/20/AI人格化数字空间MVP/">AI 人格化数字空间：一个 MVP 产品方案</a>——从背景到产品定义、用户流程与数据结构。' },
+    { type: 'thought', body: '当内容平台越来越像信息流，个人表达被算法压缩——我们需要属于自己的空间。' },
+    { type: 'link', body: '<a href="/gallery/">Gallery 审美层</a> · 飘落 / 柱廊 / 胶片 / 网格，四种方式浏览影像。' },
+    { type: 'note', body: '本站由 Hexo + Vercel 构建，Gallery 图片动态加载，持续迭代中。' },
+    { type: 'post', body: '<a href="/about">关于 boomery</a> · 了解这个数字空间实验的来龙去脉。' }
+  ],
+  summary: 'boomery 是一个在 AI 时代探索「个人数字表达」的在线实验：用产品思维定义空间结构，用工程能力把它搭建出来，用 Gallery 存放审美与情绪。这里既是博客，也是一次把「数字人格」从概念变成可浏览体验的实践。',
+  explore: [
+    { title: 'MVP 方案全文', desc: '产品定义、用户画像、五层空间结构与 AI 能力设计。', href: '/2026/05/20/AI人格化数字空间MVP/' },
+    { title: 'Tech 思考', desc: '产品方案、AI 与工程笔记。', href: '/categories/技术/' },
+    { title: 'Gallery 审美层', desc: '四种视图模式，独立影像空间。', href: '/gallery/' }
+  ]
+};
+
+const FRAGMENT_CLASS = {
+  quote: 'fragment--quote',
+  link: 'fragment--link',
+  thought: 'fragment--thought',
+  note: 'fragment--note',
+  post: 'fragment--post'
+};
+
+const FRAGMENT_LABEL = {
+  quote: 'Quote',
+  link: 'Link',
+  thought: 'Thought',
+  note: 'Note',
+  post: 'Article'
+};
+
+function renderCover() {
+  document.getElementById('coverTagline').textContent = SPACE.cover.tagline;
+  document.getElementById('coverMood').textContent = SPACE.cover.mood;
+  document.getElementById('coverTags').innerHTML = SPACE.cover.tags
+    .map(t => `<li>${t}</li>`).join('');
+}
+
+function renderPersona() {
+  document.getElementById('personaGrid').innerHTML = SPACE.persona.map(p => `
+    <article class="persona-card glass-card">
+      <div class="persona-card__icon">${p.icon}</div>
+      <h3>${p.title}</h3>
+      <p>${p.text}</p>
+    </article>
+  `).join('');
+}
+
+function renderTags() {
+  document.getElementById('tagWall').innerHTML = SPACE.worldview.map(t => `
+    <span class="tag-wall__item tag-wall__item--${t.type}">${t.label}</span>
+  `).join('');
+}
+
+function renderFragments() {
+  document.getElementById('fragmentBento').innerHTML = SPACE.fragments.map(f => `
+    <article class="fragment glass-card ${FRAGMENT_CLASS[f.type] || 'fragment--note'}">
+      <div class="fragment__type">${FRAGMENT_LABEL[f.type] || 'Note'}</div>
+      <div class="fragment__body">${f.body}</div>
+    </article>
+  `).join('');
+}
+
+function renderSummary() {
+  document.getElementById('summaryText').textContent = SPACE.summary;
+}
+
+function renderExplore() {
+  document.getElementById('exploreGrid').innerHTML = SPACE.explore.map(e => `
+    <a class="explore-card glass-card" href="${e.href}">
+      <h3>${e.title}</h3>
+      <p>${e.desc}</p>
+      <div class="explore-card__arrow">→ 进入</div>
+    </a>
+  `).join('');
+}
+
+async function renderVisual() {
+  const mosaic = document.getElementById('visualMosaic');
+  try {
+    const res = await fetch(`${API_BASE}/api/photos`);
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const photos = await res.json();
+    if (!photos.length) {
+      mosaic.innerHTML = '<div class="visual-room__empty">暂无影像 · 前往 Gallery 上传</div>';
+      return;
+    }
+    const preview = photos.slice(0, 5);
+    mosaic.innerHTML = preview.map(p => `
+      <a class="visual-room__tile" href="/gallery/" title="${p.title || ''}">
+        <img src="${p.src}" alt="${p.title || ''}" loading="lazy" draggable="false" />
+        ${p.title ? `<span class="visual-room__tile-cap">${p.title}</span>` : ''}
+      </a>
+    `).join('');
+  } catch {
+    mosaic.innerHTML = '<div class="visual-room__empty">影像加载失败 · <a href="/gallery/">前往 Gallery</a></div>';
+  }
+}
+
+/* 滚动进度 + 入场动画 */
+function initScroll() {
+  const progress = document.getElementById('scrollProgress');
+  window.addEventListener('scroll', () => {
+    const h = document.documentElement.scrollHeight - window.innerHeight;
+    progress.style.width = h > 0 ? `${(window.scrollY / h) * 100}%` : '0';
+  }, { passive: true });
+
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) e.target.classList.add('is-visible');
+    });
+  }, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
+
+  document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+}
+
+renderCover();
+renderPersona();
+renderTags();
+renderFragments();
+renderSummary();
+renderExplore();
+renderVisual();
+initScroll();
+</script>
+</body>
+</html>

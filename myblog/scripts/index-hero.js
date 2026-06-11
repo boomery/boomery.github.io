@@ -23,19 +23,18 @@ function buildHero(root) {
       用文字记录思考，用 Gallery 存放审美，用工程把想法变成可浏览、可分享的数字空间。
     </p>
     <div class="home-hero__actions">
-      <a class="home-hero__btn home-hero__btn--primary" href="${r}gallery/">进入 Gallery</a>
-      <a class="home-hero__btn home-hero__btn--ghost" href="${r}now/">查看 Now</a>
-      <a class="home-hero__btn home-hero__btn--ghost" href="${r}tags/build-log/">Build Log</a>
-      <a class="home-hero__btn home-hero__btn--ghost" href="${r}about/">关于 boomery</a>
+      <a class="home-hero__btn home-hero__btn--primary" href="${r}space/">进入数字空间</a>
+      <a class="home-hero__btn home-hero__btn--ghost" href="${r}gallery/">Gallery</a>
+      <a class="home-hero__btn home-hero__btn--ghost" href="${r}about">关于我</a>
     </div>
     <ul class="home-hero__tags" aria-label="内容方向">
-      <li><a href="${r}categories/技术/">产品方案</a></li>
-      <li><a href="${r}tags/build-log/">工程实现</a></li>
-      <li><a href="${r}gallery/">审美表达</a></li>
+      <li>产品方案</li>
+      <li>工程实现</li>
+      <li>审美表达</li>
     </ul>
   </div>
 </section>
-<div class="home-posts-label"><span class="home-posts-label__dot"></span>空间记录</div>`;
+<div class="home-posts-label"><span class="home-posts-label__dot"></span>最新记录</div>`;
 }
 
 hexo.extend.filter.register('after_render:html', str => {
