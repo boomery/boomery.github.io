@@ -183,49 +183,101 @@
       50%       { transform: translateY(4px); }
     }
 
-    /* ── 柱廊 Cover Flow ── */
+    /* ── 柱廊：多柱分段滚动 ── */
     .colonnade-view {
       position: absolute;
       inset: 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding-top: 40px;
+      overflow: hidden;
+      padding: 82px 10px 92px;
+      touch-action: none;
+      cursor: grab;
+      user-select: none;
     }
-    .colonnade-stage {
-      perspective: 1100px;
-      perspective-origin: 50% 42%;
-      width: 100%;
+    .colonnade-view.is-dragging { cursor: grabbing; }
+
+    .colonnade-arena {
+      display: flex;
+      justify-content: center;
+      align-items: stretch;
+      gap: clamp(8px, 2vw, 16px);
       height: 100%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      max-width: 920px;
+      margin: 0 auto;
     }
-    .colonnade-ring {
+
+    .colonnade-column {
+      flex: 1;
+      max-width: 172px;
+      min-width: 0;
+      height: 100%;
+      overflow: hidden;
       position: relative;
-      transform-style: preserve-3d;
-      transition: transform 0.55s cubic-bezier(.22,.68,0,1.1);
-      width: 0;
-      height: 0;
+      border-radius: 12px;
+      background:
+        linear-gradient(180deg, rgba(200,255,0,0.04) 0%, transparent 18%, transparent 82%, rgba(200,255,0,0.03) 100%),
+        rgba(255,255,255,0.02);
+      box-shadow:
+        inset 1px 0 0 rgba(200,255,0,0.1),
+        inset -1px 0 0 rgba(200,255,0,0.06),
+        0 8px 32px rgba(0,0,0,0.35);
     }
-    .colonnade-card {
+    .colonnade-column::before,
+    .colonnade-column::after {
+      content: '';
       position: absolute;
-      left: -110px;
-      top: -150px;
-      width: 220px;
-      height: 300px;
-      border-radius: var(--radius);
+      left: 50%;
+      transform: translateX(-50%);
+      width: 72%;
+      height: 6px;
+      border-radius: 999px;
+      background: linear-gradient(90deg, transparent, rgba(200,255,0,0.35), transparent);
+      z-index: 2;
+      pointer-events: none;
+    }
+    .colonnade-column::before { top: 6px; opacity: 0.55; }
+    .colonnade-column::after  { bottom: 6px; opacity: 0.35; }
+
+    .colonnade-track {
+      will-change: transform;
+      padding: 14px 8px 20px;
+    }
+
+    .colonnade-segment {
+      padding: 8px 6px 10px;
+      margin-bottom: 10px;
+      border-radius: 10px;
+      background: rgba(8,8,16,0.55);
+      border: 1px solid rgba(255,255,255,0.06);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.04);
+    }
+    .colonnade-segment-ring {
+      height: 3px;
+      margin: 0 4px 8px;
+      border-radius: 999px;
+      background: linear-gradient(90deg, transparent, rgba(200,255,0,0.45), transparent);
+      opacity: 0.7;
+    }
+
+    .colonnade-cell {
+      display: block;
+      width: 100%;
+      aspect-ratio: 1;
+      margin-bottom: 6px;
+      padding: 0;
+      border: none;
+      border-radius: 7px;
       overflow: hidden;
       cursor: pointer;
-      backface-visibility: hidden;
-      box-shadow: 0 8px 32px rgba(0,0,0,0.55);
-      transition: box-shadow 0.35s, filter 0.35s;
+      background: #0e0e16;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.35);
+      transition: transform 0.22s, box-shadow 0.22s;
     }
-    .colonnade-card.is-center {
-      box-shadow: 0 0 0 2px var(--accent), 0 16px 48px rgba(200,255,0,0.22);
-      filter: brightness(1.08);
+    .colonnade-cell:last-child { margin-bottom: 0; }
+    .colonnade-cell:hover {
+      transform: scale(1.03);
+      box-shadow: 0 0 0 1px var(--accent), 0 6px 18px rgba(200,255,0,0.15);
     }
-    .colonnade-card img {
+    .colonnade-cell img {
       width: 100%;
       height: 100%;
       object-fit: cover;
@@ -233,47 +285,25 @@
       pointer-events: none;
       user-select: none;
     }
-    .colonnade-nav {
-      position: absolute;
-      top: 50%;
-      transform: translateY(-50%);
-      z-index: 30;
-      width: 44px;
-      height: 44px;
-      border-radius: 50%;
-      background: rgba(255,255,255,0.06);
-      border: 1px solid #333;
-      color: #fff;
-      font-size: 1.4rem;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: background 0.2s;
+    .colonnade-cell--empty {
+      opacity: 0.12;
+      background: #0a0a12;
+      pointer-events: none;
+      box-shadow: none;
     }
-    .colonnade-nav:hover { background: var(--accent); color: #000; }
-    .colonnade-nav.prev { left: 24px; }
-    .colonnade-nav.next { right: 24px; }
-    .colonnade-caption {
+
+    .colonnade-hint {
       position: absolute;
-      bottom: 72px;
+      bottom: 18px;
       left: 50%;
       transform: translateX(-50%);
-      z-index: 25;
-      text-align: center;
-      max-width: 80vw;
-      pointer-events: none;
-    }
-    .colonnade-caption strong {
-      display: block;
-      color: var(--text);
-      font-size: 0.92rem;
-      margin-bottom: 4px;
-    }
-    .colonnade-caption span {
+      z-index: 20;
+      font-size: 0.68rem;
       color: var(--muted);
-      font-size: 0.75rem;
-      letter-spacing: 0.06em;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      pointer-events: none;
+      white-space: nowrap;
     }
 
     /* ── 胶片横向滚动 ── */
@@ -691,10 +721,10 @@
       }
       .back-link { justify-self: start; width: 100%; }
       .mode-btn { font-size: 0.62rem; padding: 5px 10px; }
-      .colonnade-card { width: 180px; height: 246px; left: -90px; top: -123px; }
-      .colonnade-nav.prev { left: 8px; }
-      .colonnade-nav.next { right: 8px; }
-      .colonnade-caption { bottom: 64px; }
+      .colonnade-view { padding: 92px 6px 88px; }
+      .colonnade-arena { gap: 6px; }
+      .colonnade-column { max-width: none; border-radius: 8px; }
+      .colonnade-hint { bottom: 12px; font-size: 0.6rem; }
       .grid-view { padding: 96px 14px 88px; }
       .grid-layout { grid-template-columns: repeat(auto-fill, minmax(128px, 1fr)); gap: 10px; }
       .comment-section { padding: 40px 16px 60px; }
@@ -969,96 +999,190 @@ function renderDrift() {
   };
 }
 
-/* ── 柱廊 Cover Flow ── */
+/* ── 柱廊：多柱分段自动滚动 + 惯性拖拽 ── */
 function renderColonnade() {
-  let center = 0;
-  const cards = [];
+  const SEG_SIZE = 5;
+  const segments = [];
+  for (let i = 0; i < PHOTOS.length; i += SEG_SIZE) {
+    const photos = PHOTOS.slice(i, i + SEG_SIZE);
+    segments.push({
+      photos,
+      indices: photos.map((_, j) => i + j),
+    });
+  }
+
+  function buildSegmentEl(seg) {
+    const segment = document.createElement('div');
+    segment.className = 'colonnade-segment';
+    const ring = document.createElement('div');
+    ring.className = 'colonnade-segment-ring';
+    segment.appendChild(ring);
+
+    seg.photos.forEach((photo, pi) => {
+      const cell = document.createElement('button');
+      cell.type = 'button';
+      cell.className = 'colonnade-cell';
+      const img = document.createElement('img');
+      img.src = photo.src;
+      img.alt = photo.title;
+      img.loading = 'lazy';
+      img.draggable = false;
+      cell.appendChild(img);
+      const idx = seg.indices[pi];
+      cell.addEventListener('click', e => {
+        if (dragMoved) { e.preventDefault(); return; }
+        openLightbox(idx);
+      });
+      segment.appendChild(cell);
+    });
+
+    for (let k = seg.photos.length; k < SEG_SIZE; k++) {
+      const empty = document.createElement('div');
+      empty.className = 'colonnade-cell colonnade-cell--empty';
+      segment.appendChild(empty);
+    }
+    return segment;
+  }
+
+  function fillTrack(track, segs) {
+    track.innerHTML = '';
+    if (!segs.length) return;
+    [0, 1].forEach(() => {
+      segs.forEach(seg => track.appendChild(buildSegmentEl(seg)));
+    });
+  }
 
   const wrap = document.createElement('div');
   wrap.className = 'colonnade-view';
-  wrap.innerHTML = `
-    <button class="colonnade-nav prev" aria-label="上一张">‹</button>
-    <div class="colonnade-stage"><div class="colonnade-ring"></div></div>
-    <button class="colonnade-nav next" aria-label="下一张">›</button>
-    <div class="colonnade-caption"><strong></strong><span></span></div>
-  `;
+  const arena = document.createElement('div');
+  arena.className = 'colonnade-arena';
+  const hint = document.createElement('div');
+  hint.className = 'colonnade-hint';
+  hint.textContent = '上下拖动浏览 · 每节 5 张';
+  wrap.appendChild(arena);
+  wrap.appendChild(hint);
   viewport.appendChild(wrap);
 
-  const ring = wrap.querySelector('.colonnade-ring');
-  const captionEl = wrap.querySelector('.colonnade-caption');
-  const titleEl = captionEl.querySelector('strong');
-  const tagEl = captionEl.querySelector('span');
+  let columns = [];
+  let rafId = null;
+  let dragMoved = false;
+  let dragging = false;
+  let pointerId = null;
+  let lastPointerY = 0;
+  let lastPointerT = 0;
+  let velocityY = 0;
 
-  function radius() {
-    return Math.min(W() * 0.38, 340);
+  function distributeSegments() {
+    const count = Math.max(1, Math.min(5, Math.floor(W() / 156), segments.length));
+    const buckets = Array.from({ length: count }, () => []);
+    segments.forEach((seg, i) => buckets[i % count].push(seg));
+    return buckets.filter(b => b.length > 0);
   }
 
-  function stepAngle() {
-    const n = PHOTOS.length;
-    return n <= 1 ? 0 : Math.min(360 / n, 48);
-  }
+  function buildColumns() {
+    arena.innerHTML = '';
+    columns = distributeSegments().map((segs, ci) => {
+      const col = document.createElement('div');
+      col.className = 'colonnade-column';
+      const track = document.createElement('div');
+      track.className = 'colonnade-track';
+      fillTrack(track, segs);
+      col.appendChild(track);
+      arena.appendChild(col);
 
-  function layoutCards() {
-    const r = radius();
-    const step = stepAngle();
-    cards.forEach((card, i) => {
-      card.style.transform = `rotateY(${i * step}deg) translateZ(${r}px)`;
+      const loopH = () => track.scrollHeight / 2 || 1;
+      return {
+        track,
+        offset: Math.random() * 120,
+        speed: (ci % 2 === 0 ? 1 : -1) * (0.18 + (ci % 3) * 0.06),
+        loopH,
+      };
     });
   }
 
-  PHOTOS.forEach((item, i) => {
-    const card = document.createElement('div');
-    card.className = 'colonnade-card';
-    card.innerHTML = `<img src="${item.src}" alt="${item.title}" draggable="false" />`;
-    card.addEventListener('click', () => {
-      if (i === center) openLightbox(i);
-      else { center = i; updateRing(true); }
+  function wrapOffset(col) {
+    const h = col.loopH();
+    if (h <= 1) return;
+    while (col.offset >= h) col.offset -= h;
+    while (col.offset < 0) col.offset += h;
+  }
+
+  function applyTransforms() {
+    columns.forEach(col => {
+      wrapOffset(col);
+      col.track.style.transform = `translate3d(0,${-col.offset}px,0)`;
     });
-    ring.appendChild(card);
-    cards.push(card);
-  });
-
-  function updateRing(animate) {
-    const step = stepAngle();
-    ring.style.transition = animate ? 'transform 0.55s cubic-bezier(.22,.68,0,1.1)' : 'none';
-    ring.style.transform = `rotateY(${-center * step}deg)`;
-    cards.forEach((c, i) => c.classList.toggle('is-center', i === center));
-    const p = PHOTOS[center];
-    titleEl.textContent = p?.title || '';
-    tagEl.textContent = p?.tag ? `· ${p.tag}` : '';
   }
 
-  function move(delta) {
-    if (PHOTOS.length <= 1) return;
-    center = (center + delta + PHOTOS.length) % PHOTOS.length;
-    updateRing(true);
+  function tick(now) {
+    if (!dragging && columns.length) {
+      columns.forEach(col => {
+        col.offset += col.speed;
+      });
+      if (Math.abs(velocityY) > 0.04) {
+        columns.forEach(col => { col.offset += velocityY; });
+        velocityY *= 0.94;
+      } else {
+        velocityY = 0;
+      }
+      applyTransforms();
+    }
+    rafId = requestAnimationFrame(tick);
   }
 
-  wrap.querySelector('.colonnade-nav.prev').onclick = () => move(-1);
-  wrap.querySelector('.colonnade-nav.next').onclick = () => move(1);
+  function onPointerDown(e) {
+    if (e.button !== undefined && e.button !== 0) return;
+    dragging = true;
+    dragMoved = false;
+    pointerId = e.pointerId;
+    lastPointerY = e.clientY;
+    lastPointerT = performance.now();
+    velocityY = 0;
+    wrap.classList.add('is-dragging');
+    wrap.setPointerCapture(pointerId);
+  }
 
-  let touchStartX = 0;
-  wrap.addEventListener('touchstart', e => {
-    touchStartX = e.touches[0].clientX;
-  }, { passive: true });
-  wrap.addEventListener('touchend', e => {
-    const dx = e.changedTouches[0].clientX - touchStartX;
-    if (Math.abs(dx) > 40) move(dx > 0 ? -1 : 1);
-  });
+  function onPointerMove(e) {
+    if (!dragging || e.pointerId !== pointerId) return;
+    const dy = e.clientY - lastPointerY;
+    const dt = Math.max(performance.now() - lastPointerT, 1);
+    if (Math.abs(dy) > 2) dragMoved = true;
+    columns.forEach(col => { col.offset -= dy; });
+    velocityY = -dy / dt * 16;
+    lastPointerY = e.clientY;
+    lastPointerT = performance.now();
+    applyTransforms();
+  }
 
-  const onKey = e => {
-    if (currentMode !== 'colonnade') return;
-    if (document.getElementById('lightbox').classList.contains('open')) return;
-    if (e.key === 'ArrowLeft') move(-1);
-    if (e.key === 'ArrowRight') move(1);
+  function endDrag(e) {
+    if (!dragging || (e && e.pointerId !== pointerId)) return;
+    dragging = false;
+    wrap.classList.remove('is-dragging');
+    try { wrap.releasePointerCapture(pointerId); } catch (_) {}
+    pointerId = null;
+  }
+
+  buildColumns();
+  applyTransforms();
+  rafId = requestAnimationFrame(tick);
+
+  wrap.addEventListener('pointerdown', onPointerDown);
+  wrap.addEventListener('pointermove', onPointerMove);
+  wrap.addEventListener('pointerup', endDrag);
+  wrap.addEventListener('pointercancel', endDrag);
+  wrap.addEventListener('lostpointercapture', () => { dragging = false; wrap.classList.remove('is-dragging'); });
+
+  modeState.cleanup = () => {
+    if (rafId) cancelAnimationFrame(rafId);
+    wrap.removeEventListener('pointerdown', onPointerDown);
+    wrap.removeEventListener('pointermove', onPointerMove);
+    wrap.removeEventListener('pointerup', endDrag);
+    wrap.removeEventListener('pointercancel', endDrag);
   };
-  document.addEventListener('keydown', onKey);
-
-  layoutCards();
-  updateRing(false);
-
-  modeState.cleanup = () => document.removeEventListener('keydown', onKey);
-  modeState.onResize = () => { layoutCards(); updateRing(false); };
+  modeState.onResize = () => {
+    buildColumns();
+    applyTransforms();
+  };
 }
 
 /* ── 胶片横向滚动 ── */
