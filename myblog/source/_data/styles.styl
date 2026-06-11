@@ -56,11 +56,16 @@ $header-height = 60px
   margin-bottom: 32px
   position: sticky
   top: 0
+  width: 100%
   z-index: 1300
 
 .header-inner
   align-items: center
-  padding: 16px 0 !important
+  box-sizing: border-box
+  margin: 0 !important
+  max-width: none !important
+  padding: 16px 40px !important
+  width: 100% !important
 
 .brand
   border-bottom: none !important
@@ -314,7 +319,7 @@ body.sidebar-active .sidebar
     margin-bottom: 20px
 
   .header-inner
-    padding: 12px 0 !important
+    padding: 12px 20px !important
 
   .site-nav .menu
     text-align: left
