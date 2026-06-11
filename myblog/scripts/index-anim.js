@@ -73,3 +73,10 @@ hexo.extend.filter.register('after_render:html', str => {
   if (!str.includes('id="heroParticles"')) return str;
   return str.replace('</body>', `<script>${PARTICLE_SCRIPT}</script>\n</body>`);
 });
+
+hexo.extend.filter.register('after_render:html', str => {
+  return str.replace(
+    '<meta name="viewport" content="width=device-width">',
+    '<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">'
+  );
+});
