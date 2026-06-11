@@ -19,6 +19,132 @@
   66%
     transform: translate(4%, -3%) scale(0.98) rotate(2deg)
 
+@keyframes hero-border-spin
+  to
+    transform: rotate(360deg)
+
+@keyframes hero-scan
+  0%
+    top: -8%
+    opacity: 0
+  8%
+    opacity: 0.55
+  92%
+    opacity: 0.55
+  100%
+    top: 108%
+    opacity: 0
+
+@keyframes hero-glow-pulse
+  0%, 100%
+    opacity: 0.65
+    transform: scale(1)
+  50%
+    opacity: 1
+    transform: scale(1.06)
+
+@keyframes hero-fade-up
+  from
+    opacity: 0
+    transform: translateY(22px)
+  to
+    opacity: 1
+    transform: translateY(0)
+
+@keyframes hero-shimmer
+  0%
+    background-position: 0% 50%
+  100%
+    background-position: 200% 50%
+
+@keyframes grid-drift
+  0%
+    background-position: 0 0
+  100%
+    background-position: 48px 48px
+
+@keyframes pulse-dot
+  0%, 100%
+    box-shadow: 0 0 0 0 rgba(74, 95, 212, 0.45)
+  50%
+    box-shadow: 0 0 0 7px rgba(74, 95, 212, 0)
+
+@keyframes line-scan
+  0%
+    transform: translateX(-120%)
+  100%
+    transform: translateX(320%)
+
+@keyframes tag-float
+  0%, 100%
+    transform: translateY(0)
+  50%
+    transform: translateY(-2px)
+
+@keyframes hero-border-spin
+  to
+    transform: rotate(360deg)
+
+@keyframes hero-scan
+  0%
+    top: -8%
+    opacity: 0
+  8%
+    opacity: 0.55
+  92%
+    opacity: 0.55
+  100%
+    top: 108%
+    opacity: 0
+
+@keyframes hero-glow-pulse
+  0%, 100%
+    opacity: 0.65
+    transform: scale(1)
+  50%
+    opacity: 1
+    transform: scale(1.06)
+
+@keyframes hero-fade-up
+  from
+    opacity: 0
+    transform: translateY(22px)
+  to
+    opacity: 1
+    transform: translateY(0)
+
+@keyframes hero-shimmer
+  0%
+    background-position: 0% 50%
+  100%
+    background-position: 200% 50%
+
+@keyframes grid-drift
+  0%
+    background-position: 0 0
+  100%
+    background-position: 48px 48px
+
+@keyframes pulse-dot
+  0%, 100%
+    opacity: 1
+    box-shadow: 0 0 0 0 rgba(74, 95, 212, 0.45)
+  50%
+    opacity: 0.55
+    box-shadow: 0 0 0 5px rgba(74, 95, 212, 0)
+
+@keyframes line-scan
+  0%
+    transform: translateX(-120%)
+  100%
+    transform: translateX(320%)
+
+@keyframes tag-float
+  0%, 100%
+    transform: translateY(0)
+  50%
+    transform: translateY(-2px)
+
 // ── Fluid background ──
 body
   background: var(--body-bg-color)
@@ -120,6 +246,48 @@ html
 
 .main-inner
   padding-top: 4px
+
+.main-inner.index
+  &::before
+    animation: grid-drift 24s linear infinite
+    background-image: linear-gradient(rgba(74, 95, 212, 0.07) 1px, transparent 1px),
+                      linear-gradient(90deg, rgba(74, 95, 212, 0.07) 1px, transparent 1px)
+    background-size: 48px 48px
+    content: ''
+    inset: 0
+    mask-image: radial-gradient(ellipse 80% 70% at 50% 30%, black 20%, transparent 75%)
+    -webkit-mask-image: radial-gradient(ellipse 80% 70% at 50% 30%, black 20%, transparent 75%)
+    pointer-events: none
+    position: fixed
+    z-index: -1
+
+.posts-expand.index .post-block
+  animation: hero-fade-up 0.65s ease both
+
+  &:nth-child(1)
+    animation-delay: 0.07s
+  &:nth-child(2)
+    animation-delay: 0.14s
+  &:nth-child(3)
+    animation-delay: 0.21s
+  &:nth-child(4)
+    animation-delay: 0.28s
+  &:nth-child(5)
+    animation-delay: 0.35s
+  &:nth-child(6)
+    animation-delay: 0.42s
+  &:nth-child(7)
+    animation-delay: 0.49s
+  &:nth-child(8)
+    animation-delay: 0.56s
+  &:nth-child(9)
+    animation-delay: 0.63s
+  &:nth-child(10)
+    animation-delay: 0.7s
+  &:nth-child(11)
+    animation-delay: 0.77s
+  &:nth-child(12)
+    animation-delay: 0.84s
 
 // ── Sidebar / TOC（overlay 模式，不推挤页面） ──
 $sidebar-glass-width = 320px
@@ -341,42 +509,105 @@ body.sidebar-active .sidebar
   margin: 0 auto 36px
   max-width: 860px
   overflow: hidden
+  min-height: 320px
+
+.home-hero__particles
+  inset: 0
+  pointer-events: none
+  position: absolute
+  z-index: 2
+  opacity: 0.85
+
+.home-hero__grid
+  background-image: linear-gradient(rgba(74, 95, 212, 0.09) 1px, transparent 1px),
+                    linear-gradient(90deg, rgba(74, 95, 212, 0.09) 1px, transparent 1px)
+  background-size: 32px 32px
+  animation: grid-drift 18s linear infinite
+  inset: 0
+  mask-image: radial-gradient(ellipse 90% 80% at 50% 40%, black, transparent)
+  -webkit-mask-image: radial-gradient(ellipse 90% 80% at 50% 40%, black, transparent)
+  pointer-events: none
+  position: absolute
+  z-index: 1
 
 .home-hero__glow
-  background: radial-gradient(ellipse 70% 60% at 30% 20%, rgba(74, 95, 212, 0.18) 0%, transparent 70%),
-              radial-gradient(ellipse 50% 50% at 80% 80%, rgba(200, 180, 255, 0.15) 0%, transparent 70%)
+  animation: hero-glow-pulse 5s ease-in-out infinite
+  background: radial-gradient(ellipse 70% 60% at 30% 20%, rgba(74, 95, 212, 0.22) 0%, transparent 70%),
+              radial-gradient(ellipse 50% 50% at 80% 80%, rgba(140, 100, 255, 0.18) 0%, transparent 70%),
+              radial-gradient(ellipse 40% 40% at 60% 30%, rgba(100, 200, 255, 0.12) 0%, transparent 70%)
   inset: -20%
   pointer-events: none
   position: absolute
   z-index: 0
 
+.home-hero__scanline
+  animation: hero-scan 5.5s ease-in-out infinite
+  background: linear-gradient(to bottom, transparent, rgba(74, 95, 212, 0.18), transparent)
+  height: 40%
+  left: 0
+  pointer-events: none
+  position: absolute
+  right: 0
+  z-index: 4
+
+.home-hero__border
+  border-radius: 22px
+  inset: 0
+  overflow: hidden
+  pointer-events: none
+  position: absolute
+  z-index: 3
+
+  &::before
+    animation: hero-border-spin 6s linear infinite
+    background: conic-gradient(from 0deg, transparent, rgba(74, 95, 212, 0.65), rgba(140, 100, 255, 0.5), transparent, rgba(100, 180, 255, 0.45), transparent)
+    content: ''
+    inset: -50%
+    position: absolute
+
 .home-hero__inner
+  animation: hero-fade-up 0.75s cubic-bezier(.22,.68,0,1.05) both
   backdrop-filter: blur(24px) saturate(1.5)
   -webkit-backdrop-filter: blur(24px) saturate(1.5)
-  background: rgba(255, 255, 255, 0.72)
-  border: 1px solid rgba(255, 255, 255, 0.7)
+  background: rgba(255, 255, 255, 0.74)
+  border: 1px solid rgba(255, 255, 255, 0.75)
   border-radius: 20px
-  box-shadow: 0 8px 40px rgba(100, 120, 180, 0.12),
-              0 2px 8px rgba(0, 0, 0, 0.04)
+  box-shadow: 0 8px 40px rgba(74, 95, 212, 0.14),
+              0 2px 8px rgba(0, 0, 0, 0.04),
+              inset 0 1px 0 rgba(255, 255, 255, 0.8)
+  margin: 2px
   padding: 44px 48px 40px
   position: relative
   text-align: left
-  z-index: 1
+  z-index: 5
 
 .home-hero__badge
+  align-items: center
+  animation: hero-fade-up 0.75s ease 0.1s both
   background: rgba(74, 95, 212, 0.1)
-  border: 1px solid rgba(74, 95, 212, 0.2)
+  border: 1px solid rgba(74, 95, 212, 0.25)
   border-radius: 999px
   color: #4a5fd4
-  display: inline-block
+  display: inline-flex
   font-size: 0.72rem
   font-weight: 700
+  gap: 7px
   letter-spacing: 0.12em
   margin-bottom: 18px
-  padding: 6px 14px
+  padding: 6px 14px 6px 10px
   text-transform: uppercase
 
+.home-hero__badge-dot
+  animation: pulse-dot 2s ease infinite
+  background: #4a5fd4
+  border-radius: 50%
+  display: inline-block
+  flex-shrink: 0
+  height: 7px
+  width: 7px
+
 .home-hero__title
+  animation: hero-fade-up 0.75s ease 0.18s both
   color: #1a1a2e
   font-size: 2rem
   font-weight: 800
@@ -384,7 +615,16 @@ body.sidebar-active .sidebar
   line-height: 1.25
   margin: 0 0 16px
 
+.home-hero__accent
+  background: linear-gradient(90deg, #4a5fd4, #8b5cf6, #4a9fd4, #4a5fd4)
+  background-size: 200% auto
+  -webkit-background-clip: text
+  background-clip: text
+  animation: hero-shimmer 4s linear infinite
+  -webkit-text-fill-color: transparent
+
 .home-hero__desc
+  animation: hero-fade-up 0.75s ease 0.26s both
   color: #555
   font-size: 0.98rem
   line-height: 1.85
@@ -392,6 +632,7 @@ body.sidebar-active .sidebar
   max-width: 640px
 
 .home-hero__actions
+  animation: hero-fade-up 0.75s ease 0.34s both
   display: flex
   flex-wrap: wrap
   gap: 10px
@@ -403,20 +644,30 @@ body.sidebar-active .sidebar
   font-weight: 600
   letter-spacing: 0.02em
   padding: 10px 20px
+  position: relative
   text-decoration: none !important
-  transition: background 0.2s, border-color 0.2s, color 0.2s, transform 0.2s
+  transition: background 0.2s, border-color 0.2s, color 0.2s, transform 0.2s, box-shadow 0.2s
 
   &:hover
     transform: translateY(-1px)
 
 .home-hero__btn--primary
-  background: #4a5fd4 !important
-  border: 1px solid #4a5fd4 !important
+  background: linear-gradient(135deg, #4a5fd4, #5a4fd4) !important
+  border: 1px solid rgba(74, 95, 212, 0.5) !important
+  box-shadow: 0 4px 20px rgba(74, 95, 212, 0.28)
   color: #fff !important
+  overflow: hidden
+
+  &::after
+    animation: hero-shimmer 3s linear infinite
+    background: linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.25) 50%, transparent 60%)
+    content: ''
+    inset: 0
+    position: absolute
 
   &:hover
-    background: #3a4fc4 !important
-    border-color: #3a4fc4 !important
+    background: linear-gradient(135deg, #3a4fc4, #4a3fc4) !important
+    box-shadow: 0 6px 28px rgba(74, 95, 212, 0.38)
     color: #fff !important
 
 .home-hero__btn--ghost
@@ -427,9 +678,11 @@ body.sidebar-active .sidebar
   &:hover
     background: rgba(74, 95, 212, 0.14) !important
     border-color: rgba(74, 95, 212, 0.35) !important
+    box-shadow: 0 0 16px rgba(74, 95, 212, 0.12)
     color: #3a4fc4 !important
 
 .home-hero__tags
+  animation: hero-fade-up 0.75s ease 0.42s both
   display: flex
   flex-wrap: wrap
   gap: 8px
@@ -438,29 +691,64 @@ body.sidebar-active .sidebar
   padding: 0
 
   li
-    background: rgba(0, 0, 0, 0.04)
+    animation: tag-float 3s ease-in-out infinite
+    background: rgba(74, 95, 212, 0.06)
+    border: 1px solid rgba(74, 95, 212, 0.1)
     border-radius: 6px
-    color: #888
+    color: #777
     font-size: 0.78rem
     font-weight: 500
     padding: 4px 10px
 
+    &:nth-child(2)
+      animation-delay: 0.4s
+
+    &:nth-child(3)
+      animation-delay: 0.8s
+
 .home-posts-label
+  align-items: center
+  animation: hero-fade-up 0.6s ease 0.5s both
   color: #999
+  display: flex
   font-size: 0.72rem
   font-weight: 700
+  gap: 8px
   letter-spacing: 0.14em
   margin: 0 auto 20px
   max-width: 860px
+  position: relative
   text-align: left
   text-transform: uppercase
 
+  &__dot
+    animation: pulse-dot 2.2s ease infinite
+    background: #4a5fd4
+    border-radius: 50%
+    flex-shrink: 0
+    height: 6px
+    width: 6px
+
   &::after
-    background: linear-gradient(to right, rgba(74, 95, 212, 0.35), transparent)
+    background: rgba(74, 95, 212, 0.15)
     content: ''
     display: block
+    flex: 1
     height: 1px
-    margin-top: 10px
+    margin-top: 0
+    overflow: hidden
+    position: relative
+
+  &::before
+    animation: line-scan 3.5s ease-in-out infinite
+    background: linear-gradient(90deg, transparent, rgba(74, 95, 212, 0.8), transparent)
+    content: ''
+    height: 1px
+    left: 24px
+    position: absolute
+    right: 0
+    top: 50%
+    transform: translateY(-50%)
     width: 100%
 
 // ── Footer ──
@@ -551,8 +839,18 @@ body.sidebar-active .sidebar
     border-bottom-color: rgba(255, 255, 255, 0.06)
 
   .home-hero__inner
-    background: rgba(22, 22, 32, 0.78)
+    background: rgba(22, 22, 32, 0.82)
     border-color: rgba(255, 255, 255, 0.08)
+    box-shadow: 0 8px 40px rgba(0, 0, 0, 0.35),
+                inset 0 1px 0 rgba(255, 255, 255, 0.06)
+
+  .home-hero__grid
+    background-image: linear-gradient(rgba(139, 157, 255, 0.08) 1px, transparent 1px),
+                      linear-gradient(90deg, rgba(139, 157, 255, 0.08) 1px, transparent 1px)
+
+  .main-inner.index::before
+    background-image: linear-gradient(rgba(139, 157, 255, 0.06) 1px, transparent 1px),
+                      linear-gradient(90deg, rgba(139, 157, 255, 0.06) 1px, transparent 1px)
 
   .home-hero__title
     color: #e8e8f0
@@ -574,8 +872,16 @@ body.sidebar-active .sidebar
     border-color: rgba(139, 157, 255, 0.2) !important
     color: #8b9dff !important
 
+  .home-hero__accent
+    background: linear-gradient(90deg, #8b9dff, #b794f6, #6ecfff, #8b9dff)
+    background-size: 200% auto
+    -webkit-background-clip: text
+    background-clip: text
+    -webkit-text-fill-color: transparent
+
   .home-hero__tags li
-    background: rgba(255, 255, 255, 0.06)
+    background: rgba(139, 157, 255, 0.08)
+    border-color: rgba(139, 157, 255, 0.12)
     color: #888
 
   .home-posts-label
@@ -628,6 +934,27 @@ body.sidebar-active .sidebar
   body::before,
   body::after
     animation: none
+
+  .main-inner.index::before,
+  .home-hero__grid,
+  .home-hero__glow,
+  .home-hero__scanline,
+  .home-hero__border::before,
+  .home-hero__accent,
+  .home-hero__badge-dot,
+  .home-posts-label__dot,
+  .home-posts-label::before,
+  .home-hero__btn--primary::after,
+  .home-hero__tags li,
+  .posts-expand.index .post-block,
+  .home-hero__inner,
+  .home-hero__badge,
+  .home-hero__title,
+  .home-hero__desc,
+  .home-hero__actions,
+  .home-hero__tags,
+  .home-posts-label
+    animation: none !important
 
   .post-block
     transition: none
