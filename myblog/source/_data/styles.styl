@@ -79,6 +79,13 @@ html
   font-size: 1.2rem !important
   letter-spacing: -0.03em
 
+.site-subtitle
+  color: #888 !important
+  font-size: 0.72rem !important
+  font-weight: 500
+  letter-spacing: 0.06em
+  margin-top: 2px !important
+
 .site-meta
   text-align: left
 
@@ -328,6 +335,134 @@ body.sidebar-active .sidebar
   &:hover
     background: rgba(74, 95, 212, 0.1) !important
 
+// ── Homepage Hero ──
+.home-hero
+  position: relative
+  margin: 0 auto 36px
+  max-width: 860px
+  overflow: hidden
+
+.home-hero__glow
+  background: radial-gradient(ellipse 70% 60% at 30% 20%, rgba(74, 95, 212, 0.18) 0%, transparent 70%),
+              radial-gradient(ellipse 50% 50% at 80% 80%, rgba(200, 180, 255, 0.15) 0%, transparent 70%)
+  inset: -20%
+  pointer-events: none
+  position: absolute
+  z-index: 0
+
+.home-hero__inner
+  backdrop-filter: blur(24px) saturate(1.5)
+  -webkit-backdrop-filter: blur(24px) saturate(1.5)
+  background: rgba(255, 255, 255, 0.72)
+  border: 1px solid rgba(255, 255, 255, 0.7)
+  border-radius: 20px
+  box-shadow: 0 8px 40px rgba(100, 120, 180, 0.12),
+              0 2px 8px rgba(0, 0, 0, 0.04)
+  padding: 44px 48px 40px
+  position: relative
+  text-align: left
+  z-index: 1
+
+.home-hero__badge
+  background: rgba(74, 95, 212, 0.1)
+  border: 1px solid rgba(74, 95, 212, 0.2)
+  border-radius: 999px
+  color: #4a5fd4
+  display: inline-block
+  font-size: 0.72rem
+  font-weight: 700
+  letter-spacing: 0.12em
+  margin-bottom: 18px
+  padding: 6px 14px
+  text-transform: uppercase
+
+.home-hero__title
+  color: #1a1a2e
+  font-size: 2rem
+  font-weight: 800
+  letter-spacing: -0.03em
+  line-height: 1.25
+  margin: 0 0 16px
+
+.home-hero__desc
+  color: #555
+  font-size: 0.98rem
+  line-height: 1.85
+  margin: 0 0 28px
+  max-width: 640px
+
+.home-hero__actions
+  display: flex
+  flex-wrap: wrap
+  gap: 10px
+  margin-bottom: 24px
+
+.home-hero__btn
+  border-radius: 10px
+  font-size: 0.88rem
+  font-weight: 600
+  letter-spacing: 0.02em
+  padding: 10px 20px
+  text-decoration: none !important
+  transition: background 0.2s, border-color 0.2s, color 0.2s, transform 0.2s
+
+  &:hover
+    transform: translateY(-1px)
+
+.home-hero__btn--primary
+  background: #4a5fd4 !important
+  border: 1px solid #4a5fd4 !important
+  color: #fff !important
+
+  &:hover
+    background: #3a4fc4 !important
+    border-color: #3a4fc4 !important
+    color: #fff !important
+
+.home-hero__btn--ghost
+  background: rgba(74, 95, 212, 0.07) !important
+  border: 1px solid rgba(74, 95, 212, 0.18) !important
+  color: #4a5fd4 !important
+
+  &:hover
+    background: rgba(74, 95, 212, 0.14) !important
+    border-color: rgba(74, 95, 212, 0.35) !important
+    color: #3a4fc4 !important
+
+.home-hero__tags
+  display: flex
+  flex-wrap: wrap
+  gap: 8px
+  list-style: none
+  margin: 0
+  padding: 0
+
+  li
+    background: rgba(0, 0, 0, 0.04)
+    border-radius: 6px
+    color: #888
+    font-size: 0.78rem
+    font-weight: 500
+    padding: 4px 10px
+
+.home-posts-label
+  color: #999
+  font-size: 0.72rem
+  font-weight: 700
+  letter-spacing: 0.14em
+  margin: 0 auto 20px
+  max-width: 860px
+  text-align: left
+  text-transform: uppercase
+
+  &::after
+    background: linear-gradient(to right, rgba(74, 95, 212, 0.35), transparent)
+    content: ''
+    display: block
+    height: 1px
+    margin-top: 10px
+    width: 100%
+
 // ── Footer ──
 .footer
   background: rgba(255, 255, 255, 0.6) !important
@@ -364,6 +499,22 @@ body.sidebar-active .sidebar
   .posts-expand.index .post-header
     text-align: left
 
+  .home-hero__inner
+    padding: 28px 22px 26px
+
+  .home-hero__title
+    font-size: 1.55rem
+
+  .home-hero__desc
+    font-size: 0.92rem
+
+  .home-hero__actions
+    flex-direction: column
+
+  .home-hero__btn
+    text-align: center
+    width: 100%
+
 // ── Dark mode ──
 @media (prefers-color-scheme: dark)
   body::before
@@ -399,14 +550,42 @@ body.sidebar-active .sidebar
     background: rgba(22, 22, 32, 0.94) !important
     border-bottom-color: rgba(255, 255, 255, 0.06)
 
+  .home-hero__inner
+    background: rgba(22, 22, 32, 0.78)
+    border-color: rgba(255, 255, 255, 0.08)
+
+  .home-hero__title
+    color: #e8e8f0
+
+  .home-hero__desc
+    color: #aaa
+
+  .home-hero__badge
+    background: rgba(139, 157, 255, 0.12)
+    border-color: rgba(139, 157, 255, 0.25)
+    color: #8b9dff
+
+  .home-hero__btn--primary
+    background: #5a6fe0 !important
+    border-color: #5a6fe0 !important
+
+  .home-hero__btn--ghost
+    background: rgba(139, 157, 255, 0.1) !important
+    border-color: rgba(139, 157, 255, 0.2) !important
+    color: #8b9dff !important
+
+  .home-hero__tags li
+    background: rgba(255, 255, 255, 0.06)
+    color: #888
+
+  .home-posts-label
+    color: #666
+
   .sidebar
     background: rgba(22, 22, 32, 0.55) !important
     backdrop-filter: blur(32px) saturate(1.8)
     -webkit-backdrop-filter: blur(32px) saturate(1.8)
     border-right-color: rgba(255, 255, 255, 0.08)
-
-  .sidebar-dimmer
-    background: rgba(0, 0, 0, 0.35) !important
 
     .sidebar-inner
       color: #aaa
@@ -428,6 +607,9 @@ body.sidebar-active .sidebar
     .nav .active-current > a
       color: #8b9dff !important
       background: rgba(139, 157, 255, 0.12) !important
+
+  .sidebar-dimmer
+    background: rgba(0, 0, 0, 0.35) !important
 
   .site-nav .menu .menu-item a
     color: #aaa !important
