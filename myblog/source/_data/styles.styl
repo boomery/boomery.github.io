@@ -47,6 +47,8 @@ body
     opacity: 0.7
 
 // ── Header / Nav ──
+$header-height = 60px
+
 .header
   background: rgba(255, 255, 255, 0.88) !important
   backdrop-filter: blur(20px) saturate(1.4)
@@ -56,7 +58,7 @@ body
   margin-bottom: 32px
   position: sticky
   top: 0
-  z-index: 100
+  z-index: 1300
 
 .header-inner
   align-items: center
@@ -105,6 +107,55 @@ body
 
 .main-inner
   padding-top: 4px
+
+// ── Sidebar / TOC（文章详情目录） ──
+.sidebar
+  top: $header-height !important
+  bottom: 0 !important
+  height: auto !important
+
+  a
+    border-bottom: none !important
+
+  .sidebar-inner
+    max-height: calc(100vh - $header-height - 36px) !important
+    padding-top: 14px
+
+  .sidebar-nav li
+    font-size: 0.75rem
+    font-weight: 600
+    letter-spacing: 0.1em
+    text-transform: uppercase
+
+  .post-toc
+    text-align: left
+
+    ol
+      padding: 0 4px 8px 0 !important
+
+    .nav-item
+      line-height: 1.55 !important
+      margin-bottom: 2px
+      white-space: normal !important
+
+    a
+      border-bottom: none !important
+      border-radius: 5px
+      color: rgba(210, 210, 220, 0.9) !important
+      display: block
+      font-size: 0.82rem
+      padding: 4px 8px
+      transition: background 0.15s, color 0.15s
+
+      &:hover
+        background: rgba(255, 255, 255, 0.08) !important
+        color: #fff !important
+
+    .nav .active > a,
+    .nav .active-current > a
+      background: rgba(255, 255, 255, 0.1) !important
+      color: $sidebar-highlight !important
+      font-weight: 600
 
 // ── Category / Archive timeline ──
 .posts-collapse .collection-header
