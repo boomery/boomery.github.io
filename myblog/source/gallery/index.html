@@ -343,6 +343,68 @@
       letter-spacing: 0.04em;
     }
 
+    /* ── 网格平铺 ── */
+    .grid-view {
+      position: absolute;
+      inset: 0;
+      overflow-x: hidden;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      padding: 88px 24px 100px;
+      scrollbar-width: thin;
+      scrollbar-color: #333 transparent;
+    }
+    .grid-view::-webkit-scrollbar { width: 4px; }
+    .grid-view::-webkit-scrollbar-thumb {
+      background: #333;
+      border-radius: 4px;
+    }
+    .grid-layout {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(148px, 1fr));
+      gap: 12px;
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+    .grid-item {
+      border-radius: var(--radius);
+      overflow: hidden;
+      cursor: pointer;
+      background: #111;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.35);
+      transition: transform 0.22s, box-shadow 0.22s;
+    }
+    .grid-item:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 0 0 1px var(--accent), 0 10px 28px rgba(200,255,0,0.12);
+    }
+    .grid-item img {
+      width: 100%;
+      aspect-ratio: 1;
+      object-fit: cover;
+      display: block;
+      pointer-events: none;
+      user-select: none;
+    }
+    .grid-item-meta {
+      padding: 10px 12px 12px;
+      border-top: 1px solid #1a1a1a;
+    }
+    .grid-item-meta strong {
+      display: block;
+      color: var(--text);
+      font-size: 0.78rem;
+      margin-bottom: 3px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .grid-item-meta span {
+      color: var(--muted);
+      font-size: 0.68rem;
+      letter-spacing: 0.04em;
+    }
+
     .gallery-empty {
       position: absolute;
       inset: 0;
@@ -633,6 +695,8 @@
       .colonnade-nav.prev { left: 8px; }
       .colonnade-nav.next { right: 8px; }
       .colonnade-caption { bottom: 64px; }
+      .grid-view { padding: 96px 14px 88px; }
+      .grid-layout { grid-template-columns: repeat(auto-fill, minmax(128px, 1fr)); gap: 10px; }
       .comment-section { padding: 40px 16px 60px; }
       .upload-fab { bottom: 20px; right: 20px; }
     }
@@ -653,6 +717,7 @@
         <button class="mode-btn active" data-mode="drift">飘落</button>
         <button class="mode-btn" data-mode="colonnade">柱廊</button>
         <button class="mode-btn" data-mode="filmstrip">胶片</button>
+        <button class="mode-btn" data-mode="grid">网格</button>
       </div>
     </div>
   </div>
@@ -822,11 +887,12 @@ function renderGallery() {
   }
   if (currentMode === 'colonnade') renderColonnade();
   else if (currentMode === 'filmstrip') renderFilmstrip();
+  else if (currentMode === 'grid') renderGrid();
   else renderDrift();
 }
 
 function setMode(mode) {
-  if (!['drift', 'colonnade', 'filmstrip'].includes(mode)) return;
+  if (!['drift', 'colonnade', 'filmstrip', 'grid'].includes(mode)) return;
   currentMode = mode;
   localStorage.setItem(MODE_KEY, mode);
   setModeButtons(mode);
@@ -1025,6 +1091,42 @@ function renderFilmstrip() {
     el.appendChild(meta);
     el.addEventListener('click', () => openLightbox(i));
     track.appendChild(el);
+  });
+
+  modeState.cleanup = null;
+  modeState.onResize = null;
+}
+
+/* ── 网格平铺 ── */
+function renderGrid() {
+  const wrap = document.createElement('div');
+  wrap.className = 'grid-view';
+  const layout = document.createElement('div');
+  layout.className = 'grid-layout';
+  wrap.appendChild(layout);
+  viewport.appendChild(wrap);
+
+  PHOTOS.forEach((item, i) => {
+    const el = document.createElement('div');
+    el.className = 'grid-item';
+    const img = document.createElement('img');
+    img.src = item.src;
+    img.alt = item.title;
+    img.draggable = false;
+    const meta = document.createElement('div');
+    meta.className = 'grid-item-meta';
+    const strong = document.createElement('strong');
+    strong.textContent = item.title;
+    meta.appendChild(strong);
+    if (item.tag) {
+      const span = document.createElement('span');
+      span.textContent = item.tag;
+      meta.appendChild(span);
+    }
+    el.appendChild(img);
+    el.appendChild(meta);
+    el.addEventListener('click', () => openLightbox(i));
+    layout.appendChild(el);
   });
 
   modeState.cleanup = null;
