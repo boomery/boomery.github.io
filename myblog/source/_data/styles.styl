@@ -1,4 +1,4 @@
-// Fluid gradient background — site-wide ambient animation
+// Fluid gradient background + refined article cards
 // Injected via themes/next/_config.yml → custom_file_path.style
 
 @keyframes fluid-drift-a
@@ -19,6 +19,7 @@
   66%
     transform: translate(4%, -3%) scale(0.98) rotate(2deg)
 
+// ── Fluid background ──
 body
   background: var(--body-bg-color)
 
@@ -45,13 +46,119 @@ body
     animation: fluid-drift-b 28s ease-in-out infinite
     opacity: 0.7
 
-// Slight glass feel on main content blocks
-.post-block,
+// ── Article cards ──
+.post-block
+  background: rgba(255, 255, 255, 0.88) !important
+  backdrop-filter: blur(20px) saturate(1.4)
+  -webkit-backdrop-filter: blur(20px) saturate(1.4)
+  border: 1px solid rgba(255, 255, 255, 0.65)
+  border-radius: 16px
+  box-shadow: 0 4px 24px rgba(100, 120, 180, 0.1),
+              0 1px 3px rgba(0, 0, 0, 0.04)
+  padding: 36px 40px
+  transition: box-shadow 0.3s ease, transform 0.3s ease
+
+  &:hover
+    box-shadow: 0 8px 32px rgba(100, 120, 180, 0.16),
+                0 2px 6px rgba(0, 0, 0, 0.06)
+    transform: translateY(-2px)
+
+.posts-expand .post-block:not(:first-child)
+  margin-top: 28px !important
+
+.posts-expand.index .post-header
+  margin-bottom: 16px !important
+  text-align: left
+
+.posts-expand .post-title
+  font-size: 1.45rem !important
+  font-weight: 700 !important
+  letter-spacing: -0.02em
+  line-height: 1.35
+
+.posts-expand .post-title-link
+  color: #1a1a2e !important
+
+  &::before
+    display: none
+
+  &:hover
+    color: #4a5fd4 !important
+
+.posts-expand .post-meta-container
+  margin-top: 10px !important
+  color: #888 !important
+
+  time
+    border-bottom: none !important
+    background: rgba(0, 0, 0, 0.04)
+    border-radius: 4px
+    padding: 2px 7px
+
+.post-meta-item-icon
+  color: #aaa
+
+.post-body
+  color: #444
+  line-height: 1.85
+  font-size: 0.95rem
+  margin-top: 4px
+
+  p
+    margin-bottom: 14px
+
+  h2, h3, h4
+    color: #1a1a2e
+    margin-top: 28px
+    margin-bottom: 12px
+
+.post-button
+  margin-top: 24px !important
+
+  .btn
+    display: inline-block
+    background: rgba(74, 95, 212, 0.08) !important
+    border: 1px solid rgba(74, 95, 212, 0.2) !important
+    border-bottom: 1px solid rgba(74, 95, 212, 0.2) !important
+    border-radius: 8px
+    color: #4a5fd4 !important
+    font-size: 0.85rem
+    font-weight: 600
+    letter-spacing: 0.03em
+    padding: 8px 18px !important
+    transition: background 0.2s, border-color 0.2s, color 0.2s
+
+    &:hover
+      background: rgba(74, 95, 212, 0.15) !important
+      border-color: rgba(74, 95, 212, 0.4) !important
+      color: #3a4fc4 !important
+
+.posts-expand .post-tags a
+  background: rgba(0, 0, 0, 0.05) !important
+  border-radius: 4px
+  font-size: 0.82rem
+
+  &:hover
+    background: rgba(74, 95, 212, 0.1) !important
+
+// ── Footer ──
 .footer
-  background: rgba(255, 255, 255, 0.72) !important
+  background: rgba(255, 255, 255, 0.6) !important
   backdrop-filter: blur(12px)
   -webkit-backdrop-filter: blur(12px)
+  border-top: 1px solid rgba(255, 255, 255, 0.5)
+  margin-top: 40px
 
+// ── Mobile ──
++mobile()
+  .post-block
+    padding: 24px 20px
+    border-radius: 12px
+
+  .posts-expand.index .post-header
+    text-align: left
+
+// ── Dark mode ──
 @media (prefers-color-scheme: dark)
   body::before
     background: radial-gradient(ellipse 55% 45% at 25% 35%, rgba(60, 80, 140, 0.45) 0%, transparent 70%),
@@ -62,11 +169,33 @@ body
     background: radial-gradient(ellipse 50% 45% at 80% 25%, rgba(50, 90, 120, 0.35) 0%, transparent 70%),
                 radial-gradient(ellipse 55% 40% at 15% 75%, rgba(70, 55, 110, 0.3) 0%, transparent 70%)
 
-  .post-block,
+  .post-block
+    background: rgba(22, 22, 32, 0.85) !important
+    border-color: rgba(255, 255, 255, 0.08)
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.3)
+
+  .posts-expand .post-title-link
+    color: #e8e8f0 !important
+
+    &:hover
+      color: #8b9dff !important
+
+  .post-body
+    color: #bbb
+
+  .post-meta-container time
+    background: rgba(255, 255, 255, 0.06)
+
   .footer
-    background: rgba(20, 20, 28, 0.75) !important
+    background: rgba(22, 22, 32, 0.7) !important
 
 @media (prefers-reduced-motion: reduce)
   body::before,
   body::after
     animation: none
+
+  .post-block
+    transition: none
+
+    &:hover
+      transform: none
