@@ -18,17 +18,117 @@
 ```
 本地修改文件
     ↓
-git add . && git commit -m "说明"
+git add / commit / push  →  推送到 github.com/boomery/hexoBlog（master）
     ↓
-git push  →  推送到 github.com/boomery/hexoBlog
+GitHub 接收新提交
     ↓
-Vercel 自动检测到新提交，触发构建
+Vercel 通过 Webhook 检测到 push，自动创建一次 Deployment
     ↓
-Vercel 执行：npm install → npx hexo generate
+Vercel 在 Root Directory（myblog/）内执行构建
+    ├── npm install          ← 安装 package.json 依赖
+    └── npx hexo generate    ← 生成静态站点到 public/
     ↓
-将 public/ 目录部署为静态站点
+Vercel 将 public/ 发布为静态站点
     ↓
-Cloudflare 解析 boomery.top → Vercel 站点
+Cloudflare 解析 boomery.top → Vercel 站点（通常 1～2 分钟内生效）
+```
+
+---
+
+## Push 触发部署：完整动作说明
+
+以下说明「在 Cursor 中改完代码并 push」后，本地与云端分别会发生什么。
+
+### 一、本地 Git 操作（push 前）
+
+在仓库根目录 `/hexoBlog` 执行，典型顺序如下：
+
+| 步骤 | 命令 / 动作 | 说明 |
+|------|-------------|------|
+| 1 | `git status` | 查看哪些文件被修改、哪些是未跟踪文件 |
+| 2 | `git diff` | 确认本次改动内容，避免误提交无关文件 |
+| 3 | `git log -3 --oneline` | 参考近期提交信息风格 |
+| 4 | `git add <文件…>` | **只添加与本次改动相关的文件**（例如 `myblog/source/`、`myblog/scripts/`、`myblog/themes/next/_config.yml`） |
+| 5 | `git commit -m "…"` | 写清本次改动目的；提交说明建议使用中文 |
+| 6 | `git push origin master` | 推送到 GitHub 远程 `master` 分支 |
+| 7 | `git status` | 确认 push 成功、工作区干净 |
+
+**不会自动 push 的内容（需注意）：**
+
+- 未 `git add` 的文件（如本地临时文件、`gallery-api/api/auth.js` 若未纳入提交则不会上线）
+- 含密钥的文件（`.env`、数据库密码、Cloudinary Secret 等）——**禁止提交**
+- 仅存在于本地的 `myblog/public/`（由构建生成，一般不提交）
+
+**提交作者要求：**
+
+- Git 配置的 `user.email` 需与 GitHub 账号邮箱一致，否则 Vercel 可能拒绝部署（见下方「注意事项」）
+
+### 二、GitHub 侧
+
+| 动作 | 说明 |
+|------|------|
+| 接收 push | 远程仓库 `boomery/hexoBlog` 的 `master` 分支更新 |
+| 触发 Webhook | GitHub 通知已绑定的 Vercel 项目「有新 commit」 |
+
+### 三、Vercel 自动构建（主博客项目）
+
+Vercel 项目绑定仓库 `hexoBlog`，**Root Directory 为 `myblog`**，读取 `myblog/vercel.json`：
+
+| 阶段 | Vercel 执行内容 |
+|------|-----------------|
+| Install | `npm install` — 安装 Hexo、Next 主题、Waline 等依赖 |
+| Build | `npx hexo generate` — 编译 Markdown、注入自定义脚本/样式，输出到 `public/` |
+| Output | 将 `public/` 作为静态资源部署到 Vercel CDN |
+| 域名 | 生产环境绑定 `boomery.top`（经 Cloudflare CNAME 指向 Vercel） |
+
+构建过程中会生效的典型改动：
+
+- `myblog/source/_posts/` — 文章增删改
+- `myblog/source/_data/styles.styl` — 全站自定义样式
+- `myblog/source/gallery/index.html` — Gallery 独立页（`skip_render` 原样拷贝）
+- `myblog/scripts/*.js` — Hexo 插件脚本（如首页 Hero 注入、自动摘要）
+- `myblog/themes/next/_config.yml` — 主题配置
+
+### 四、部署完成后的验证
+
+1. 打开 [Vercel Dashboard](https://vercel.com) → 对应项目 → **Deployments**，确认最新一条为 **Ready**
+2. 浏览器访问 `https://boomery.top`，**硬刷新**（Mac：`Cmd+Shift+R`）避免缓存
+3. 若样式/脚本未更新，可再等 1～2 分钟或清 Safari/Chrome 缓存后重试
+
+### 五、与主博客 push 无关的项目
+
+| 项目 | 触发方式 | 说明 |
+|------|----------|------|
+| **主博客** `boomery.top` | push `hexoBlog` → `master` | Root Directory = `myblog` |
+| **Gallery API** `gallery-api.boomery.top` | 修改 `gallery-api/` 并 push 同一仓库 | Vercel **独立项目**，Root Directory = `gallery-api` |
+| **Waline 评论** `comment.boomery.top` | 修改 Waline 项目代码并 push | 独立 Vercel 项目，与 Hexo push 无关 |
+
+> 只改 `gallery-api/` 时：会触发 gallery-api 的 Vercel 部署；**不会**自动重新构建 Hexo，除非同时改了 `myblog/` 并 push。
+
+### 六、常用 push 示例
+
+```bash
+# 在仓库根目录
+cd /path/to/hexoBlog
+
+# 查看状态
+git status
+git diff
+
+# 仅提交博客相关改动（示例）
+git add myblog/source/_data/styles.styl myblog/scripts/index-hero.js
+git commit -m "$(cat <<'EOF'
+feat: 首页科幻感动态效果
+
+新增 Hero 粒子动画与扫描线，提交说明用中文描述改动目的。
+EOF
+)"
+git push origin master
+```
+
+```bash
+# 推送更新（最简写法，触发 Vercel 自动部署）
+git add . && git commit -m "update" && git push origin master
 ```
 
 ---
@@ -114,13 +214,16 @@ Waline 使用以下三张表（首次部署自动创建）：
 
 ```
 hexoBlog/               ← 本地项目根目录（Git 仓库根）
-├── myblog/             ← Hexo 项目目录
+├── myblog/             ← Hexo 项目目录（Vercel 主博客 Root Directory）
 │   ├── source/         ← 博客文章（.md 文件放在 _posts/ 下）
+│   │   ├── _data/      ← 自定义样式 styles.styl 等
 │   │   └── gallery/    ← 图片展示墙独立 HTML 页面
+│   ├── scripts/        ← Hexo 扩展脚本（首页 Hero、自动摘要等）
 │   ├── themes/         ← 主题目录（当前使用 next）
-│   ├── public/         ← hexo generate 生成的静态文件（部署产物）
+│   ├── public/         ← hexo generate 生成的静态文件（部署产物，一般不提交）
 │   ├── _config.yml     ← Hexo 配置文件
 │   └── vercel.json     ← Vercel 构建配置
+├── gallery-api/        ← Gallery API（独立 Vercel 项目，Root Directory = gallery-api）
 └── DEPLOY.md           ← 本文件
 ```
 
@@ -146,9 +249,11 @@ cd myblog && npx hexo server
 # 新建文章
 cd myblog && npx hexo new "文章标题"
 
-# 推送更新（触发 Vercel 自动部署）
-git add . && git commit -m "update" && git push
+# 本地生成静态文件（不部署，仅调试）
+cd myblog && npx hexo generate
 ```
+
+> 线上部署只需 `git push`，无需在本地执行 `hexo generate` 后再手动上传；Vercel 会在云端自动执行构建。
 
 ---
 
