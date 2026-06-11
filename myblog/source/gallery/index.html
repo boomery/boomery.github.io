@@ -46,9 +46,9 @@
       top: 0; left: 0; right: 0;
       z-index: 100;
       padding: 24px 40px 20px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      align-items: start;
       background: linear-gradient(to bottom, rgba(8,8,16,0.95) 60%, transparent);
     }
 
@@ -69,11 +69,52 @@
     }
     .back-link:hover { color: var(--accent); }
 
-    /* ── 雪花飘落场景 ── */
-    #scene {
+    .header-center {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+    }
+
+    /* ── 模式切换 ── */
+    .mode-switcher {
+      display: flex;
+      gap: 4px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid #1e1e2e;
+      border-radius: 999px;
+      padding: 3px;
+    }
+    .mode-btn {
+      background: transparent;
+      border: none;
+      border-radius: 999px;
+      color: var(--muted);
+      cursor: pointer;
+      font-size: 0.68rem;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      padding: 6px 12px;
+      transition: background 0.2s, color 0.2s;
+      white-space: nowrap;
+    }
+    .mode-btn:hover { color: var(--text); }
+    .mode-btn.active {
+      background: var(--accent);
+      color: #000;
+    }
+
+    /* ── 视图容器 ── */
+    .gallery-viewport {
       position: absolute;
       inset: 0;
       z-index: 1;
+    }
+
+    /* ── 雪花飘落场景 ── */
+    .drift-scene {
+      position: absolute;
+      inset: 0;
       pointer-events: none;
     }
 
@@ -140,6 +181,177 @@
     @keyframes hintBob {
       0%, 100% { transform: translateY(0); }
       50%       { transform: translateY(4px); }
+    }
+
+    /* ── 柱廊 Cover Flow ── */
+    .colonnade-view {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding-top: 40px;
+    }
+    .colonnade-stage {
+      perspective: 1100px;
+      perspective-origin: 50% 42%;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .colonnade-ring {
+      position: relative;
+      transform-style: preserve-3d;
+      transition: transform 0.55s cubic-bezier(.22,.68,0,1.1);
+      width: 0;
+      height: 0;
+    }
+    .colonnade-card {
+      position: absolute;
+      left: -110px;
+      top: -150px;
+      width: 220px;
+      height: 300px;
+      border-radius: var(--radius);
+      overflow: hidden;
+      cursor: pointer;
+      backface-visibility: hidden;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.55);
+      transition: box-shadow 0.35s, filter 0.35s;
+    }
+    .colonnade-card.is-center {
+      box-shadow: 0 0 0 2px var(--accent), 0 16px 48px rgba(200,255,0,0.22);
+      filter: brightness(1.08);
+    }
+    .colonnade-card img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      pointer-events: none;
+      user-select: none;
+    }
+    .colonnade-nav {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      z-index: 30;
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid #333;
+      color: #fff;
+      font-size: 1.4rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.2s;
+    }
+    .colonnade-nav:hover { background: var(--accent); color: #000; }
+    .colonnade-nav.prev { left: 24px; }
+    .colonnade-nav.next { right: 24px; }
+    .colonnade-caption {
+      position: absolute;
+      bottom: 72px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 25;
+      text-align: center;
+      max-width: 80vw;
+      pointer-events: none;
+    }
+    .colonnade-caption strong {
+      display: block;
+      color: var(--text);
+      font-size: 0.92rem;
+      margin-bottom: 4px;
+    }
+    .colonnade-caption span {
+      color: var(--muted);
+      font-size: 0.75rem;
+      letter-spacing: 0.06em;
+    }
+
+    /* ── 胶片横向滚动 ── */
+    .filmstrip-view {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      padding: 72px 0 88px;
+    }
+    .filmstrip-track {
+      display: flex;
+      gap: 18px;
+      overflow-x: auto;
+      overflow-y: hidden;
+      scroll-snap-type: x mandatory;
+      -webkit-overflow-scrolling: touch;
+      width: 100%;
+      padding: 0 max(24px, calc(50vw - 130px));
+      scrollbar-width: thin;
+      scrollbar-color: #333 transparent;
+    }
+    .filmstrip-track::-webkit-scrollbar { height: 4px; }
+    .filmstrip-track::-webkit-scrollbar-thumb {
+      background: #333;
+      border-radius: 4px;
+    }
+    .filmstrip-item {
+      flex: 0 0 auto;
+      width: min(260px, 74vw);
+      scroll-snap-align: center;
+      cursor: pointer;
+      border-radius: var(--radius);
+      overflow: hidden;
+      background: #111;
+      box-shadow: 0 6px 28px rgba(0,0,0,0.45);
+      transition: transform 0.25s, box-shadow 0.25s;
+    }
+    .filmstrip-item:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 0 0 1px var(--accent), 0 12px 36px rgba(200,255,0,0.15);
+    }
+    .filmstrip-item img {
+      width: 100%;
+      aspect-ratio: 3 / 4;
+      object-fit: cover;
+      display: block;
+      pointer-events: none;
+      user-select: none;
+    }
+    .filmstrip-meta {
+      padding: 12px 14px 14px;
+      border-top: 1px solid #1a1a1a;
+    }
+    .filmstrip-meta strong {
+      display: block;
+      color: var(--text);
+      font-size: 0.82rem;
+      margin-bottom: 4px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .filmstrip-meta span {
+      color: var(--muted);
+      font-size: 0.72rem;
+      letter-spacing: 0.04em;
+    }
+
+    .gallery-empty {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--muted);
+      font-size: 0.85rem;
+      letter-spacing: 0.08em;
     }
 
     /* ── 评论区 ── */
@@ -409,7 +621,18 @@
     .modal-success.show { display: block; }
 
     @media (max-width: 600px) {
-      .page-header { padding: 16px; }
+      .page-header {
+        padding: 14px 16px 12px;
+        grid-template-columns: 1fr;
+        justify-items: center;
+        gap: 10px;
+      }
+      .back-link { justify-self: start; width: 100%; }
+      .mode-btn { font-size: 0.62rem; padding: 5px 10px; }
+      .colonnade-card { width: 180px; height: 246px; left: -90px; top: -123px; }
+      .colonnade-nav.prev { left: 8px; }
+      .colonnade-nav.next { right: 8px; }
+      .colonnade-caption { bottom: 64px; }
       .comment-section { padding: 40px 16px 60px; }
       .upload-fab { bottom: 20px; right: 20px; }
     }
@@ -424,11 +647,18 @@
   <!-- Header -->
   <div class="page-header">
     <a href="/" class="back-link">← 返回博客</a>
-    <div class="logo">Photo<span>Wall</span></div>
+    <div class="header-center">
+      <div class="logo">Photo<span>Wall</span></div>
+      <div class="mode-switcher" id="modeSwitcher">
+        <button class="mode-btn active" data-mode="drift">飘落</button>
+        <button class="mode-btn" data-mode="colonnade">柱廊</button>
+        <button class="mode-btn" data-mode="filmstrip">胶片</button>
+      </div>
+    </div>
   </div>
 
-  <!-- 飘落场景 -->
-  <div id="scene"></div>
+  <!-- 视图容器（飘落 / 柱廊 / 胶片） -->
+  <div id="galleryViewport" class="gallery-viewport"></div>
 
   <!-- 底部遮罩 -->
   <div class="fade-bottom"></div>
@@ -549,58 +779,256 @@ const API_BASE = 'https://gallery-api.boomery.top';
 })();
 
 /* ══════════════════════════════
-   雪花飘落引擎
+   视图模式：飘落 / 柱廊 / 胶片
 ══════════════════════════════ */
-const scene = document.getElementById('scene');
+const viewport = document.getElementById('galleryViewport');
+const MODE_KEY = 'gallery-view-mode';
 let PHOTOS = [];
-let flakes = [], rafId = null;
+let currentMode = localStorage.getItem(MODE_KEY) || 'drift';
+let modeState = { cleanup: null };
 
 const W = () => window.innerWidth;
 const H = () => window.innerHeight;
 const rand = (a, b) => a + Math.random() * (b - a);
 
-function createFlake(item, idx, initY) {
-  const size   = rand(90, 190);
-  const el     = document.createElement('div');
-  el.className = 'flake';
-  el.style.cssText = `width:${size}px;height:${size}px;z-index:${Math.floor(rand(2,20))}`;
-
-  const img = document.createElement('img');
-  img.src = item.src; img.alt = item.title; img.draggable = false;
-  el.appendChild(img);
-  el.addEventListener('click', () => openLightbox(idx));
-  scene.appendChild(el);
-
-  return {
-    el, size, idx,
-    x: rand(size / 2, W() - size / 2),
-    y: initY !== undefined ? initY : rand(-200, -size),
-    vy: rand(0.4, 1.1),
-    angle: rand(-25, 25),
-    vAngle: rand(-0.18, 0.18),
-  };
+function updateCounter() {
+  document.getElementById('counter').innerHTML = `<span>${PHOTOS.length}</span> photos`;
 }
 
-function spawnFlakes() {
-  if (rafId) cancelAnimationFrame(rafId);
-  scene.innerHTML = ''; flakes = [];
+function setModeButtons(mode) {
+  document.querySelectorAll('.mode-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.mode === mode);
+  });
+}
+
+function stopMode() {
+  if (modeState.cleanup) {
+    modeState.cleanup();
+    modeState.cleanup = null;
+  }
+  viewport.innerHTML = '';
+}
+
+function renderEmpty() {
+  viewport.innerHTML = '<div class="gallery-empty">暂无图片</div>';
+}
+
+function renderGallery() {
+  stopMode();
+  updateCounter();
+  if (!PHOTOS.length) {
+    renderEmpty();
+    return;
+  }
+  if (currentMode === 'colonnade') renderColonnade();
+  else if (currentMode === 'filmstrip') renderFilmstrip();
+  else renderDrift();
+}
+
+function setMode(mode) {
+  if (!['drift', 'colonnade', 'filmstrip'].includes(mode)) return;
+  currentMode = mode;
+  localStorage.setItem(MODE_KEY, mode);
+  setModeButtons(mode);
+  renderGallery();
+}
+
+document.getElementById('modeSwitcher').addEventListener('click', e => {
+  const btn = e.target.closest('.mode-btn');
+  if (btn) setMode(btn.dataset.mode);
+});
+
+/* ── 飘落模式 ── */
+function renderDrift() {
+  const scene = document.createElement('div');
+  scene.className = 'drift-scene';
+  viewport.appendChild(scene);
+
+  const flakes = [];
+  let rafId = null;
+
+  function createFlake(item, idx, initY) {
+    const size = rand(90, 190);
+    const el = document.createElement('div');
+    el.className = 'flake';
+    el.style.cssText = `width:${size}px;height:${size}px;z-index:${Math.floor(rand(2, 20))}`;
+
+    const img = document.createElement('img');
+    img.src = item.src;
+    img.alt = item.title;
+    img.draggable = false;
+    el.appendChild(img);
+    el.addEventListener('click', () => openLightbox(idx));
+    scene.appendChild(el);
+
+    return {
+      el, size, idx,
+      x: rand(size / 2, W() - size / 2),
+      y: initY !== undefined ? initY : rand(-200, -size),
+      vy: rand(0.4, 1.1),
+      angle: rand(-25, 25),
+      vAngle: rand(-0.18, 0.18),
+    };
+  }
+
   PHOTOS.forEach((item, i) => {
     flakes.push(createFlake(item, i, rand(-H(), H() * 0.8)));
   });
+
+  function tick() {
+    const w = W(), h = H();
+    flakes.forEach(f => {
+      f.y += f.vy;
+      f.angle += f.vAngle;
+      f.x += Math.sin(f.y * 0.008) * 0.4;
+      if (f.y > h + f.size + 20) {
+        f.y = rand(-f.size * 3, -f.size);
+        f.x = rand(f.size / 2, w - f.size / 2);
+      }
+      if (f.x < -f.size) f.x = w + f.size / 2;
+      if (f.x > w + f.size) f.x = -f.size / 2;
+      f.el.style.transform = `translate(${f.x - f.size / 2}px,${f.y}px) rotate(${f.angle}deg)`;
+    });
+    rafId = requestAnimationFrame(tick);
+  }
+
+  tick();
+
+  modeState.cleanup = () => {
+    if (rafId) cancelAnimationFrame(rafId);
+  };
+
+  modeState.onResize = () => {
+    flakes.forEach(f => { f.x = Math.min(f.x, W() - f.size / 2); });
+  };
 }
 
-function tick() {
-  const w = W(), h = H();
-  flakes.forEach(f => {
-    f.y += f.vy;
-    f.angle += f.vAngle;
-    f.x += Math.sin(f.y * 0.008) * 0.4;
-    if (f.y > h + f.size + 20) { f.y = rand(-f.size * 3, -f.size); f.x = rand(f.size/2, w - f.size/2); }
-    if (f.x < -f.size) f.x = w + f.size / 2;
-    if (f.x > w + f.size) f.x = -f.size / 2;
-    f.el.style.transform = `translate(${f.x - f.size/2}px,${f.y}px) rotate(${f.angle}deg)`;
+/* ── 柱廊 Cover Flow ── */
+function renderColonnade() {
+  let center = 0;
+  const cards = [];
+
+  const wrap = document.createElement('div');
+  wrap.className = 'colonnade-view';
+  wrap.innerHTML = `
+    <button class="colonnade-nav prev" aria-label="上一张">‹</button>
+    <div class="colonnade-stage"><div class="colonnade-ring"></div></div>
+    <button class="colonnade-nav next" aria-label="下一张">›</button>
+    <div class="colonnade-caption"><strong></strong><span></span></div>
+  `;
+  viewport.appendChild(wrap);
+
+  const ring = wrap.querySelector('.colonnade-ring');
+  const captionEl = wrap.querySelector('.colonnade-caption');
+  const titleEl = captionEl.querySelector('strong');
+  const tagEl = captionEl.querySelector('span');
+
+  function radius() {
+    return Math.min(W() * 0.38, 340);
+  }
+
+  function stepAngle() {
+    const n = PHOTOS.length;
+    return n <= 1 ? 0 : Math.min(360 / n, 48);
+  }
+
+  function layoutCards() {
+    const r = radius();
+    const step = stepAngle();
+    cards.forEach((card, i) => {
+      card.style.transform = `rotateY(${i * step}deg) translateZ(${r}px)`;
+    });
+  }
+
+  PHOTOS.forEach((item, i) => {
+    const card = document.createElement('div');
+    card.className = 'colonnade-card';
+    card.innerHTML = `<img src="${item.src}" alt="${item.title}" draggable="false" />`;
+    card.addEventListener('click', () => {
+      if (i === center) openLightbox(i);
+      else { center = i; updateRing(true); }
+    });
+    ring.appendChild(card);
+    cards.push(card);
   });
-  rafId = requestAnimationFrame(tick);
+
+  function updateRing(animate) {
+    const step = stepAngle();
+    ring.style.transition = animate ? 'transform 0.55s cubic-bezier(.22,.68,0,1.1)' : 'none';
+    ring.style.transform = `rotateY(${-center * step}deg)`;
+    cards.forEach((c, i) => c.classList.toggle('is-center', i === center));
+    const p = PHOTOS[center];
+    titleEl.textContent = p?.title || '';
+    tagEl.textContent = p?.tag ? `· ${p.tag}` : '';
+  }
+
+  function move(delta) {
+    if (PHOTOS.length <= 1) return;
+    center = (center + delta + PHOTOS.length) % PHOTOS.length;
+    updateRing(true);
+  }
+
+  wrap.querySelector('.colonnade-nav.prev').onclick = () => move(-1);
+  wrap.querySelector('.colonnade-nav.next').onclick = () => move(1);
+
+  let touchStartX = 0;
+  wrap.addEventListener('touchstart', e => {
+    touchStartX = e.touches[0].clientX;
+  }, { passive: true });
+  wrap.addEventListener('touchend', e => {
+    const dx = e.changedTouches[0].clientX - touchStartX;
+    if (Math.abs(dx) > 40) move(dx > 0 ? -1 : 1);
+  });
+
+  const onKey = e => {
+    if (currentMode !== 'colonnade') return;
+    if (document.getElementById('lightbox').classList.contains('open')) return;
+    if (e.key === 'ArrowLeft') move(-1);
+    if (e.key === 'ArrowRight') move(1);
+  };
+  document.addEventListener('keydown', onKey);
+
+  layoutCards();
+  updateRing(false);
+
+  modeState.cleanup = () => document.removeEventListener('keydown', onKey);
+  modeState.onResize = () => { layoutCards(); updateRing(false); };
+}
+
+/* ── 胶片横向滚动 ── */
+function renderFilmstrip() {
+  const wrap = document.createElement('div');
+  wrap.className = 'filmstrip-view';
+  const track = document.createElement('div');
+  track.className = 'filmstrip-track';
+  wrap.appendChild(track);
+  viewport.appendChild(wrap);
+
+  PHOTOS.forEach((item, i) => {
+    const el = document.createElement('div');
+    el.className = 'filmstrip-item';
+    const img = document.createElement('img');
+    img.src = item.src;
+    img.alt = item.title;
+    img.draggable = false;
+    const meta = document.createElement('div');
+    meta.className = 'filmstrip-meta';
+    const strong = document.createElement('strong');
+    strong.textContent = item.title;
+    meta.appendChild(strong);
+    if (item.tag) {
+      const span = document.createElement('span');
+      span.textContent = item.tag;
+      meta.appendChild(span);
+    }
+    el.appendChild(img);
+    el.appendChild(meta);
+    el.addEventListener('click', () => openLightbox(i));
+    track.appendChild(el);
+  });
+
+  modeState.cleanup = null;
+  modeState.onResize = null;
 }
 
 /* ══════════════════════════════
@@ -851,9 +1279,7 @@ document.getElementById('uploadSubmit').onclick = async () => {
 
     // 刷新图片墙
     PHOTOS = await loadPhotos();
-    document.getElementById('counter').innerHTML = `<span>${PHOTOS.length}</span> photos`;
-    spawnFlakes();
-    tick();
+    renderGallery();
 
     setTimeout(() => document.getElementById('uploadModal').classList.remove('open'), 1500);
   } catch (err) {
@@ -869,15 +1295,12 @@ document.getElementById('uploadSubmit').onclick = async () => {
 ══════════════════════════════ */
 (async () => {
   PHOTOS = await loadPhotos();
-  document.getElementById('counter').innerHTML = `<span>${PHOTOS.length}</span> photos`;
-  if (PHOTOS.length > 0) {
-    spawnFlakes();
-    tick();
-  }
+  setModeButtons(currentMode);
+  renderGallery();
 })();
 
 window.addEventListener('resize', () => {
-  flakes.forEach(f => { f.x = Math.min(f.x, W() - f.size / 2); });
+  if (modeState.onResize) modeState.onResize();
 });
 </script>
 
