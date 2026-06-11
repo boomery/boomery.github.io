@@ -506,6 +506,33 @@
       scrollbar-width: thin;
       scrollbar-color: rgba(74, 95, 212, 0.25) transparent;
     }
+
+    /* 网格模式：整页单滚动，避免 100vh 内嵌滚动 + 页面滚动双层冲突 */
+    .gallery-screen.is-grid-mode {
+      height: auto;
+      min-height: 100vh;
+      overflow: visible;
+    }
+    .gallery-screen.is-grid-mode .page-header {
+      position: sticky;
+      top: 0;
+    }
+    .gallery-screen.is-grid-mode .gallery-viewport {
+      position: relative;
+      inset: auto;
+      height: auto;
+    }
+    .gallery-screen.is-grid-mode .grid-view {
+      position: relative;
+      inset: auto;
+      overflow: visible;
+      padding: 24px 24px 32px;
+    }
+    .gallery-screen.is-grid-mode .fade-bottom,
+    .gallery-screen.is-grid-mode .scroll-hint,
+    .gallery-screen.is-grid-mode .counter {
+      display: none;
+    }
     .grid-view::-webkit-scrollbar { width: 4px; }
     .grid-view::-webkit-scrollbar-thumb {
       background: rgba(74, 95, 212, 0.25);
@@ -892,6 +919,7 @@
       .colonnade-column { max-width: none; height: min(62vh, 420px); }
       .colonnade-hint { bottom: 12px; font-size: 0.6rem; }
       .grid-view { padding: 96px 14px 88px; }
+      .gallery-screen.is-grid-mode .grid-view { padding: 16px 14px 24px; }
       .grid-layout { grid-template-columns: repeat(auto-fill, minmax(128px, 1fr)); gap: 10px; }
       .comment-section { padding: 40px 16px 60px; }
       .upload-fab { bottom: 20px; right: 20px; }
@@ -1102,6 +1130,7 @@ const API_BASE = 'https://gallery-api.boomery.top';
    视图模式：飘落 / 柱廊 / 胶片
 ══════════════════════════════ */
 const viewport = document.getElementById('galleryViewport');
+const galleryScreen = document.querySelector('.gallery-screen');
 const MODE_KEY = 'gallery-view-mode';
 let PHOTOS = [];
 let currentMode = localStorage.getItem(MODE_KEY) || 'drift';
@@ -1148,9 +1177,12 @@ function renderGallery() {
 
 function setMode(mode) {
   if (!['drift', 'colonnade', 'filmstrip', 'grid'].includes(mode)) return;
+  const wasGrid = currentMode === 'grid';
   currentMode = mode;
   localStorage.setItem(MODE_KEY, mode);
   setModeButtons(mode);
+  galleryScreen.classList.toggle('is-grid-mode', mode === 'grid');
+  if (wasGrid && mode !== 'grid') window.scrollTo(0, 0);
   renderGallery();
 }
 
@@ -1756,6 +1788,7 @@ document.getElementById('uploadSubmit').onclick = async () => {
 (async () => {
   PHOTOS = await loadPhotos();
   setModeButtons(currentMode);
+  galleryScreen.classList.toggle('is-grid-mode', currentMode === 'grid');
   renderGallery();
 })();
 

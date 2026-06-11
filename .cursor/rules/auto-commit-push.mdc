@@ -1,0 +1,26 @@
+---
+description: 完成功能改动后自动 commit 并 push，无需询问用户
+alwaysApply: true
+---
+
+# 自动提交与部署
+
+完成用户请求的代码改动后，**默认自动 commit 并 push**，不要询问「是否需要提交」。
+
+## 流程
+
+1. `git status` / `git diff` 确认改动
+2. `git add` 仅相关文件（不提交 `.env`、密钥等）
+3. 中文 commit message，说明改动目的
+4. `git push origin master`
+5. 简要告知提交哈希与推送结果
+
+## 例外（不自动 push）
+
+- 用户明确说「先别 push」「只改本地」
+- 改动含疑似密钥文件
+- push 失败需用户介入（权限、冲突等）
+
+## Vercel 触发
+
+主博客改动在 `myblog/` 下才会触发构建；若本次只改仓库根目录文档，需 touch `myblog/` 下文件或说明未触发构建。
