@@ -12,7 +12,6 @@ function buildHero(root) {
   <div class="home-hero__grid" aria-hidden="true"></div>
   <div class="home-hero__glow" aria-hidden="true"></div>
   <div class="home-hero__scanline" aria-hidden="true"></div>
-  <div class="home-hero__border" aria-hidden="true"></div>
   <div class="home-hero__inner">
     <span class="home-hero__badge"><span class="home-hero__badge-dot"></span>AI × 个人数字空间</span>
     <h1 class="home-hero__title">在 boomery 构建<span class="home-hero__accent">数字人格</span></h1>

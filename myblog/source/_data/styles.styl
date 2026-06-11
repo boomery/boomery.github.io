@@ -510,6 +510,7 @@ body.sidebar-active .sidebar
   max-width: 860px
   overflow: hidden
   min-height: 320px
+  border-radius: 22px
 
 .home-hero__particles
   inset: 0
@@ -543,27 +544,13 @@ body.sidebar-active .sidebar
 .home-hero__scanline
   animation: hero-scan 5.5s ease-in-out infinite
   background: linear-gradient(to bottom, transparent, rgba(74, 95, 212, 0.18), transparent)
+  border-radius: inherit
   height: 40%
   left: 0
   pointer-events: none
   position: absolute
   right: 0
   z-index: 4
-
-.home-hero__border
-  border-radius: 22px
-  inset: 0
-  overflow: hidden
-  pointer-events: none
-  position: absolute
-  z-index: 3
-
-  &::before
-    animation: hero-border-spin 6s linear infinite
-    background: conic-gradient(from 0deg, transparent, rgba(74, 95, 212, 0.65), rgba(140, 100, 255, 0.5), transparent, rgba(100, 180, 255, 0.45), transparent)
-    content: ''
-    inset: -50%
-    position: absolute
 
 .home-hero__inner
   animation: hero-fade-up 0.75s cubic-bezier(.22,.68,0,1.05) both
@@ -575,11 +562,22 @@ body.sidebar-active .sidebar
   box-shadow: 0 8px 40px rgba(74, 95, 212, 0.14),
               0 2px 8px rgba(0, 0, 0, 0.04),
               inset 0 1px 0 rgba(255, 255, 255, 0.8)
-  margin: 2px
+  isolation: isolate
   padding: 44px 48px 40px
   position: relative
   text-align: left
   z-index: 5
+
+  &::before
+    animation: hero-shimmer 5s linear infinite
+    background: linear-gradient(90deg, rgba(74, 95, 212, 0.55), rgba(140, 100, 255, 0.45), rgba(100, 180, 255, 0.4), rgba(74, 95, 212, 0.55))
+    background-size: 300% 100%
+    border-radius: 22px
+    content: ''
+    inset: -2px
+    pointer-events: none
+    position: absolute
+    z-index: -1
 
 .home-hero__badge
   align-items: center
@@ -939,7 +937,7 @@ body.sidebar-active .sidebar
   .home-hero__grid,
   .home-hero__glow,
   .home-hero__scanline,
-  .home-hero__border::before,
+  .home-hero__inner::before,
   .home-hero__accent,
   .home-hero__badge-dot,
   .home-posts-label__dot,
