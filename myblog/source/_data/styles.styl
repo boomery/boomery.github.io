@@ -522,7 +522,6 @@ body.sidebar-active .sidebar
   margin: 0 auto 36px
   max-width: 860px
   overflow: hidden
-  min-height: 320px
   border-radius: 22px
 
 .home-hero__particles
@@ -650,14 +649,23 @@ body.sidebar-active .sidebar
   margin-bottom: 24px
 
 .home-hero__btn
+  border-bottom: none !important
   border-radius: 10px
+  box-sizing: border-box
+  display: inline-flex
+  align-items: center
+  justify-content: center
   font-size: 0.88rem
   font-weight: 600
   letter-spacing: 0.02em
+  line-height: 1.4
+  max-width: 100%
   padding: 10px 20px
   position: relative
   text-decoration: none !important
   transition: background 0.2s, border-color 0.2s, color 0.2s, transform 0.2s, box-shadow 0.2s
+  -webkit-tap-highlight-color: transparent
+  z-index: 1
 
   &:hover
     transform: translateY(-1px)
@@ -674,7 +682,9 @@ body.sidebar-active .sidebar
     background: linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.25) 50%, transparent 60%)
     content: ''
     inset: 0
+    pointer-events: none
     position: absolute
+    z-index: 0
 
   &:hover
     background: linear-gradient(135deg, #3a4fc4, #4a3fc4) !important
@@ -793,6 +803,53 @@ body.sidebar-active .sidebar
     width: 100% !important
     box-sizing: border-box
 
+  .main-inner.index
+    padding-left: 16px !important
+    padding-right: 16px !important
+
+  // 首页 Hero 不被 overflow 裁切；底部留空避开左下角 sidebar 按钮
+  .home-hero
+    margin-bottom: 24px
+    min-height: 0
+    overflow: visible
+
+  .home-hero__inner
+    overflow: visible
+    padding: 24px 18px 56px
+
+  .home-hero__title
+    font-size: 1.55rem
+
+  .home-hero__desc
+    font-size: 0.92rem
+    margin-bottom: 22px
+
+  .home-hero__actions
+    flex-direction: column
+    gap: 12px
+    margin-bottom: 20px
+    width: 100%
+
+  .home-hero__btn
+    min-height: 44px
+    padding: 12px 16px
+    text-align: center
+    width: 100%
+
+  .home-hero__tags
+    gap: 6px
+    margin-bottom: 0
+
+  .home-hero__tags li
+    font-size: 0.72rem
+
+  // 首页移动端：sidebar 按钮移到右下角，避免遮挡 Hero 按钮
+  body:has(.main-inner.index) .sidebar-toggle
+    bottom: 18px !important
+    left: auto !important
+    right: 18px !important
+    z-index: 1400
+
   .header
     margin-bottom: 20px
 
@@ -811,22 +868,6 @@ body.sidebar-active .sidebar
 
   .posts-expand.index .post-header
     text-align: left
-
-  .home-hero__inner
-    padding: 28px 22px 26px
-
-  .home-hero__title
-    font-size: 1.55rem
-
-  .home-hero__desc
-    font-size: 0.92rem
-
-  .home-hero__actions
-    flex-direction: column
-
-  .home-hero__btn
-    text-align: center
-    width: 100%
 
 // ── Dark mode ──
 @media (prefers-color-scheme: dark)
