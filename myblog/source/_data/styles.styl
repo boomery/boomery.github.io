@@ -257,8 +257,6 @@ body
 
 .main-inner.index
   overflow-x: hidden
-  width: 100%
-  max-width: 100%
   box-sizing: border-box
 
   &::before
@@ -779,6 +777,10 @@ body.sidebar-active .sidebar
 
 // ── Mobile ──
 +tablet-mobile()
+  .main-inner.index
+    max-width: 100% !important
+    width: 100% !important
+
   .sidebar-dimmer
     left: 0 !important
     width: 100% !important
