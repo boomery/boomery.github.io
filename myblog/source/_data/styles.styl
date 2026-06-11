@@ -115,6 +115,17 @@ html
   padding-top: 4px
 
 // ── Sidebar / TOC（overlay 模式，不推挤页面） ──
+$sidebar-glass-width = 320px
+
+// 遮罩只盖住主内容区，不挡在侧边栏下方，否则 backdrop-filter 只会模糊黑遮罩
+.sidebar-dimmer
+  background: rgba(26, 26, 46, 0.28) !important
+  left: $sidebar-glass-width !important
+  width: calc(100% - $sidebar-glass-width) !important
+
+  .sidebar-active &
+    opacity: 1 !important
+
 +desktop()
   .sidebar-active
     padding-left: 0 !important
@@ -124,15 +135,17 @@ html
     z-index: 1190
 
 .sidebar
-  background: rgba(255, 255, 255, 0.78) !important
-  backdrop-filter: blur(24px) saturate(1.5)
-  -webkit-backdrop-filter: blur(24px) saturate(1.5)
-  border-right: 1px solid rgba(255, 255, 255, 0.65)
+  background: rgba(255, 255, 255, 0.52) !important
+  backdrop-filter: blur(32px) saturate(1.8)
+  -webkit-backdrop-filter: blur(32px) saturate(1.8)
+  border-right: 1px solid rgba(255, 255, 255, 0.55)
   box-shadow: 4px 0 28px rgba(100, 120, 180, 0.12) !important
   height: 100vh !important
   left: 0 - $sidebar-desktop !important
   top: 0 !important
   z-index: 1200
+  -webkit-transform: translateZ(0)
+  transform: translateZ(0)
 
 body.sidebar-active .sidebar
   left: 0 !important
@@ -324,6 +337,13 @@ body.sidebar-active .sidebar
   margin-top: 40px
 
 // ── Mobile ──
++tablet-mobile()
+  .sidebar
+    background: rgba(255, 255, 255, 0.45) !important
+    backdrop-filter: blur(40px) saturate(2)
+    -webkit-backdrop-filter: blur(40px) saturate(2)
+    box-shadow: 4px 0 36px rgba(100, 120, 180, 0.18) !important
+
 +mobile()
   .header
     margin-bottom: 20px
@@ -380,8 +400,13 @@ body.sidebar-active .sidebar
     border-bottom-color: rgba(255, 255, 255, 0.06)
 
   .sidebar
-    background: rgba(22, 22, 32, 0.82) !important
+    background: rgba(22, 22, 32, 0.55) !important
+    backdrop-filter: blur(32px) saturate(1.8)
+    -webkit-backdrop-filter: blur(32px) saturate(1.8)
     border-right-color: rgba(255, 255, 255, 0.08)
+
+  .sidebar-dimmer
+    background: rgba(0, 0, 0, 0.35) !important
 
     .sidebar-inner
       color: #aaa
