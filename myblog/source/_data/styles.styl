@@ -46,6 +46,95 @@ body
     animation: fluid-drift-b 28s ease-in-out infinite
     opacity: 0.7
 
+// ── Header / Nav ──
+.header
+  background: rgba(255, 255, 255, 0.88) !important
+  backdrop-filter: blur(20px) saturate(1.4)
+  -webkit-backdrop-filter: blur(20px) saturate(1.4)
+  border-bottom: 1px solid rgba(255, 255, 255, 0.6)
+  box-shadow: 0 2px 16px rgba(100, 120, 180, 0.08)
+  margin-bottom: 32px
+  position: sticky
+  top: 0
+  z-index: 100
+
+.header-inner
+  align-items: center
+  padding: 16px 0 !important
+
+.brand
+  border-bottom: none !important
+  padding: 0 !important
+
+.site-title
+  font-weight: 800 !important
+  font-size: 1.2rem !important
+  letter-spacing: -0.03em
+
+.site-meta
+  text-align: left
+
+.logo-line
+  display: none
+
+.site-nav .menu
+  padding: 0
+  text-align: right
+
+  .menu-item
+    margin: 0 2px
+
+    a
+      border-bottom: none !important
+      border-radius: 8px
+      color: #666 !important
+      font-size: 0.88rem
+      font-weight: 500
+      letter-spacing: 0.02em
+      padding: 8px 14px !important
+      transition: background 0.2s, color 0.2s
+
+      &:hover
+        background: rgba(74, 95, 212, 0.08) !important
+        color: #4a5fd4 !important
+
+      &.menu-item-active
+        background: rgba(74, 95, 212, 0.12) !important
+        color: #4a5fd4 !important
+        font-weight: 600
+
+.main-inner
+  padding-top: 4px
+
+// ── Category / Archive timeline ──
+.posts-collapse .collection-header
+  color: #1a1a2e
+  font-size: 1.4rem
+  font-weight: 700
+
+  small
+    color: #999
+    font-size: 0.75rem
+    font-weight: 500
+    margin-left: 8px
+
+.posts-collapse .collection-year
+  color: #4a5fd4
+  font-size: 1.1rem
+  font-weight: 700
+  margin: 36px 0 16px
+
+.posts-collapse .post-header
+  border-bottom-color: rgba(0, 0, 0, 0.07) !important
+  margin-top: 20px !important
+  padding-bottom: 10px
+
+  &:hover
+    border-bottom-color: rgba(74, 95, 212, 0.25) !important
+
+.posts-collapse .post-content::before
+  background: rgba(74, 95, 212, 0.15) !important
+
 // ── Article cards ──
 .post-block
   background: rgba(255, 255, 255, 0.88) !important
@@ -151,6 +240,18 @@ body
 
 // ── Mobile ──
 +mobile()
+  .header
+    margin-bottom: 20px
+
+  .header-inner
+    padding: 12px 0 !important
+
+  .site-nav .menu
+    text-align: left
+
+    .menu-item a
+      padding: 10px 12px !important
+
   .post-block
     padding: 24px 20px
     border-radius: 12px
@@ -188,6 +289,23 @@ body
 
   .footer
     background: rgba(22, 22, 32, 0.7) !important
+
+  .header
+    background: rgba(22, 22, 32, 0.88) !important
+    border-bottom-color: rgba(255, 255, 255, 0.06)
+
+  .site-nav .menu .menu-item a
+    color: #aaa !important
+
+    &:hover,
+    &.menu-item-active
+      color: #8b9dff !important
+
+  .posts-collapse .collection-header
+    color: #e8e8f0
+
+  .posts-collapse .collection-year
+    color: #8b9dff
 
 @media (prefers-reduced-motion: reduce)
   body::before,
