@@ -1,0 +1,72 @@
+// Fluid gradient background — site-wide ambient animation
+// Injected via themes/next/_config.yml → custom_file_path.style
+
+@keyframes fluid-drift-a
+  0%, 100%
+    transform: translate(0, 0) scale(1) rotate(0deg)
+  25%
+    transform: translate(6%, -4%) scale(1.08) rotate(2deg)
+  50%
+    transform: translate(-4%, 5%) scale(0.96) rotate(-1deg)
+  75%
+    transform: translate(3%, 3%) scale(1.04) rotate(1deg)
+
+@keyframes fluid-drift-b
+  0%, 100%
+    transform: translate(0, 0) scale(1) rotate(0deg)
+  33%
+    transform: translate(-5%, 4%) scale(1.06) rotate(-2deg)
+  66%
+    transform: translate(4%, -3%) scale(0.98) rotate(2deg)
+
+body
+  background: var(--body-bg-color)
+
+  &::before,
+  &::after
+    content: ''
+    position: fixed
+    inset: -25%
+    z-index: -1
+    pointer-events: none
+    filter: blur(90px)
+    will-change: transform
+
+  &::before
+    background: radial-gradient(ellipse 55% 45% at 25% 35%, rgba(180, 200, 255, 0.55) 0%, transparent 70%),
+                radial-gradient(ellipse 50% 40% at 75% 65%, rgba(220, 190, 255, 0.45) 0%, transparent 70%),
+                radial-gradient(ellipse 45% 50% at 50% 90%, rgba(255, 210, 190, 0.35) 0%, transparent 70%)
+    animation: fluid-drift-a 22s ease-in-out infinite
+    opacity: 0.85
+
+  &::after
+    background: radial-gradient(ellipse 50% 45% at 80% 25%, rgba(190, 230, 255, 0.4) 0%, transparent 70%),
+                radial-gradient(ellipse 55% 40% at 15% 75%, rgba(200, 180, 255, 0.35) 0%, transparent 70%)
+    animation: fluid-drift-b 28s ease-in-out infinite
+    opacity: 0.7
+
+// Slight glass feel on main content blocks
+.post-block,
+.footer
+  background: rgba(255, 255, 255, 0.72) !important
+  backdrop-filter: blur(12px)
+  -webkit-backdrop-filter: blur(12px)
+
+@media (prefers-color-scheme: dark)
+  body::before
+    background: radial-gradient(ellipse 55% 45% at 25% 35%, rgba(60, 80, 140, 0.45) 0%, transparent 70%),
+                radial-gradient(ellipse 50% 40% at 75% 65%, rgba(90, 60, 130, 0.35) 0%, transparent 70%),
+                radial-gradient(ellipse 45% 50% at 50% 90%, rgba(100, 70, 60, 0.25) 0%, transparent 70%)
+
+  body::after
+    background: radial-gradient(ellipse 50% 45% at 80% 25%, rgba(50, 90, 120, 0.35) 0%, transparent 70%),
+                radial-gradient(ellipse 55% 40% at 15% 75%, rgba(70, 55, 110, 0.3) 0%, transparent 70%)
+
+  .post-block,
+  .footer
+    background: rgba(20, 20, 28, 0.75) !important
+
+@media (prefers-reduced-motion: reduce)
+  body::before,
+  body::after
+    animation: none
