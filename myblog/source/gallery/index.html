@@ -424,75 +424,39 @@
       white-space: nowrap;
     }
 
-    /* ── 胶片横向滚动 ── */
+    /* ── 35mm 胶片：3D 半透明螺旋循环旋转 ── */
     .filmstrip-view {
       position: absolute;
       inset: 0;
-      display: flex;
-      align-items: center;
-      padding: 72px 0 88px;
-    }
-    .filmstrip-track {
-      display: flex;
-      gap: 18px;
-      overflow-x: auto;
-      overflow-y: hidden;
-      scroll-snap-type: x mandatory;
-      -webkit-overflow-scrolling: touch;
-      width: 100%;
-      padding: 0 max(24px, calc(50vw - 130px));
-      scrollbar-width: thin;
-      scrollbar-color: rgba(74, 95, 212, 0.25) transparent;
-    }
-    .filmstrip-track::-webkit-scrollbar { height: 4px; }
-    .filmstrip-track::-webkit-scrollbar-thumb {
-      background: rgba(74, 95, 212, 0.25);
-      border-radius: 4px;
-    }
-    .filmstrip-item {
-      flex: 0 0 auto;
-      width: min(260px, 74vw);
-      scroll-snap-align: center;
-      cursor: pointer;
-      border-radius: 16px;
       overflow: hidden;
-      background: var(--glass);
-      backdrop-filter: blur(20px) saturate(1.4);
-      -webkit-backdrop-filter: blur(20px) saturate(1.4);
-      border: 1px solid var(--glass-border);
-      box-shadow: 0 6px 28px var(--shadow);
-      transition: transform 0.25s, box-shadow 0.25s;
     }
-    .filmstrip-item:hover {
-      transform: translateY(-4px);
-      box-shadow: 0 0 0 1px var(--accent), 0 12px 36px rgba(74, 95, 212, 0.18);
-    }
-    .filmstrip-item img {
+    .filmstrip-3d-stage {
       width: 100%;
-      aspect-ratio: 3 / 4;
-      object-fit: cover;
+      height: 100%;
+      position: relative;
+      touch-action: none;
+    }
+    .filmstrip-3d-stage canvas {
       display: block;
-      pointer-events: none;
-      user-select: none;
+      width: 100% !important;
+      height: 100% !important;
+      cursor: grab;
+      outline: none;
     }
-    .filmstrip-meta {
-      padding: 12px 14px 14px;
-      border-top: 1px solid rgba(74, 95, 212, 0.08);
-    }
-    .filmstrip-meta strong {
-      display: block;
-      color: var(--text);
-      font-size: 0.82rem;
-      font-weight: 600;
-      margin-bottom: 4px;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-    .filmstrip-meta span {
+    .filmstrip-3d-stage.is-dragging canvas { cursor: grabbing; }
+    .filmstrip-3d-stage.is-loading canvas { opacity: 0.35; }
+    .filmstrip-3d-hint {
+      position: absolute;
+      bottom: 18px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 2;
+      font-size: 0.68rem;
       color: var(--muted);
-      font-size: 0.72rem;
-      letter-spacing: 0.04em;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      pointer-events: none;
+      white-space: nowrap;
     }
 
     /* ── 网格平铺 ── */
@@ -1451,40 +1415,378 @@ function renderColonnade() {
   };
 }
 
-/* ── 胶片横向滚动 ── */
+/* ── 35mm 胶片：直线纹理 + Three.js 3D 螺旋循环 ── */
+const FILM_PERF_H = 14;
+const FILM_ROW_PAD = 6;
+const FILM_TEX_FRAME_W = 200;
+const FILM_FLOW_SPEED = 0.0014;
+const THREE_CDN = 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js';
+
+let threeLoadPromise = null;
+function loadThreeLib() {
+  if (window.THREE) return Promise.resolve(window.THREE);
+  if (!threeLoadPromise) {
+    threeLoadPromise = new Promise((resolve, reject) => {
+      const s = document.createElement('script');
+      s.src = THREE_CDN;
+      s.async = true;
+      s.onload = () => resolve(window.THREE);
+      s.onerror = () => reject(new Error('Three.js load failed'));
+      document.head.appendChild(s);
+    });
+  }
+  return threeLoadPromise;
+}
+
+function drawFilmPerfRow(ctx, y, width) {
+  ctx.fillStyle = '#000';
+  ctx.fillRect(0, y, width, FILM_PERF_H);
+  const holeW = 8;
+  const pitch = 20;
+  for (let x = 4; x < width; x += pitch) {
+    ctx.fillStyle = '#e6e6e6';
+    ctx.fillRect(x, y + 3, holeW, 8);
+  }
+}
+
+function loadFilmImage(src) {
+  return new Promise(resolve => {
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => resolve(img);
+    img.onerror = () => resolve(null);
+    img.src = src;
+  });
+}
+
+function expandPhotosForLoop(photos, minFrames) {
+  if (!photos.length) return [];
+  const out = [];
+  while (out.length < minFrames) out.push(...photos);
+  return out.slice(0, minFrames);
+}
+
+async function buildStraightFilmCanvas(photos) {
+  const loopPhotos = expandPhotosForLoop(photos, Math.max(photos.length, 12));
+  const tilePhotos = loopPhotos.concat(loopPhotos);
+  const frameW = FILM_TEX_FRAME_W;
+  const imgH = Math.round(frameW * 3 / 4);
+  const rowH = imgH + FILM_ROW_PAD * 2;
+  const totalW = tilePhotos.length * frameW;
+  const totalH = FILM_PERF_H + rowH + FILM_PERF_H;
+
+  const canvas = document.createElement('canvas');
+  canvas.width = totalW;
+  canvas.height = totalH;
+  const ctx = canvas.getContext('2d');
+
+  ctx.fillStyle = '#000';
+  ctx.fillRect(0, 0, totalW, totalH);
+  drawFilmPerfRow(ctx, 0, totalW);
+  drawFilmPerfRow(ctx, totalH - FILM_PERF_H, totalW);
+
+  const images = await Promise.all(tilePhotos.map(p => loadFilmImage(p.src)));
+  images.forEach((img, i) => {
+    const x = i * frameW;
+    const y = FILM_PERF_H + FILM_ROW_PAD;
+    if (img) {
+      ctx.drawImage(img, x, y, frameW, imgH);
+      return;
+    }
+    const grad = ctx.createLinearGradient(x, y, x + frameW, y + imgH);
+    grad.addColorStop(0, '#2a2a2a');
+    grad.addColorStop(1, '#111');
+    ctx.fillStyle = grad;
+    ctx.fillRect(x, y, frameW, imgH);
+  });
+
+  ctx.fillStyle = 'rgba(255, 196, 120, 0.14)';
+  ctx.fillRect(0, 0, totalW, totalH);
+
+  return { canvas, frameW, totalW, totalH, loopCount: loopPhotos.length };
+}
+
+function buildFilmSpiralCurve(THREE) {
+  const pts = [];
+  const segs = 80;
+  const loops = 1.2;
+  const radius = 3.0;
+  for (let i = 0; i <= segs; i++) {
+    const t = i / segs;
+    const ang = t * Math.PI * 2 * loops - Math.PI * 0.5;
+    const wave = Math.sin(t * Math.PI * 2 * 2) * 0.5;
+    pts.push(new THREE.Vector3(
+      Math.cos(ang) * (radius + wave * 0.3),
+      Math.sin(t * Math.PI * 2) * 1.1 + wave * 0.2,
+      Math.sin(ang) * (radius + wave * 0.3)
+    ));
+  }
+  return new THREE.CatmullRomCurve3(pts, true, 'centripetal');
+}
+
+function createFilmRibbonMesh(THREE, curve, texture, strips, height) {
+  const positions = [];
+  const uvs = [];
+  const indices = [];
+  const worldUp = new THREE.Vector3(0, 1, 0);
+  const tangent = new THREE.Vector3();
+  const frameUp = new THREE.Vector3();
+
+  for (let i = 0; i <= strips; i++) {
+    const t = i / strips;
+    const p = curve.getPointAt(t);
+    curve.getTangentAt(t, tangent).normalize();
+    frameUp.copy(worldUp).addScaledVector(tangent, -worldUp.dot(tangent));
+    if (frameUp.lengthSq() < 1e-4) frameUp.set(0, 0, 1);
+    frameUp.normalize();
+    const half = height / 2;
+    const top = p.x + frameUp.x * half;
+    const topY = p.y + frameUp.y * half;
+    const topZ = p.z + frameUp.z * half;
+    const botX = p.x - frameUp.x * half;
+    const botY = p.y - frameUp.y * half;
+    const botZ = p.z - frameUp.z * half;
+    positions.push(top, topY, topZ, botX, botY, botZ);
+    uvs.push(t, 1, t, 0);
+  }
+
+  for (let i = 0; i < strips; i++) {
+    const a = i * 2;
+    const b = a + 1;
+    const c = a + 2;
+    const d = a + 3;
+    indices.push(a, b, c, b, d, c);
+  }
+
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+  geo.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2));
+  geo.setIndex(indices);
+  geo.computeVertexNormals();
+
+  const mat = new THREE.MeshPhysicalMaterial({
+    map: texture,
+    color: new THREE.Color(0xffd6a8),
+    transparent: true,
+    opacity: 0.74,
+    side: THREE.DoubleSide,
+    roughness: 0.28,
+    metalness: 0.08,
+    clearcoat: 0.45,
+    clearcoatRoughness: 0.22,
+    depthWrite: false
+  });
+
+  const mesh = new THREE.Mesh(geo, mat);
+  mesh.renderOrder = 1;
+  return mesh;
+}
+
 function renderFilmstrip() {
   const wrap = document.createElement('div');
   wrap.className = 'filmstrip-view';
-  const track = document.createElement('div');
-  track.className = 'filmstrip-track';
-  wrap.appendChild(track);
+  const stage = document.createElement('div');
+  stage.className = 'filmstrip-3d-stage is-loading';
+  const hint = document.createElement('div');
+  hint.className = 'filmstrip-3d-hint';
+  hint.textContent = '拖拽环视 · 点击照片查看';
+  stage.appendChild(hint);
+  wrap.appendChild(stage);
   viewport.appendChild(wrap);
 
-  PHOTOS.forEach((item, i) => {
-    const el = document.createElement('div');
-    el.className = 'filmstrip-item';
-    const img = document.createElement('img');
-    img.src = item.src;
-    img.alt = item.title;
-    img.draggable = false;
-    const meta = document.createElement('div');
-    meta.className = 'filmstrip-meta';
-    const strong = document.createElement('strong');
-    strong.textContent = item.title;
-    meta.appendChild(strong);
-    if (item.tag) {
-      const span = document.createElement('span');
-      span.textContent = item.tag;
-      meta.appendChild(span);
-    }
-    el.appendChild(img);
-    el.appendChild(meta);
-    el.addEventListener('click', () => openLightbox(i));
-    track.appendChild(el);
-  });
+  const state = {
+    renderer: null,
+    scene: null,
+    camera: null,
+    filmGroup: null,
+    filmMesh: null,
+    texture: null,
+    raf: 0,
+    flow: 0,
+    time: 0,
+    camYaw: 0,
+    camPitch: 0.75,
+    camRadius: 7.2,
+    glow: null,
+    dragging: false,
+    dragMoved: false,
+    lastX: 0,
+    lastY: 0,
+    raycaster: null,
+    mouse: null,
+    frameW: FILM_TEX_FRAME_W,
+    loopCount: 1,
+    disposed: false
+  };
 
-  modeState.cleanup = null;
-  modeState.onResize = null;
+  const disposeFilm3D = () => {
+    state.disposed = true;
+    if (state.raf) cancelAnimationFrame(state.raf);
+    if (state.renderer) {
+      state.renderer.dispose();
+      if (state.renderer.domElement.parentNode) {
+        state.renderer.domElement.parentNode.removeChild(state.renderer.domElement);
+      }
+    }
+    if (state.filmMesh) {
+      state.filmMesh.geometry.dispose();
+      state.filmMesh.material.dispose();
+    }
+    if (state.texture) state.texture.dispose();
+  };
+
+  const resizeFilm3D = () => {
+    if (!state.renderer || !state.camera) return;
+    const w = stage.clientWidth || window.innerWidth;
+    const h = stage.clientHeight || window.innerHeight;
+    state.camera.aspect = w / h;
+    state.camera.updateProjectionMatrix();
+    state.renderer.setSize(w, h, false);
+  };
+
+  const updateCamera = () => {
+    if (!state.camera) return;
+    const x = Math.sin(state.camYaw) * state.camRadius;
+    const z = Math.cos(state.camYaw) * state.camRadius;
+    state.camera.position.set(x, state.camPitch, z);
+    state.camera.lookAt(0, 0, 0);
+  };
+
+  const tick = () => {
+    if (state.disposed) return;
+    state.time += 0.016;
+    const flowRate = FILM_FLOW_SPEED * (0.82 + 0.18 * Math.sin(state.time * 0.9));
+    state.flow = (state.flow + flowRate) % 1;
+    if (state.texture) {
+      state.texture.offset.x = state.flow;
+      state.texture.needsUpdate = false;
+    }
+    if (state.glow) {
+      state.glow.intensity = 0.82 + Math.sin(state.time * 1.4 + state.flow * Math.PI * 2) * 0.14;
+      state.glow.position.y = Math.sin(state.time * 0.7) * 0.25;
+    }
+    state.renderer.render(state.scene, state.camera);
+    state.raf = requestAnimationFrame(tick);
+  };
+
+  const onPointerDown = e => {
+    if (e.button !== 0) return;
+    state.dragging = true;
+    state.dragMoved = false;
+    state.lastX = e.clientX;
+    state.lastY = e.clientY;
+    stage.classList.add('is-dragging');
+    stage.setPointerCapture(e.pointerId);
+  };
+  const onPointerMove = e => {
+    if (!state.dragging) return;
+    const dx = e.clientX - state.lastX;
+    const dy = e.clientY - state.lastY;
+    if (Math.abs(dx) > 2 || Math.abs(dy) > 2) state.dragMoved = true;
+    state.camYaw += dx * 0.005;
+    state.camPitch = Math.max(-0.2, Math.min(1.8, state.camPitch + dy * 0.008));
+    updateCamera();
+    state.lastX = e.clientX;
+    state.lastY = e.clientY;
+  };
+  const endDrag = e => {
+    if (!state.dragging) return;
+    state.dragging = false;
+    stage.classList.remove('is-dragging');
+    try { stage.releasePointerCapture(e.pointerId); } catch (_) {}
+  };
+
+  const onClick = e => {
+    if (state.dragMoved || !state.filmMesh || !state.camera) return;
+    const rect = state.renderer.domElement.getBoundingClientRect();
+    state.mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+    state.mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+    state.raycaster.setFromCamera(state.mouse, state.camera);
+    const hits = state.raycaster.intersectObject(state.filmMesh);
+    if (!hits.length || !hits[0].uv) return;
+    let u = hits[0].uv.x - state.flow;
+    u = ((u % 1) + 1) % 1;
+    const loopIdx = Math.floor(u * state.loopCount * 2) % state.loopCount;
+    if (loopIdx >= 0) openLightbox(loopIdx % PHOTOS.length);
+  };
+
+  const boot = async () => {
+    try {
+      const THREE = await loadThreeLib();
+      if (state.disposed) return;
+      const built = await buildStraightFilmCanvas(PHOTOS);
+      if (state.disposed) return;
+
+      state.frameW = built.frameW;
+      state.loopCount = built.loopCount;
+
+      const w = stage.clientWidth || window.innerWidth;
+      const h = stage.clientHeight || window.innerHeight;
+
+      state.scene = new THREE.Scene();
+      state.camera = new THREE.PerspectiveCamera(42, w / h, 0.1, 100);
+      updateCamera();
+
+      state.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+      state.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      state.renderer.setSize(w, h, false);
+      state.renderer.setClearColor(0x000000, 0);
+      stage.insertBefore(state.renderer.domElement, hint);
+
+      state.scene.add(new THREE.AmbientLight(0xffffff, 0.55));
+      const key = new THREE.DirectionalLight(0xffffff, 1.1);
+      key.position.set(4, 6, 5);
+      state.scene.add(key);
+      const rim = new THREE.PointLight(0xc8d8ff, 1.4, 20);
+      rim.position.set(-3, 2, -2);
+      state.scene.add(rim);
+      state.glow = new THREE.PointLight(0xffe8c8, 0.9, 16);
+      state.glow.position.set(0, 0, 0);
+      state.scene.add(state.glow);
+
+      state.texture = new THREE.CanvasTexture(built.canvas);
+      state.texture.colorSpace = THREE.SRGBColorSpace;
+      state.texture.wrapS = THREE.RepeatWrapping;
+      state.texture.wrapT = THREE.ClampToEdgeWrapping;
+      state.texture.repeat.set(1, 1);
+      state.texture.anisotropy = state.renderer.capabilities.getMaxAnisotropy();
+
+      const curve = buildFilmSpiralCurve(THREE);
+      const stripHeight = 0.95;
+      state.filmMesh = createFilmRibbonMesh(THREE, curve, state.texture, 220, stripHeight);
+
+      state.filmGroup = new THREE.Group();
+      state.filmGroup.add(state.filmMesh);
+      state.filmGroup.rotation.x = 0;
+      state.scene.add(state.filmGroup);
+
+      state.raycaster = new THREE.Raycaster();
+      state.mouse = new THREE.Vector2();
+
+      stage.addEventListener('pointerdown', onPointerDown);
+      stage.addEventListener('pointermove', onPointerMove);
+      stage.addEventListener('pointerup', endDrag);
+      stage.addEventListener('pointercancel', endDrag);
+      state.renderer.domElement.addEventListener('click', onClick);
+
+      stage.classList.remove('is-loading');
+      tick();
+    } catch (err) {
+      console.error(err);
+      stage.innerHTML = '<div class="gallery-empty">胶片 3D 加载失败</div>';
+    }
+  };
+
+  boot();
+
+  modeState.cleanup = () => {
+    stage.removeEventListener('pointerdown', onPointerDown);
+    stage.removeEventListener('pointermove', onPointerMove);
+    stage.removeEventListener('pointerup', endDrag);
+    stage.removeEventListener('pointercancel', endDrag);
+    disposeFilm3D();
+  };
+  modeState.onResize = resizeFilm3D;
 }
 
 /* ── 网格平铺 ── */

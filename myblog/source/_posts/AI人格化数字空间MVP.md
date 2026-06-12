@@ -2,7 +2,6 @@
 title: AI 人格化数字空间：一个 MVP 产品方案
 date: 2026-05-20 10:00:00
 categories: 技术
-featured: true
 tags:
   - AI
   - 产品方案
