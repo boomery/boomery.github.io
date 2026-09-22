@@ -183,7 +183,7 @@ window.addEventListener('pagehide', function () {
 });
 
 const NIGHT_GAME_VERSION = '0.19.2';
-const NIGHT_BUILT_AT = '2026-09-22 17:50';
+const NIGHT_BUILT_AT = '2026-09-22 17:58';
 const NIGHT_PCK = 'https://cdn.boomery.top/night.pck';
 (function stampBuildMeta() {
   const ver = document.getElementById('nightGameVer');
@@ -216,7 +216,7 @@ const GODOT_THREADS_ENABLED = false;
 const engine = new Engine(GODOT_CONFIG);
 
 if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('sw.js?v=' + GODOT_CONFIG.fileSizes[NIGHT_PCK] + '.r3', { updateViaCache: 'none' });
+  navigator.serviceWorker.register('sw.js?v=' + GODOT_CONFIG.fileSizes[NIGHT_PCK] + '-' + NIGHT_GAME_VERSION, { updateViaCache: 'none' });
 }
 
 (function () {
@@ -235,27 +235,66 @@ if ('serviceWorker' in navigator) {
   let initializing = true;
   let statusMode = '';
   let packCached = false;
+  let packStale = false;
+  const PACK_CACHE = 'night-pck-' + NIGHT_GAME_VERSION + '-' + GODOT_CONFIG.fileSizes[NIGHT_PCK];
 
   async function localPack() {
     if (!('caches' in window)) return null;
     try {
-      return await caches.match(NIGHT_PCK, { ignoreSearch: true });
+      const cache = await caches.open(PACK_CACHE);
+      const cached = await cache.match(NIGHT_PCK, { ignoreSearch: true });
+      if (!cached) return null;
+      const expected = GODOT_CONFIG.fileSizes[NIGHT_PCK];
+      const len = Number(cached.headers.get('Content-Length')) || 0;
+      const ver = cached.headers.get('X-Night-Version') || '';
+      if (expected && len && len !== expected) return null;
+      if (ver && ver !== NIGHT_GAME_VERSION) return null;
+      return cached;
     } catch (err) {
       return null;
     }
   }
 
+  async function hasOtherPackCache() {
+    if (!('caches' in window)) return false;
+    try {
+      const keys = await caches.keys();
+      return keys.some(function (key) {
+        return key.indexOf('night-pck-') === 0 && key !== PACK_CACHE;
+      });
+    } catch (err) {
+      return false;
+    }
+  }
+
+  async function purgeOldPacks() {
+    if (!('caches' in window)) return;
+    try {
+      const keys = await caches.keys();
+      await Promise.all(keys.filter(function (key) {
+        return key.indexOf('night-pck-') === 0 && key !== PACK_CACHE;
+      }).map(function (key) {
+        return caches.delete(key);
+      }));
+    } catch (err) {}
+  }
+
   async function markCachedPack() {
-    packCached = !!(await localPack());
-    if (packCached && gateNote) {
+    const cached = await localPack();
+    packCached = !!cached;
+    packStale = !packCached && await hasOtherPackCache();
+    if (!gateNote) return;
+    if (packCached) {
       gateNote.textContent = '游戏文件已缓存在本机，再次启程无需下载';
+    } else if (packStale) {
+      gateNote.textContent = '游戏已更新至 v' + NIGHT_GAME_VERSION + '，启程时将重新下载约 ' + formatMB(GODOT_CONFIG.fileSizes[NIGHT_PCK]);
     }
   }
 
   async function waitForWorker(ms) {
     if (!('serviceWorker' in navigator)) return;
     const ctrl = navigator.serviceWorker.controller;
-    if (!ctrl || (ctrl.scriptURL || '').indexOf('.r3') !== -1) return;
+    if (!ctrl || (ctrl.scriptURL || '').indexOf(NIGHT_GAME_VERSION) !== -1) return;
     try {
       await Promise.race([
         new Promise(function (resolve) {
@@ -314,9 +353,11 @@ if ('serviceWorker' in navigator) {
     const expected = GODOT_CONFIG.fileSizes[NIGHT_PCK];
     const cached = await localPack();
     if (cached) {
-      return readBody(cached, onBytes, expected);
+      const buf = await readBody(cached, onBytes, expected);
+      if (!expected || buf.byteLength === expected) return buf;
     }
-    const res = await fetch(NIGHT_PCK, { mode: 'cors' });
+    await purgeOldPacks();
+    const res = await fetch(NIGHT_PCK, { mode: 'cors', cache: 'no-store' });
     if (!res.ok) throw new Error('游戏包 night.pck 未能加载（HTTP ' + res.status + '）');
     const buf = await readBody(res, onBytes, expected);
     await storePack(buf);
@@ -326,21 +367,23 @@ if ('serviceWorker' in navigator) {
   async function storePack(buf) {
     if (!('caches' in window)) return;
     try {
-      const cache = await caches.open('night-pck-' + GODOT_CONFIG.fileSizes[NIGHT_PCK]);
+      const cache = await caches.open(PACK_CACHE);
       await cache.put(NIGHT_PCK, new Response(buf, {
         headers: {
           'Content-Type': 'application/octet-stream',
           'Content-Length': String(buf.byteLength),
+          'X-Night-Version': NIGHT_GAME_VERSION,
         },
       }));
+      await purgeOldPacks();
     } catch (err) {}
   }
-
-  markCachedPack();
 
   function formatMB(bytes) {
     return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
   }
+
+  markCachedPack();
 
   let bootTimer = null;
   const bootHints = [
@@ -378,6 +421,8 @@ if ('serviceWorker' in navigator) {
     gateBar.style.width = '';
     if (packCached) {
       gateLoadText.textContent = '正在从本机读取行囊…';
+    } else if (packStale) {
+      gateLoadText.textContent = '发现新版本，正在重新下载…';
     } else {
       gateLoadText.textContent = '正在装载行囊…';
     }
@@ -392,7 +437,7 @@ if ('serviceWorker' in navigator) {
     const pct = Math.min(100, Math.round((current / total) * 100));
     gateLoad.classList.remove('is-indeterminate');
     gateBar.style.width = pct + '%';
-    const label = packCached ? '本机读取 ' : '装载中 ';
+    const label = packCached ? '本机读取 ' : (packStale ? '更新中 ' : '装载中 ');
     gateLoadText.textContent = label + pct + '% · ' + formatMB(current) + ' / ' + formatMB(total);
   }
 
