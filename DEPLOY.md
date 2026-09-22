@@ -86,6 +86,7 @@ Vercel 项目绑定仓库 `hexoBlog`，**Root Directory 为 `myblog`**，读取 
 - `myblog/source/_posts/` — 文章增删改
 - `myblog/source/_data/styles.styl` — 全站自定义样式
 - `myblog/source/gallery/index.html` — Gallery 独立页（`skip_render` 原样拷贝）
+- `myblog/source/night/index.html` — 夜行镖游戏页（`skip_render` 原样拷贝；pck 需 CDN）
 - `myblog/scripts/*.js` — Hexo 插件脚本（如首页 Hero 注入、自动摘要）
 - `myblog/themes/next/_config.yml` — 主题配置
 
@@ -217,7 +218,9 @@ hexoBlog/               ← 本地项目根目录（Git 仓库根）
 ├── myblog/             ← Hexo 项目目录（Vercel 主博客 Root Directory）
 │   ├── source/         ← 博客文章（.md 文件放在 _posts/ 下）
 │   │   ├── _data/      ← 自定义样式 styles.styl 等
-│   │   └── gallery/    ← 图片展示墙独立 HTML 页面
+│   │   ├── gallery/    ← 图片展示墙独立 HTML 页面
+│   │   ├── space/      ← 数字空间独立 HTML 页面
+│   │   └── night/      ← 夜行镖 Godot Web 游戏（pck 体积过大，不入库）
 │   ├── scripts/        ← Hexo 扩展脚本（首页 Hero、自动摘要等）
 │   ├── themes/         ← 主题目录（当前使用 next）
 │   ├── public/         ← hexo generate 生成的静态文件（部署产物，一般不提交）
@@ -236,7 +239,7 @@ hexoBlog/               ← 本地项目根目录（Git 仓库根）
 3. **git 邮箱必须设置**：邮箱为空或 Unknown 时 Vercel 会拒绝部署
 4. **Cloudflare SSL 模式**：整站设置为 Full，避免与 Vercel 的 HTTPS 冲突
 5. **comment 子域名不开代理**：`comment.boomery.top` 的 Cloudflare DNS 必须为灰色云朵（DNS only）
-6. **gallery 页面跳过渲染**：`_config.yml` 中 `skip_render: gallery/index.html`，防止主题覆盖独立 HTML
+6. **独立 HTML 跳过渲染**：`_config.yml` 中 `skip_render` 包含 `gallery/index.html`、`space/index.html`、`night/**`，防止主题或 Nunjucks 覆盖独立页面 / 游戏脚本
 
 ---
 
@@ -340,3 +343,38 @@ CREATE TABLE IF NOT EXISTS site_avatar (
 4. 填写以上 5 个环境变量，部署
 5. 在 Cloudflare 添加 CNAME `gallery-api` → Vercel DNS，设为 DNS only
 6. `git push` 触发主博客重新部署（gallery 页面会自动用新 API 地址）
+
+---
+
+## 夜行镖 Web 游戏（/night/）
+
+Godot 网页导出，页面路径：`myblog/source/night/`，访问地址：`https://boomery.top/night/`。
+
+接入方式与 Gallery 相同：独立 HTML + `skip_render`，不走主题布局。文件已改成 ASCII 名（`night.js` / `night.wasm` / `night.pck`），避免中文文件名在 CDN 上出问题。
+
+### 体积限制（必须分开托管 .pck）
+
+| 文件 | 约 | 能否放进本仓库 / Vercel |
+|------|----|-------------------------|
+| `night.js`、HTML、图标 | < 2MB | 可以 |
+| `night.wasm` | 36MB | 可以（低于 GitHub 100MB 上限） |
+| `night.pck` | **140MB** | **不可以**。GitHub 单文件上限 100MB，Vercel Hobby 也是 100MB |
+
+`.pck` 已在 `myblog/.gitignore` 中排除。本地预览时文件仍会复制到 `source/night/night.pck`，`npx hexo server` 可以玩。
+
+### 线上要能玩：把 pck 放到 Cloudflare R2
+
+推荐用现有的 Cloudflare 账号开 R2 公共桶（无出站流量费）：
+
+1. Cloudflare Dashboard → R2 → 新建桶（例如 `boomery-cdn`），开启公共访问
+2. 绑定自定义域 `cdn.boomery.top`（DNS only，灰色云朵）
+3. 上传 `myblog/source/night/night.pck`
+4. 在 `myblog/source/night/index.html` 把顶部常量改成：
+
+```js
+const NIGHT_PCK = 'https://cdn.boomery.top/night/night.pck';
+```
+
+5. R2 的 CORS 允许 `https://boomery.top` GET/HEAD
+
+本地 `hexo server` 不用改，继续用同目录的 `night.pck`。
