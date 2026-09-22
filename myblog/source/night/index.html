@@ -318,7 +318,7 @@ body {
       <div class="gate-kicker">WEB GAME</div>
       <h1>槐安夜雨</h1>
       <p>七年之前，雨夜走镖，同门惨死。追凶之路漫漫，前路飘摇。</p>
-      <p class="gate-note">需下载游戏文件170MB</p>
+      <p class="gate-note" id="gateNote">需下载游戏文件170MB，首次之后会留在本机</p>
       <button class="gate-btn" id="enterBtn" type="button">即刻启程</button>
       <div class="gate-load" id="gateLoad">
         <div class="gate-load__track">
@@ -452,6 +452,10 @@ if (NIGHT_PCK !== 'night.pck') {
 const GODOT_THREADS_ENABLED = false;
 const engine = new Engine(GODOT_CONFIG);
 
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js?v=' + GODOT_CONFIG.fileSizes[NIGHT_PCK], { updateViaCache: 'none' });
+}
+
 (function () {
   const statusOverlay = document.getElementById('status');
   const statusProgress = document.getElementById('status-progress');
@@ -463,8 +467,39 @@ const engine = new Engine(GODOT_CONFIG);
   const gateBar = document.getElementById('gateBar');
   const gateLoadText = document.getElementById('gateLoadText');
 
+  const gateNote = document.getElementById('gateNote');
+
   let initializing = true;
   let statusMode = '';
+  let packCached = false;
+
+  async function localPack() {
+    if (!('caches' in window)) return null;
+    try {
+      return await caches.match(NIGHT_PCK, { ignoreSearch: true });
+    } catch (err) {
+      return null;
+    }
+  }
+
+  async function markCachedPack() {
+    packCached = !!(await localPack());
+    if (packCached && gateNote) {
+      gateNote.textContent = '游戏文件已缓存在本机，再次启程无需下载';
+    }
+  }
+
+  async function waitForWorker(ms) {
+    if (!('serviceWorker' in navigator)) return;
+    try {
+      await Promise.race([
+        navigator.serviceWorker.ready,
+        new Promise(function (resolve) { setTimeout(resolve, ms); }),
+      ]);
+    } catch (err) {}
+  }
+
+  markCachedPack();
 
   function formatMB(bytes) {
     return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
@@ -474,7 +509,11 @@ const engine = new Engine(GODOT_CONFIG);
     enterBtn.classList.add('is-hidden');
     gateLoad.classList.add('is-on', 'is-indeterminate');
     gateBar.style.width = '';
-    gateLoadText.textContent = '正在装载行囊…';
+    if (packCached) {
+      gateLoadText.textContent = '正在从本机装载…';
+    } else {
+      gateLoadText.textContent = '正在装载行囊…';
+    }
   }
 
   function updateGateProgress(current, total) {
@@ -535,6 +574,7 @@ const engine = new Engine(GODOT_CONFIG);
   }
 
   async function pckExists() {
+    if (await localPack()) return true;
     try {
       const res = await fetch(NIGHT_PCK, { method: 'HEAD' });
       return res.ok;
@@ -569,12 +609,15 @@ const engine = new Engine(GODOT_CONFIG);
     }).then(() => {
       setStatusMode('hidden');
       gate.classList.add('is-gone');
+      markCachedPack();
     }, displayFailureNotice);
   }
 
   enterBtn.addEventListener('click', async function () {
     enterBtn.disabled = true;
     backFab.classList.add('is-on');
+    await waitForWorker(1800);
+    await markCachedPack();
     showGateProgress();
     const ready = await pckExists();
     if (!ready) {

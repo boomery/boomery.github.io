@@ -112,5 +112,6 @@ fi
 echo "上传 $DST/night.pck → R2 $R2_BUCKET/$R2_KEY"
 wrangler r2 object put "$R2_BUCKET/$R2_KEY" \
   --file "$DST/night.pck" \
-  --content-type application/octet-stream
+  --content-type application/octet-stream \
+  --cache-control "public, max-age=31536000, immutable"
 echo "R2 已覆盖 https://cdn.boomery.top/night.pck"
