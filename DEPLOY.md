@@ -392,8 +392,10 @@ CORS 已允许 `https://boomery.top`、`https://www.boomery.top`、`http://local
 - 本地 `save_game()` 后约 2 秒上传到 `https://gallery-api.boomery.top/api/night-saves`
 - 服务端只存 `SHA-256(night-seal-v1:` + 印信 `)`，不存明文
 
-游戏逻辑改的是 Godot 源码（`Desktop/night`），不是已经导出的 `web/`。改完后需要：
+游戏逻辑改的是 Godot 源码（`Desktop/night`），不是已经导出的 `web/`。改完后在本仓库根目录执行：
 
-1. 在 Godot 里重新导出 Web（至少覆盖 `night.pck`）
-2. 把新的 `night.pck` 上传到 R2，覆盖 `cdn.boomery.top/night.pck`
-3. 本仓库 `gallery-api` 随 push 部署后，印信接口才可用
+```bash
+bash scripts/export-night-web.sh
+```
+
+会无头导出 Web、同步到 `myblog/source/night/`（**不覆盖**自定义 `index.html`，只更新 `fileSizes`），并把 `night.pck` 传到 R2。本地预览可加 `--skip-r2`。

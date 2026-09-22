@@ -1,0 +1,31 @@
+---
+description: 改完 Desktop/night 游戏源码后自动导出 Web 到博客 /night/
+alwaysApply: true
+---
+
+# 夜行镖 Web 自动导出
+
+只要这次对话改了 **Godot 游戏源码**（`/Users/chaoxinzhang/Desktop/night` 下的脚本、场景、资源，不是已经导出的 `web/`），完成改动后必须导出到本仓库，不要让用户自己在编辑器里点导出。
+
+## 怎么做
+
+在 hexoBlog 仓库根目录执行：
+
+```bash
+bash scripts/export-night-web.sh
+```
+
+脚本会：用本机 Godot 无头导出 Web → 把 `night.js` / `night.wasm` / `night.pck` 等复制到 `myblog/source/night/` → 只改 `index.html` 里的 `fileSizes` → 把 `night.pck` 上传到 R2（`cdn.boomery.top/night.pck`）。
+
+本地预览、先不传 CDN 时用 `bash scripts/export-night-web.sh --skip-r2`。
+
+## 不要做的事
+
+- **不要**用 Godot 生成的 HTML 覆盖 `myblog/source/night/index.html`（封面、进度条、印信 `NightSave` 都在这份自定义页里）
+- **不要**把 `night.pck` 提交进 git（已 gitignore；走 R2）
+- **不要**提交 `/Users/chaoxinzhang/Desktop/night` 那个仓库，除非用户明确要求
+- 只改博客 HTML/CSS/印信桥、没动 Godot 源码时，**不要**跑导出
+
+## 导出之后
+
+`night.wasm` / `night.js` / `index.html` 的体积数字若有变化，按自动提交规则 commit 并 push。pck 只在 R2。
