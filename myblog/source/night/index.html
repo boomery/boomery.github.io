@@ -2,540 +2,83 @@
 <html lang="zh-CN">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>槐安夜雨 · 夜行镖</title>
   <meta name="description" content="boomery 的暗黑武侠 Web 游戏：夜行镖 · 槐安夜雨。开场直入旧渡口。">
   <link rel="icon" type="image/png" href="night.icon.png">
   <link rel="apple-touch-icon" href="night.apple-touch-icon.png">
-  <style>
-html, body, #canvas {
-  margin: 0;
-  padding: 0;
-  border: 0;
-}
-
-body {
-  color: #efe6d6;
-  background: #0b0a09;
-  overflow: hidden;
-  touch-action: none;
-  font-family: "Songti SC", "Noto Serif SC", "Songti SC", "STSong", serif;
-}
-
-#canvas {
-  display: block;
-}
-
-#canvas:focus { outline: none; }
-
-#status, #status-splash, #status-progress {
-  position: absolute;
-  left: 0;
-  right: 0;
-}
-
-#status, #status-splash {
-  top: 0;
-  bottom: 0;
-}
-
-#status {
-  background-color: #141210;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  visibility: hidden;
-  z-index: 4;
-}
-
-#status-splash {
-  max-height: 100%;
-  max-width: 100%;
-  margin: auto;
-}
-
-#status-splash.show-image--false { display: none; }
-#status-splash.fullsize--true {
-  height: 100%;
-  width: 100%;
-  object-fit: contain;
-}
-#status-splash.use-filter--false { image-rendering: pixelated; }
-
-#status-progress, #status-notice { display: none; }
-
-#status-progress {
-  bottom: 10%;
-  width: 50%;
-  margin: 0 auto;
-}
-
-#status-notice {
-  background-color: #5b3943;
-  border-radius: 0.5rem;
-  border: 1px solid #9b3943;
-  color: #e0e0e0;
-  font-family: "PingFang SC", "Noto Sans", Arial, sans-serif;
-  line-height: 1.3;
-  margin: 0 2rem;
-  overflow: hidden;
-  padding: 1rem;
-  text-align: center;
-  z-index: 5;
-}
-
-.gate {
-  position: fixed;
-  inset: 0;
-  z-index: 8;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 72px 24px 88px;
-  background:
-    radial-gradient(ellipse 70% 55% at 50% 0%, rgba(120, 40, 28, 0.35), transparent 58%),
-    radial-gradient(ellipse 50% 40% at 80% 90%, rgba(40, 32, 72, 0.4), transparent 60%),
-    #0b0a09;
-  transition: opacity 0.45s ease, visibility 0.45s ease;
-}
-
-.gate.is-gone {
-  opacity: 0;
-  visibility: hidden;
-  pointer-events: none;
-}
-
-.gate::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background-image:
-    linear-gradient(rgba(239, 230, 214, 0.03) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(239, 230, 214, 0.03) 1px, transparent 1px);
-  background-size: 48px 48px;
-  mask-image: radial-gradient(ellipse at center, black 30%, transparent 78%);
-  pointer-events: none;
-}
-
-.gate-nav {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 16px 22px;
-  font-family: "PingFang SC", "Inter", system-ui, sans-serif;
-}
-
-.gate-nav a {
-  color: rgba(239, 230, 214, 0.72);
-  text-decoration: none;
-  font-size: 13px;
-  letter-spacing: 0.06em;
-}
-
-.gate-nav a:hover { color: #f3c98a; }
-
-.gate-brand {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-weight: 600;
-}
-
-.gate-brand img { width: 28px; height: 28px; }
-
-.gate-card {
-  position: relative;
-  width: min(420px, 100%);
-  text-align: center;
-  background: radial-gradient(ellipse at center, rgba(11, 10, 9, 0.32) 0%, transparent 74%);
-}
-
-.gate-logo-wrap {
-  position: relative;
-  display: block;
-  margin: 0 auto;
-  width: 168px;
-  height: 168px;
-  border-radius: 50%;
-  overflow: hidden;
-  border: 1px solid rgba(243, 201, 138, 0.28);
-  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.45);
-  background: #0b1214;
-  will-change: transform, box-shadow;
-}
-
-.gate-logo {
-  display: block;
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-  background: #0b1214;
-}
-
-.gate-engine {
-  position: absolute;
-  right: 16px;
-  bottom: 14px;
-  z-index: 1;
-  width: 96px;
-  text-decoration: none;
-  opacity: 0.7;
-}
-
-.gate-engine:hover { opacity: 1; }
-
-.gate-engine img {
-  width: 96px;
-  height: auto;
-  display: block;
-}
-
-@media (max-width: 480px) {
-  .gate-logo-wrap { width: 132px; height: 132px; }
-  .gate-engine { width: 72px; right: 12px; bottom: 10px; }
-  .gate-engine img { width: 72px; }
-  .gate-meta { right: 92px; font-size: 10px; }
-}
-
-.gate-kicker {
-  margin: 22px 0 8px;
-  font-family: "PingFang SC", system-ui, sans-serif;
-  font-size: 12px;
-  letter-spacing: 0.28em;
-  color: #f3c98a;
-}
-
-.gate-card h1 {
-  margin: 0;
-  font-size: clamp(32px, 8vw, 48px);
-  font-weight: 500;
-  letter-spacing: 0.18em;
-}
-
-.gate-card p {
-  margin: 14px 0 0;
-  color: rgba(239, 230, 214, 0.68);
-  font-size: 15px;
-  line-height: 1.7;
-  letter-spacing: 0.04em;
-}
-
-.gate-note {
-  margin-top: 10px;
-  font-family: "PingFang SC", system-ui, sans-serif;
-  font-size: 12px;
-  color: rgba(239, 230, 214, 0.42);
-}
-
-.gate-btn {
-  margin-top: 28px;
-  appearance: none;
-  border: 1px solid rgba(243, 201, 138, 0.55);
-  background: linear-gradient(180deg, #8a2a22, #5c1612);
-  color: #f7ecd8;
-  font-family: inherit;
-  font-size: 16px;
-  letter-spacing: 0.28em;
-  padding: 12px 36px;
-  border-radius: 4px;
-  cursor: pointer;
-}
-
-.gate-btn:hover { filter: brightness(1.08); }
-.gate-btn:disabled {
-  cursor: wait;
-  opacity: 0.7;
-}
-
-.gate-btn.is-hidden { display: none; }
-.gate-btn-wrap:has(.gate-btn.is-hidden) { display: none; }
-
-.gate-load {
-  display: none;
-  margin-top: 28px;
-  width: 100%;
-}
-
-.gate-load.is-on { display: block; }
-
-.gate-load__track {
-  height: 3px;
-  background: rgba(243, 201, 138, 0.16);
-  border-radius: 99px;
-  overflow: hidden;
-}
-
-.gate-load__bar {
-  height: 100%;
-  width: 0;
-  background: linear-gradient(90deg, #8a2a22, #f3c98a);
-  border-radius: 99px;
-  transition: width 0.2s ease-out;
-}
-
-.gate-load.is-indeterminate .gate-load__bar {
-  width: 32%;
-  animation: gate-load-slide 1.1s ease-in-out infinite;
-}
-
-.gate-load.is-booting .gate-load__bar {
-  width: 100%;
-  animation: gate-load-pulse 1.2s ease-in-out infinite;
-}
-
-@keyframes gate-load-slide {
-  0% { transform: translateX(-120%); }
-  100% { transform: translateX(380%); }
-}
-
-@keyframes gate-load-pulse {
-  0%, 100% { opacity: 0.42; }
-  50% { opacity: 1; }
-}
-
-.gate-load__text {
-  margin: 12px 0 0;
-  font-family: "PingFang SC", system-ui, sans-serif;
-  font-size: 12px;
-  letter-spacing: 0.08em;
-  color: rgba(239, 230, 214, 0.55);
-}
-
-.gate-load.is-on:not(.is-error) .gate-load__text {
-  animation: gate-text-breathe 1.6s ease-in-out infinite;
-}
-
-@keyframes gate-text-breathe {
-  0%, 100% { opacity: 0.62; }
-  50% { opacity: 1; }
-}
-
-.back-fab {
-  position: fixed;
-  top: 14px;
-  left: 14px;
-  z-index: 6;
-  display: none;
-  padding: 8px 12px;
-  border-radius: 999px;
-  background: rgba(12, 10, 9, 0.72);
-  border: 1px solid rgba(243, 201, 138, 0.28);
-  color: #efe6d6;
-  text-decoration: none;
-  font-family: "PingFang SC", system-ui, sans-serif;
-  font-size: 12px;
-  letter-spacing: 0.06em;
-}
-
-.back-fab.is-on { display: inline-flex; }
-
-.gate-meta {
-  position: absolute;
-  left: 22px;
-  right: 120px;
-  bottom: 16px;
-  z-index: 1;
-  margin: 0;
-  font-family: "PingFang SC", system-ui, sans-serif;
-  font-size: 11px;
-  letter-spacing: 0.08em;
-  color: rgba(239, 230, 214, 0.38);
-  pointer-events: none;
-}
-
-.gate-svg-defs {
-  position: absolute;
-  width: 0;
-  height: 0;
-  overflow: hidden;
-}
-
-.gate-rain {
-  position: absolute;
-  inset: 0;
-  display: block;
-  width: 100%;
-  height: 100%;
-  z-index: 0;
-  pointer-events: none;
-  background: #070605;
-  opacity: 0;
-  transition: opacity 0.8s ease;
-}
-
-.gate-rain.is-on { opacity: 1; }
-
-.gate-veil {
-  position: absolute;
-  inset: 0;
-  z-index: 1;
-  pointer-events: none;
-  background: radial-gradient(ellipse 58% 52% at 50% 40%, transparent 0%, rgba(11, 10, 9, 0.22) 68%, rgba(11, 10, 9, 0.52) 100%);
-}
-
-.gate-flash {
-  position: absolute;
-  inset: 0;
-  z-index: 1;
-  background: #fff6e4;
-  opacity: 0;
-  pointer-events: none;
-}
-
-.gate-nav { z-index: 3; }
-.gate-card { z-index: 2; }
-.gate-engine, .gate-meta { z-index: 2; }
-
-.gate-nav-right {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-}
-
-.gate-sound {
-  appearance: none;
-  border: 1px solid rgba(243, 201, 138, 0.28);
-  background: rgba(12, 10, 9, 0.35);
-  color: rgba(239, 230, 214, 0.78);
-  font-family: "PingFang SC", system-ui, sans-serif;
-  font-size: 12px;
-  letter-spacing: 0.12em;
-  padding: 4px 10px;
-  border-radius: 999px;
-  cursor: pointer;
-}
-
-.gate-sound.is-muted { opacity: 0.48; }
-.gate-sound:hover { color: #f3c98a; border-color: rgba(243, 201, 138, 0.55); }
-
-.gate-listen {
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 46px;
-  z-index: 8;
-  margin: 0;
-  text-align: center;
-  font-family: "PingFang SC", system-ui, sans-serif;
-  font-size: 12px;
-  letter-spacing: 0.18em;
-  color: rgba(239, 230, 214, 0.42);
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.5s ease;
-}
-
-.gate-listen.is-on { opacity: 1; }
-.gate-listen.is-gone { opacity: 0 !important; }
-.gate-btn { margin-top: 0; }
-
-.gate-btn-wrap {
-  position: relative;
-  display: inline-block;
-  margin-top: 28px;
-  overflow: hidden;
-  border-radius: 4px;
-}
-
-.gate-btn-wrap::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 10%;
-  right: 10%;
-  height: 1px;
-  z-index: 2;
-  pointer-events: none;
-  background: linear-gradient(90deg, transparent, rgba(255, 248, 230, 0.55), transparent);
-}
-
-.gate-beads {
-  position: absolute;
-  inset: 0;
-  z-index: 2;
-  pointer-events: none;
-  overflow: hidden;
-  border-radius: 4px;
-  filter: url(#gateGoo);
-}
-
-.gate-bead {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 11px;
-  height: 15px;
-  margin: 0;
-  border-radius: 50% 50% 45% 45%;
-  background: radial-gradient(circle at 32% 28%, rgba(255, 252, 245, 0.95), rgba(186, 214, 224, 0.32) 50%, rgba(255, 255, 255, 0) 74%);
-  box-shadow: inset 1px 1px 2px rgba(255, 255, 255, 0.6), 0 4px 10px rgba(0, 0, 0, 0.2);
-  opacity: 0;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .gate-rain, .gate-flash, .gate-beads { display: none; }
-}
-  </style>
+  <link rel="preload" href="art/ferry-night.webp" as="image" fetchpriority="high">
+  <link rel="preload" href="fonts/night-calligraphy.ttf" as="font" type="font/ttf" crossorigin>
+  <link rel="stylesheet" href="gate.css">
 </head>
 <body>
-  <div class="gate" id="gate">
-    <svg class="gate-svg-defs" aria-hidden="true" width="0" height="0">
-      <defs>
-        <filter id="gateGoo">
-          <feGaussianBlur in="SourceGraphic" stdDeviation="1.8" result="blur"></feGaussianBlur>
-          <feColorMatrix in="blur" mode="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 20 -8" result="goo"></feColorMatrix>
-          <feComposite in="SourceGraphic" in2="goo" operator="atop"></feComposite>
-        </filter>
-      </defs>
-    </svg>
-    <canvas class="gate-rain" id="rainBg" aria-hidden="true"></canvas>
-    <div class="gate-veil" aria-hidden="true"></div>
-    <div class="gate-flash" id="gateFlash" aria-hidden="true"></div>
-    <nav class="gate-nav">
-      <a class="gate-brand" href="/">
-        <img src="/images/boomery-logo.svg" width="28" height="28" alt="">
-        boomery
-      </a>
-      <span class="gate-nav-right">
-        <button class="gate-sound" id="gateSound" type="button" aria-pressed="false" title="闭雨声">雨</button>
-        <a href="/space/">← 数字空间</a>
-      </span>
-    </nav>
-    <div class="gate-card">
-      <div class="gate-logo-wrap" id="logoWrap">
-        <img class="gate-logo" src="night.icon.png" alt="槐安夜雨">
-      </div>
-      <div class="gate-kicker">WEB GAME</div>
-      <h1>槐安夜雨</h1>
-      <p>七年之前，雨夜走镖，同门惨死。追凶之路漫漫，前路飘摇。</p>
-      <p class="gate-note" id="gateNote">需下载游戏文件170MB，首次之后会留在本机</p>
-      <span class="gate-btn-wrap" id="enterWrap">
-        <button class="gate-btn" id="enterBtn" type="button">即刻启程</button>
-        <span class="gate-beads" id="gateBeads" aria-hidden="true">
-          <i class="gate-bead"></i><i class="gate-bead"></i><i class="gate-bead"></i>
-          <i class="gate-bead"></i><i class="gate-bead"></i><i class="gate-bead"></i>
-          <i class="gate-bead"></i><i class="gate-bead"></i>
-        </span>
-      </span>
-      <div class="gate-load" id="gateLoad">
-        <div class="gate-load__track">
-          <div class="gate-load__bar" id="gateBar"></div>
-        </div>
-        <p class="gate-load__text" id="gateLoadText">正在装载行囊…</p>
-      </div>
+  <main class="gate" id="gate" aria-label="槐安夜雨游戏入口">
+    <div class="gate-world" aria-hidden="true">
+      <img class="gate-scene" id="gateScene" src="art/ferry-night.webp" alt="" fetchpriority="high">
+      <div class="gate-cloudlight" id="gateCloudlight"></div>
+      <svg class="gate-lightning" id="gateLightning" viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice">
+        <defs><filter id="lightningGlow" x="-100%" y="-30%" width="300%" height="160%"><feGaussianBlur stdDeviation="2.4"/></filter></defs>
+        <g class="lightning-branches" fill="none" stroke-linejoin="round">
+          <path d="M1016 -20 998 28 1007 39 982 79 986 87 959 125 975 117 947 170 953 179 921 235 929 216 903 260"/>
+          <path class="lightning-twig" d="m984 79 33 20 6 25 27 23 9 32 m-111 -10 -30 11 -7 18 -29 7"/>
+        </g>
+      </svg>
+      <div class="gate-mist gate-mist--far"></div>
+      <div class="gate-mist gate-mist--near"></div>
+      <div class="gate-rainfall" id="gateRainfall"></div>
+      <canvas class="gate-glass" id="rainBg"></canvas>
+      <div class="gate-veil"></div>
+      <div class="gate-flash" id="gateFlash"></div>
+      <div class="gate-grain"></div>
     </div>
-    <p class="gate-listen" id="gateListen">轻点画面，听雨入夜</p>
-    <p class="gate-meta">游戏 <span id="nightGameVer">v0.19.1</span> · 更新于 <time id="nightBuiltAt">2026-09-22 15:14</time></p>
-    <a class="gate-engine" href="https://godotengine.org" target="_blank" rel="noopener" title="Made with Godot">
-      <img src="night.png" alt="Godot">
-    </a>
-  </div>
+    <nav class="gate-nav" aria-label="入口导航">
+      <a class="gate-brand" href="/" aria-label="返回 boomery 首页">
+        <span class="gate-brand__seal" aria-hidden="true">夜</span>
+        <span>夜行镖<small>A BOOMERY GAME</small></span>
+      </a>
+      <div class="gate-nav-right">
+        <a class="gate-space" href="/space/">数字空间 <span aria-hidden="true">↗</span></a>
+        <span class="gate-nav-divider" aria-hidden="true"></span>
+        <button class="gate-weather" id="gateWeather" type="button" aria-pressed="true" aria-label="雷雨动态效果">雷雨 <span id="weatherState">开</span></button>
+        <button class="gate-sound" id="gateSound" type="button" aria-pressed="false" aria-label="环境声音">
+          <span class="sound-bars" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>
+          <span id="soundLabel">听雨</span>
+        </button>
+      </div>
+    </nav>
+    <section class="gate-card" aria-labelledby="gateTitle">
+      <p class="gate-kicker"><span></span>一段未了的江湖旧事</p>
+      <div class="gate-title-wrap">
+        <h1 id="gateTitle"><span>槐安</span><span>夜雨</span></h1>
+        <span class="gate-title-seal" aria-label="夜行镖">夜<br>行<br>镖</span>
+      </div>
+      <p class="gate-tagline">雨未歇，旧仇未了。</p>
+      <p class="gate-story">七年前，一场夜雨，一趟血镖。<br>七年后，重回旧渡，问剑故人。</p>
+      <div class="gate-actions">
+        <span class="gate-btn-wrap rain-surface" id="enterWrap">
+          <button class="gate-btn" id="enterBtn" type="button"><span>即刻启程</span><span class="gate-btn__arrow" aria-hidden="true">⟶</span></button>
+          <span class="surface-water" aria-hidden="true"></span>
+        </span>
+        <div class="gate-load" id="gateLoad" role="status" aria-live="polite">
+          <div class="gate-load__track"><div class="gate-load__bar" id="gateBar"></div></div>
+          <p class="gate-load__text" id="gateLoadText">正在装载行囊…</p>
+        </div>
+        <p class="gate-note" id="gateNote">首次启程约需下载 178 MB · 支持本机缓存</p>
+      </div>
+    </section>
+    <aside class="gate-poem" aria-label="雨夜题记"><span>一身风雨</span><span>半生恩仇</span></aside>
+    <div class="gate-chapter rain-surface">
+      <span class="chapter-number">壹</span>
+      <span class="chapter-title">旧渡口<small>故事，自此入夜</small></span>
+      <span class="chapter-line" aria-hidden="true"></span>
+      <span class="surface-water" aria-hidden="true"></span>
+    </div>
+    <footer class="gate-footer">
+      <p class="gate-meta"><span id="nightGameVer">v0.19.1</span><span class="meta-dot">·</span><time id="nightBuiltAt">2026-09-22 16:20</time></p>
+      <p class="gate-listen" id="gateListen">轻触画面，听雨入夜</p>
+      <a class="gate-engine" href="https://godotengine.org" target="_blank" rel="noopener">MADE WITH GODOT <span aria-hidden="true">↗</span></a>
+    </footer>
+  </main>
 
   <a class="back-fab" id="backFab" href="/night/">← 返回</a>
 
@@ -551,9 +94,9 @@ body {
     <div id="status-notice"></div>
   </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/howler@2.2.4/dist/howler.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/raindrop-fx@1.0.8/bundle/index.js"></script>
+  <script src="vendor/howler.min.js"></script>
+  <script src="vendor/gsap.min.js"></script>
+  <script src="vendor/raindrop-fx.js"></script>
   <script src="gate-atmosphere.js"></script>
   <script src="night.js"></script>
   <script>
@@ -883,7 +426,7 @@ if ('serviceWorker' in navigator) {
     if (err instanceof Error) message = err.message;
     else if (typeof err === 'string') message = err;
     if (/404|failed to fetch|load/i.test(message)) {
-      message += '\n游戏包 night.pck（约 140MB）未能加载。GitHub/Vercel 无法托管超过 100MB 的单文件，需将 pck 放到 Cloudflare R2 等 CDN，并修改本页顶部的 NIGHT_PCK。';
+      message = '行囊暂未送达，请检查网络后重试。已下载的缓存会尽量保留。';
     }
     stopBootHints();
     gate.classList.remove('is-gone');
@@ -964,6 +507,8 @@ if ('serviceWorker' in navigator) {
   }
 
   enterBtn.addEventListener('click', async function () {
+    initializing = true;
+    statusMode = '';
     enterBtn.disabled = true;
     backFab.classList.add('is-on');
     showGateProgress();
@@ -971,7 +516,7 @@ if ('serviceWorker' in navigator) {
     await markCachedPack();
     const ready = await pckExists();
     if (!ready) {
-      displayFailureNotice('游戏包 night.pck（约 140MB）未找到。GitHub/Vercel 无法托管超过 100MB 的单文件，请把 pck 放到 Cloudflare R2 等 CDN，并修改本页顶部的 NIGHT_PCK。');
+      displayFailureNotice('行囊暂未送达，请检查网络后重试。');
       return;
     }
     startGodot();
