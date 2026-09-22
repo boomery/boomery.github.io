@@ -74,7 +74,7 @@
       <span class="surface-water" aria-hidden="true"></span>
     </div>
     <footer class="gate-footer">
-      <p class="gate-meta"><span id="nightGameVer">v0.19.1</span><span class="meta-dot">·</span><time id="nightBuiltAt">2026-09-22 16:20</time></p>
+      <p class="gate-meta"><span id="nightGameVer">v0.19.2</span><span class="meta-dot">·</span><time id="nightBuiltAt">2026-09-22 17:50</time></p>
       <p class="gate-listen" id="gateListen">轻触画面，听雨入夜</p>
       <a class="gate-engine" href="https://godotengine.org" target="_blank" rel="noopener">MADE WITH GODOT <span aria-hidden="true">↗</span></a>
     </footer>
@@ -182,8 +182,8 @@ window.addEventListener('pagehide', function () {
   window.NightSave.flush();
 });
 
-const NIGHT_GAME_VERSION = '0.19.1';
-const NIGHT_BUILT_AT = '2026-09-22 17:10';
+const NIGHT_GAME_VERSION = '0.19.2';
+const NIGHT_BUILT_AT = '2026-09-22 17:50';
 const NIGHT_PCK = 'https://cdn.boomery.top/night.pck';
 (function stampBuildMeta() {
   const ver = document.getElementById('nightGameVer');
@@ -203,14 +203,14 @@ const GODOT_CONFIG = {
   mainPack: NIGHT_PCK,
   experimentalVK: false,
   fileSizes: {
-    'night.pck': 147298020,
+    'night.pck': 148418380,
     'night.wasm': 39514754
   },
   focusCanvas: true,
   gdextensionLibs: []
 };
 if (NIGHT_PCK !== 'night.pck') {
-  GODOT_CONFIG.fileSizes[NIGHT_PCK] = 147298020;
+  GODOT_CONFIG.fileSizes[NIGHT_PCK] = 148418380;
 }
 const GODOT_THREADS_ENABLED = false;
 const engine = new Engine(GODOT_CONFIG);
