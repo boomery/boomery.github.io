@@ -84,6 +84,7 @@ button:focus-visible, a:focus-visible { outline: 2px solid #d8c6a4; outline-offs
 .gate-note { color: #879497; font: 10px/1.7 "PingFang SC", system-ui, sans-serif; letter-spacing: .08em; margin: 16px 0 0; }
 .gate-load { display: none; width: 315px; padding: 8px 0 2px; }
 .gate-load.is-on { display: block; }
+.gate-load.is-ready .gate-load__track { display: none; }
 .gate-load__track { height: 2px; background: #96a4a32b; overflow: hidden; }
 .gate-load__bar { width: 0; height: 100%; background: linear-gradient(90deg, #78513c, #d5c19c); transition: width .2s; }
 .gate-load__text { font: 11px/1.8 "PingFang SC", system-ui, sans-serif; color: #bbc3c1; margin: 12px 0 0; overflow-wrap: anywhere; }

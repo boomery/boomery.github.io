@@ -183,7 +183,7 @@ window.addEventListener('pagehide', function () {
 });
 
 const NIGHT_GAME_VERSION = '0.19.2';
-const NIGHT_BUILT_AT = '2026-09-22 18:20';
+const NIGHT_BUILT_AT = '2026-09-22 18:26';
 const NIGHT_PCK = 'https://cdn.boomery.top/night.pck?v=0.19.2-148418380';
 (function stampBuildMeta() {
   const ver = document.getElementById('nightGameVer');
@@ -406,7 +406,7 @@ if ('serviceWorker' in navigator) {
   function showReadyToStart() {
     stopBootHints();
     gateLoad.classList.remove('is-indeterminate', 'is-booting', 'is-error');
-    gateLoad.classList.add('is-on');
+    gateLoad.classList.add('is-on', 'is-ready');
     gateBar.style.width = '100%';
     gateLoadText.textContent = '行囊已就绪。听完这阵雨，再入夜。';
     enterBtn.classList.remove('is-hidden');
@@ -418,7 +418,7 @@ if ('serviceWorker' in navigator) {
   function showGateProgress() {
     stopBootHints();
     enterBtn.classList.add('is-hidden');
-    gateLoad.classList.remove('is-error');
+    gateLoad.classList.remove('is-error', 'is-ready');
     gateLoad.classList.add('is-on', 'is-indeterminate');
     gateBar.style.width = '';
     if (packCached) {
@@ -478,7 +478,7 @@ if ('serviceWorker' in navigator) {
     stopBootHints();
     gate.classList.remove('is-gone');
     gateLoad.classList.add('is-on', 'is-error');
-    gateLoad.classList.remove('is-indeterminate', 'is-booting');
+    gateLoad.classList.remove('is-indeterminate', 'is-booting', 'is-ready');
     gateBar.style.width = '0';
     gateLoadText.textContent = message;
     enterBtn.classList.remove('is-hidden');
