@@ -183,7 +183,7 @@ window.addEventListener('pagehide', function () {
 });
 
 const NIGHT_GAME_VERSION = '0.19.2';
-const NIGHT_BUILT_AT = '2026-09-22 17:58';
+const NIGHT_BUILT_AT = '2026-09-22 18:15';
 const NIGHT_PCK = 'https://cdn.boomery.top/night.pck';
 (function stampBuildMeta() {
   const ver = document.getElementById('nightGameVer');
@@ -236,6 +236,7 @@ if ('serviceWorker' in navigator) {
   let statusMode = '';
   let packCached = false;
   let packStale = false;
+  let gatePhase = 'idle';
   const PACK_CACHE = 'night-pck-' + NIGHT_GAME_VERSION + '-' + GODOT_CONFIG.fileSizes[NIGHT_PCK];
 
   async function localPack() {
@@ -386,11 +387,6 @@ if ('serviceWorker' in navigator) {
   markCachedPack();
 
   let bootTimer = null;
-  const bootHints = [
-    '行囊已就绪，正在点亮灯笼…',
-    '正在铺开旧渡口…',
-    '夜色渐起，请稍候…',
-  ];
 
   function stopBootHints() {
     if (bootTimer) {
@@ -400,17 +396,20 @@ if ('serviceWorker' in navigator) {
     gateLoad.classList.remove('is-booting');
   }
 
-  function showBooting() {
-    gateLoad.classList.remove('is-indeterminate');
-    gateLoad.classList.add('is-on', 'is-booting');
+  function setEnterLabel(text) {
+    enterBtn.innerHTML = '<span>' + text + '</span><span class="gate-btn__arrow" aria-hidden="true">⟶</span>';
+  }
+
+  function showReadyToStart() {
+    stopBootHints();
+    gateLoad.classList.remove('is-indeterminate', 'is-booting', 'is-error');
+    gateLoad.classList.add('is-on');
     gateBar.style.width = '100%';
-    let i = 0;
-    gateLoadText.textContent = bootHints[0];
-    if (bootTimer) clearInterval(bootTimer);
-    bootTimer = setInterval(function () {
-      i = (i + 1) % bootHints.length;
-      gateLoadText.textContent = bootHints[i];
-    }, 1400);
+    gateLoadText.textContent = '行囊已就绪。听完这阵雨，再入夜。';
+    enterBtn.classList.remove('is-hidden');
+    enterBtn.disabled = false;
+    setEnterLabel('开始游戏');
+    gatePhase = 'ready';
   }
 
   function showGateProgress() {
@@ -481,7 +480,8 @@ if ('serviceWorker' in navigator) {
     gateLoadText.textContent = message;
     enterBtn.classList.remove('is-hidden');
     enterBtn.disabled = false;
-    enterBtn.textContent = '重试';
+    setEnterLabel('重试');
+    gatePhase = 'idle';
     setStatusNotice(message);
     setStatusMode('notice');
     initializing = false;
@@ -537,10 +537,17 @@ if ('serviceWorker' in navigator) {
         report();
       });
       const buf = (await Promise.all([packPromise, engine.init('night')]))[0];
-      showBooting();
-      if (window.NightGateAtmosphere) window.NightGateAtmosphere.stop();
-      await yieldPaint();
       await engine.preloadFile(buf, NIGHT_PCK);
+      showReadyToStart();
+    } catch (err) {
+      displayFailureNotice(err);
+    }
+  }
+
+  async function launchGame() {
+    if (window.NightGateAtmosphere) window.NightGateAtmosphere.stop();
+    await yieldPaint();
+    try {
       await engine.start();
       stopBootHints();
       setStatusMode('hidden');
@@ -552,12 +559,19 @@ if ('serviceWorker' in navigator) {
   }
 
   enterBtn.addEventListener('click', async function () {
+    if (gatePhase === 'ready') {
+      gatePhase = 'launching';
+      enterBtn.disabled = true;
+      await launchGame();
+      return;
+    }
+    if (gatePhase !== 'idle') return;
+    gatePhase = 'loading';
     initializing = true;
     statusMode = '';
     enterBtn.disabled = true;
     backFab.classList.add('is-on');
     showGateProgress();
-    if (window.NightGateAtmosphere) window.NightGateAtmosphere.stop();
     await waitForWorker(4000);
     await markCachedPack();
     const ready = await pckExists();
