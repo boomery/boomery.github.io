@@ -206,15 +206,15 @@
   function destroyGlass() {
     if (glassTick && gsap) gsap.ticker.remove(glassTick);
     glassTick = null;
-    if (glass) glass.stop();
-    glass = null;
-    canvas.classList.remove('is-on');
-    // RaindropFX 1.0.8 has no public destroy(). Release its GPU context on game entry.
-    if (glassContext) {
-      const lose = glassContext.getExtension('WEBGL_lose_context');
-      if (lose) lose.loseContext();
-      glassContext = null;
+    if (glass) {
+      try { glass.stop(); } catch (_) {}
+      glass = null;
     }
+    canvas.classList.remove('is-on');
+    glassContext = null;
+    // Never WEBGL_lose_context.loseContext(): Chrome/Safari can broadcast
+    // webglcontextlost to Godot's canvas and alert "please reload the page".
+    if (canvas.parentNode) canvas.remove();
   }
   function glassBackground() {
     const scale = Math.min(1, 1440 / gate.clientWidth);
@@ -301,6 +301,7 @@
     }
   }
   function onResize() {
+    if (!alive) return;
     clearTimeout(resizeTimer);
     resizeTimer = setTimeout(() => {
       if (!alive) return;

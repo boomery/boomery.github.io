@@ -183,7 +183,7 @@ window.addEventListener('pagehide', function () {
 });
 
 const NIGHT_GAME_VERSION = '0.19.1';
-const NIGHT_BUILT_AT = '2026-09-22 16:20';
+const NIGHT_BUILT_AT = '2026-09-22 17:10';
 const NIGHT_PCK = 'https://cdn.boomery.top/night.pck';
 (function stampBuildMeta() {
   const ver = document.getElementById('nightGameVer');
@@ -493,11 +493,11 @@ if ('serviceWorker' in navigator) {
       });
       const buf = (await Promise.all([packPromise, engine.init('night')]))[0];
       showBooting();
+      if (window.NightGateAtmosphere) window.NightGateAtmosphere.stop();
       await yieldPaint();
       await engine.preloadFile(buf, NIGHT_PCK);
       await engine.start();
       stopBootHints();
-      if (window.NightGateAtmosphere) window.NightGateAtmosphere.stop();
       setStatusMode('hidden');
       gate.classList.add('is-gone');
       markCachedPack();
@@ -512,6 +512,7 @@ if ('serviceWorker' in navigator) {
     enterBtn.disabled = true;
     backFab.classList.add('is-on');
     showGateProgress();
+    if (window.NightGateAtmosphere) window.NightGateAtmosphere.stop();
     await waitForWorker(4000);
     await markCachedPack();
     const ready = await pckExists();
