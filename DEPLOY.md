@@ -364,12 +364,12 @@ Godot 网页导出，页面路径：`myblog/source/night/`，访问地址：`htt
 
 ### 线上要能玩：pck 已放到 Cloudflare R2
 
-桶名 `night`，位置 APAC，公共访问已开启。当前地址：
+桶名 `night`，位置 APAC，自定义域 `cdn.boomery.top` 已绑定。当前地址：
 
 ```js
-const NIGHT_PCK = 'https://pub-842c4fb801034eb7b937bd0bf000b3cc.r2.dev/night.pck';
+const NIGHT_PCK = 'https://cdn.boomery.top/night.pck';
 ```
 
 CORS 已允许 `https://boomery.top`、`https://www.boomery.top`、`http://localhost:4000` 的 GET/HEAD。
 
-国内访问若 `r2.dev` 较慢，可再给桶绑定自定义域 `cdn.boomery.top`（DNS only），然后把 `NIGHT_PCK` 改成该域名。
+若希望 140MB 文件被 Cloudflare 边缘缓存，在 Cloudflare → Rules → Cache Rules 为 `cdn.boomery.top` 开启 Cache Everything。
