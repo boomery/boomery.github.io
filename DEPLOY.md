@@ -362,19 +362,14 @@ Godot 网页导出，页面路径：`myblog/source/night/`，访问地址：`htt
 
 `.pck` 已在 `myblog/.gitignore` 中排除。本地预览时文件仍会复制到 `source/night/night.pck`，`npx hexo server` 可以玩。
 
-### 线上要能玩：把 pck 放到 Cloudflare R2
+### 线上要能玩：pck 已放到 Cloudflare R2
 
-推荐用现有的 Cloudflare 账号开 R2 公共桶（无出站流量费）：
-
-1. Cloudflare Dashboard → R2 → 新建桶（例如 `boomery-cdn`），开启公共访问
-2. 绑定自定义域 `cdn.boomery.top`（DNS only，灰色云朵）
-3. 上传 `myblog/source/night/night.pck`
-4. 在 `myblog/source/night/index.html` 把顶部常量改成：
+桶名 `night`，位置 APAC，公共访问已开启。当前地址：
 
 ```js
-const NIGHT_PCK = 'https://cdn.boomery.top/night/night.pck';
+const NIGHT_PCK = 'https://pub-842c4fb801034eb7b937bd0bf000b3cc.r2.dev/night.pck';
 ```
 
-5. R2 的 CORS 允许 `https://boomery.top` GET/HEAD
+CORS 已允许 `https://boomery.top`、`https://www.boomery.top`、`http://localhost:4000` 的 GET/HEAD。
 
-本地 `hexo server` 不用改，继续用同目录的 `night.pck`。
+国内访问若 `r2.dev` 较慢，可再给桶绑定自定义域 `cdn.boomery.top`（DNS only），然后把 `NIGHT_PCK` 改成该域名。
