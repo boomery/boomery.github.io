@@ -318,6 +318,88 @@ body {
 
   <script src="night.js"></script>
   <script>
+window.NightSave = {
+  API: 'https://gallery-api.boomery.top/api/night-saves',
+  timer: null,
+  latest: null,
+  parsePayload: function (payload) {
+    if (typeof payload === 'string') {
+      try { payload = JSON.parse(payload); } catch (err) { return {}; }
+    }
+    return payload && typeof payload === 'object' ? payload : {};
+  },
+  invoke: function (cb, result) {
+    var json = typeof result === 'string' ? result : JSON.stringify(result);
+    var targets = [];
+    if (cb) targets.push(cb);
+    if (window._nightSaveCb && window._nightSaveCb !== cb) targets.push(window._nightSaveCb);
+    for (var i = 0; i < targets.length; i++) {
+      try { targets[i](json); } catch (err) {}
+    }
+  },
+  queuePut: function (token, payload) {
+    var pack = { token: token, payload: this.parsePayload(payload) };
+    this.latest = pack;
+    clearTimeout(this.timer);
+    var self = this;
+    this.timer = setTimeout(function () { self.put(pack.token, pack.payload); }, 2200);
+  },
+  put: function (token, payload, cb) {
+    var body = this.parsePayload(payload);
+    var self = this;
+    return fetch(this.API, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        token: token,
+        active_slot: body.active_slot,
+        slots: body.slots
+      })
+    }).then(function (r) {
+      return r.json().catch(function () { return {}; }).then(function (data) {
+        var result = { ok: r.ok && data.ok !== false, error: data.error || '', status: r.status };
+        if (result.ok && self.latest && self.latest.token === token) self.latest = null;
+        self.invoke(cb, result);
+        return result;
+      });
+    }).catch(function (err) {
+      var result = { ok: false, error: String(err) };
+      self.invoke(cb, result);
+      return result;
+    });
+  },
+  get: function (token, cb) {
+    var self = this;
+    return fetch(this.API + '?token=' + encodeURIComponent(token)).then(function (r) {
+      return r.json().catch(function () { return {}; }).then(function (data) {
+        var result = Object.assign({ ok: r.ok && data.ok !== false, error: data.error || '', status: r.status }, data);
+        self.invoke(cb, result);
+        return result;
+      });
+    }).catch(function (err) {
+      var result = { ok: false, error: String(err) };
+      self.invoke(cb, result);
+      return result;
+    });
+  },
+  copy: function (text) {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text);
+    }
+  },
+  flush: function () {
+    if (!this.latest) return;
+    var pack = this.latest;
+    this.put(pack.token, pack.payload);
+  }
+};
+window.addEventListener('visibilitychange', function () {
+  if (document.visibilityState === 'hidden') window.NightSave.flush();
+});
+window.addEventListener('pagehide', function () {
+  window.NightSave.flush();
+});
+
 const NIGHT_PCK = 'https://cdn.boomery.top/night.pck';
 const GODOT_CONFIG = {
   args: [],

@@ -323,6 +323,13 @@ CREATE TABLE IF NOT EXISTS site_avatar (
   src        TEXT         NOT NULL,
   updated_at TIMESTAMPTZ  NOT NULL DEFAULT NOW()
 );
+
+CREATE TABLE IF NOT EXISTS night_seals (
+  token_hash TEXT PRIMARY KEY,
+  active_slot INTEGER NOT NULL DEFAULT 1,
+  slots JSONB NOT NULL DEFAULT '{}'::jsonb,
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
 ```
 
 **API 端点**
@@ -334,6 +341,8 @@ CREATE TABLE IF NOT EXISTS site_avatar (
 | `/api/auth` | POST | 密码预校验 |
 | `/api/avatar` | GET | 数字空间头像 URL |
 | `/api/avatar` | POST | 上传/更新头像（同 UPLOAD_PASSWORD） |
+| `/api/night-saves` | GET | 凭印信取回夜行镖云存档 |
+| `/api/night-saves` | PUT | 写入夜行镖云存档（按印信哈希隔离，不存明文） |
 
 ### 部署步骤（首次）
 
@@ -373,3 +382,18 @@ const NIGHT_PCK = 'https://cdn.boomery.top/night.pck';
 CORS 已允许 `https://boomery.top`、`https://www.boomery.top`、`http://localhost:4000` 的 GET/HEAD。
 
 若希望 140MB 文件被 Cloudflare 边缘缓存，在 Cloudflare → Rules → Cache Rules 为 `cdn.boomery.top` 开启 Cache Everything。
+
+### 印信云存档（换机）
+
+每个浏览器仍有一份 IndexedDB 本地档。换机靠印信：
+
+- 格式 `HXNY-XXXX-XXXX`（排除易混字符 0/1/I/O）
+- 游戏内行囊 → 存档管理：抄录印信 / 凭印信取档
+- 本地 `save_game()` 后约 2 秒上传到 `https://gallery-api.boomery.top/api/night-saves`
+- 服务端只存 `SHA-256(night-seal-v1:` + 印信 `)`，不存明文
+
+游戏逻辑改的是 Godot 源码（`Desktop/night`），不是已经导出的 `web/`。改完后需要：
+
+1. 在 Godot 里重新导出 Web（至少覆盖 `night.pck`）
+2. 把新的 `night.pck` 上传到 R2，覆盖 `cdn.boomery.top/night.pck`
+3. 本仓库 `gallery-api` 随 push 部署后，印信接口才可用
