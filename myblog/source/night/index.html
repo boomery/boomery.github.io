@@ -153,17 +153,28 @@ body {
   position: relative;
   width: min(420px, 100%);
   text-align: center;
+  background: radial-gradient(ellipse at center, rgba(11, 10, 9, 0.32) 0%, transparent 74%);
 }
 
-.gate-logo {
+.gate-logo-wrap {
+  position: relative;
   display: block;
   margin: 0 auto;
   width: 168px;
   height: 168px;
-  object-fit: contain;
   border-radius: 50%;
+  overflow: hidden;
   border: 1px solid rgba(243, 201, 138, 0.28);
   box-shadow: 0 18px 50px rgba(0, 0, 0, 0.45);
+  background: #0b1214;
+  will-change: transform, box-shadow;
+}
+
+.gate-logo {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
   background: #0b1214;
 }
 
@@ -186,7 +197,7 @@ body {
 }
 
 @media (max-width: 480px) {
-  .gate-logo { width: 132px; height: 132px; }
+  .gate-logo-wrap { width: 132px; height: 132px; }
   .gate-engine { width: 72px; right: 12px; bottom: 10px; }
   .gate-engine img { width: 72px; }
   .gate-meta { right: 92px; font-size: 10px; }
@@ -243,6 +254,7 @@ body {
 }
 
 .gate-btn.is-hidden { display: none; }
+.gate-btn-wrap:has(.gate-btn.is-hidden) { display: none; }
 
 .gate-load {
   display: none;
@@ -336,24 +348,181 @@ body {
   color: rgba(239, 230, 214, 0.38);
   pointer-events: none;
 }
+
+.gate-svg-defs {
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+}
+
+.gate-rain {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  pointer-events: none;
+  background: #070605;
+  opacity: 0;
+  transition: opacity 0.8s ease;
+}
+
+.gate-rain.is-on { opacity: 1; }
+
+.gate-veil {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background: radial-gradient(ellipse 58% 52% at 50% 40%, transparent 0%, rgba(11, 10, 9, 0.22) 68%, rgba(11, 10, 9, 0.52) 100%);
+}
+
+.gate-flash {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: #fff6e4;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.gate-nav { z-index: 3; }
+.gate-card { z-index: 2; }
+.gate-engine, .gate-meta { z-index: 2; }
+
+.gate-nav-right {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.gate-sound {
+  appearance: none;
+  border: 1px solid rgba(243, 201, 138, 0.28);
+  background: rgba(12, 10, 9, 0.35);
+  color: rgba(239, 230, 214, 0.78);
+  font-family: "PingFang SC", system-ui, sans-serif;
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  padding: 4px 10px;
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.gate-sound.is-muted { opacity: 0.48; }
+.gate-sound:hover { color: #f3c98a; border-color: rgba(243, 201, 138, 0.55); }
+
+.gate-listen {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 46px;
+  z-index: 8;
+  margin: 0;
+  text-align: center;
+  font-family: "PingFang SC", system-ui, sans-serif;
+  font-size: 12px;
+  letter-spacing: 0.18em;
+  color: rgba(239, 230, 214, 0.42);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.5s ease;
+}
+
+.gate-listen.is-on { opacity: 1; }
+.gate-listen.is-gone { opacity: 0 !important; }
+.gate-btn { margin-top: 0; }
+
+.gate-btn-wrap {
+  position: relative;
+  display: inline-block;
+  margin-top: 28px;
+  overflow: hidden;
+  border-radius: 4px;
+}
+
+.gate-btn-wrap::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 10%;
+  right: 10%;
+  height: 1px;
+  z-index: 2;
+  pointer-events: none;
+  background: linear-gradient(90deg, transparent, rgba(255, 248, 230, 0.55), transparent);
+}
+
+.gate-beads {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  overflow: hidden;
+  border-radius: 4px;
+  filter: url(#gateGoo);
+}
+
+.gate-bead {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 11px;
+  height: 15px;
+  margin: 0;
+  border-radius: 50% 50% 45% 45%;
+  background: radial-gradient(circle at 32% 28%, rgba(255, 252, 245, 0.95), rgba(186, 214, 224, 0.32) 50%, rgba(255, 255, 255, 0) 74%);
+  box-shadow: inset 1px 1px 2px rgba(255, 255, 255, 0.6), 0 4px 10px rgba(0, 0, 0, 0.2);
+  opacity: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gate-rain, .gate-flash, .gate-beads { display: none; }
+}
   </style>
 </head>
 <body>
   <div class="gate" id="gate">
+    <svg class="gate-svg-defs" aria-hidden="true" width="0" height="0">
+      <defs>
+        <filter id="gateGoo">
+          <feGaussianBlur in="SourceGraphic" stdDeviation="1.8" result="blur"></feGaussianBlur>
+          <feColorMatrix in="blur" mode="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 20 -8" result="goo"></feColorMatrix>
+          <feComposite in="SourceGraphic" in2="goo" operator="atop"></feComposite>
+        </filter>
+      </defs>
+    </svg>
+    <canvas class="gate-rain" id="rainBg" aria-hidden="true"></canvas>
+    <div class="gate-veil" aria-hidden="true"></div>
+    <div class="gate-flash" id="gateFlash" aria-hidden="true"></div>
     <nav class="gate-nav">
       <a class="gate-brand" href="/">
         <img src="/images/boomery-logo.svg" width="28" height="28" alt="">
         boomery
       </a>
-      <a href="/space/">← 数字空间</a>
+      <span class="gate-nav-right">
+        <button class="gate-sound" id="gateSound" type="button" aria-pressed="false" title="闭雨声">雨</button>
+        <a href="/space/">← 数字空间</a>
+      </span>
     </nav>
     <div class="gate-card">
-      <img class="gate-logo" src="night.icon.png" alt="槐安夜雨">
+      <div class="gate-logo-wrap" id="logoWrap">
+        <img class="gate-logo" src="night.icon.png" alt="槐安夜雨">
+      </div>
       <div class="gate-kicker">WEB GAME</div>
       <h1>槐安夜雨</h1>
       <p>七年之前，雨夜走镖，同门惨死。追凶之路漫漫，前路飘摇。</p>
       <p class="gate-note" id="gateNote">需下载游戏文件170MB，首次之后会留在本机</p>
-      <button class="gate-btn" id="enterBtn" type="button">即刻启程</button>
+      <span class="gate-btn-wrap" id="enterWrap">
+        <button class="gate-btn" id="enterBtn" type="button">即刻启程</button>
+        <span class="gate-beads" id="gateBeads" aria-hidden="true">
+          <i class="gate-bead"></i><i class="gate-bead"></i><i class="gate-bead"></i>
+          <i class="gate-bead"></i><i class="gate-bead"></i><i class="gate-bead"></i>
+          <i class="gate-bead"></i><i class="gate-bead"></i>
+        </span>
+      </span>
       <div class="gate-load" id="gateLoad">
         <div class="gate-load__track">
           <div class="gate-load__bar" id="gateBar"></div>
@@ -361,7 +530,8 @@ body {
         <p class="gate-load__text" id="gateLoadText">正在装载行囊…</p>
       </div>
     </div>
-    <p class="gate-meta">游戏 <span id="nightGameVer">v0.19.1</span> · 更新于 <time id="nightBuiltAt">2026-09-22 14:58</time></p>
+    <p class="gate-listen" id="gateListen">轻点画面，听雨入夜</p>
+    <p class="gate-meta">游戏 <span id="nightGameVer">v0.19.1</span> · 更新于 <time id="nightBuiltAt">2026-09-22 15:14</time></p>
     <a class="gate-engine" href="https://godotengine.org" target="_blank" rel="noopener" title="Made with Godot">
       <img src="night.png" alt="Godot">
     </a>
@@ -381,6 +551,10 @@ body {
     <div id="status-notice"></div>
   </div>
 
+  <script src="https://cdn.jsdelivr.net/npm/howler@2.2.4/dist/howler.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/raindrop-fx@1.0.8/bundle/index.js"></script>
+  <script src="gate-atmosphere.js"></script>
   <script src="night.js"></script>
   <script>
 window.NightSave = {
@@ -466,7 +640,7 @@ window.addEventListener('pagehide', function () {
 });
 
 const NIGHT_GAME_VERSION = '0.19.1';
-const NIGHT_BUILT_AT = '2026-09-22 14:58';
+const NIGHT_BUILT_AT = '2026-09-22 16:20';
 const NIGHT_PCK = 'https://cdn.boomery.top/night.pck';
 (function stampBuildMeta() {
   const ver = document.getElementById('nightGameVer');
@@ -780,6 +954,7 @@ if ('serviceWorker' in navigator) {
       await engine.preloadFile(buf, NIGHT_PCK);
       await engine.start();
       stopBootHints();
+      if (window.NightGateAtmosphere) window.NightGateAtmosphere.stop();
       setStatusMode('hidden');
       gate.classList.add('is-gone');
       markCachedPack();
