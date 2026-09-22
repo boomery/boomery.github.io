@@ -189,6 +189,7 @@ body {
   .gate-logo { width: 132px; height: 132px; }
   .gate-engine { width: 72px; right: 12px; bottom: 10px; }
   .gate-engine img { width: 72px; }
+  .gate-meta { right: 92px; font-size: 10px; }
 }
 
 .gate-kicker {
@@ -302,6 +303,20 @@ body {
 }
 
 .back-fab.is-on { display: inline-flex; }
+
+.gate-meta {
+  position: absolute;
+  left: 22px;
+  right: 120px;
+  bottom: 16px;
+  z-index: 1;
+  margin: 0;
+  font-family: "PingFang SC", system-ui, sans-serif;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  color: rgba(239, 230, 214, 0.38);
+  pointer-events: none;
+}
   </style>
 </head>
 <body>
@@ -327,6 +342,7 @@ body {
         <p class="gate-load__text" id="gateLoadText">正在装载行囊…</p>
       </div>
     </div>
+    <p class="gate-meta">游戏 <span id="nightGameVer">v0.19.1</span> · 更新于 <time id="nightBuiltAt">2026-09-22 14:37</time></p>
     <a class="gate-engine" href="https://godotengine.org" target="_blank" rel="noopener" title="Made with Godot">
       <img src="night.png" alt="Godot">
     </a>
@@ -430,7 +446,18 @@ window.addEventListener('pagehide', function () {
   window.NightSave.flush();
 });
 
+const NIGHT_GAME_VERSION = '0.19.1';
+const NIGHT_BUILT_AT = '2026-09-22 14:37';
 const NIGHT_PCK = 'https://cdn.boomery.top/night.pck';
+(function stampBuildMeta() {
+  const ver = document.getElementById('nightGameVer');
+  const built = document.getElementById('nightBuiltAt');
+  if (ver) ver.textContent = 'v' + NIGHT_GAME_VERSION;
+  if (built) {
+    built.textContent = NIGHT_BUILT_AT;
+    built.setAttribute('datetime', NIGHT_BUILT_AT.replace(' ', 'T') + '+08:00');
+  }
+})();
 const GODOT_CONFIG = {
   args: [],
   canvasResizePolicy: 2,

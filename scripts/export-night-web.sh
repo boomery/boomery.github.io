@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # 从 Desktop/night 的 Godot 源码导出 Web，同步到博客 /night/，并把 pck 传到 R2。
-# 不会覆盖 myblog/source/night/index.html（只改 fileSizes）。
+# 不会覆盖 myblog/source/night/index.html（只改 fileSizes、版本号与更新时间）。
 set -euo pipefail
 
 GODOT="${GODOT_BIN:-$HOME/Downloads/Godot.app/Contents/MacOS/Godot}"
@@ -76,11 +76,17 @@ if [[ "$copied" -eq 0 ]]; then
   exit 1
 fi
 
-python3 - "$HTML" "$DST" <<'PY'
+GAME_VERSION="$(grep -E '^config/version=' "$SRC/project.godot" | head -1 | sed -E 's/^config\/version="?([^"]*)"?$/\1/')"
+GAME_VERSION="${GAME_VERSION:-0.0.0}"
+
+python3 - "$HTML" "$DST" "$GAME_VERSION" <<'PY'
 import pathlib, re, sys
+from datetime import datetime, timedelta, timezone
 
 html_path = pathlib.Path(sys.argv[1])
 dst = pathlib.Path(sys.argv[2])
+version = sys.argv[3]
+built = datetime.now(timezone(timedelta(hours=8))).strftime("%Y-%m-%d %H:%M")
 pck = (dst / "night.pck").stat().st_size
 wasm = (dst / "night.wasm").stat().st_size
 text = html_path.read_text(encoding="utf-8")
@@ -91,12 +97,26 @@ text, n3 = re.subn(
     rf"\g<1>{pck}",
     text,
 )
+
+def put_const(name, value, src):
+    return re.subn(
+        rf"(const {name}\s*=\s*')[^']*(')",
+        lambda m, v=value: m.group(1) + v + m.group(2),
+        src,
+        count=1,
+    )
+
+text, n4 = put_const("NIGHT_GAME_VERSION", version, text)
+text, n5 = put_const("NIGHT_BUILT_AT", built, text)
+text, n6 = re.subn(r'(id="nightGameVer">)[^<]*', lambda m: m.group(1) + "v" + version, text, count=1)
+text, n7 = re.subn(r'(id="nightBuiltAt">)[^<]*', lambda m: m.group(1) + built, text, count=1)
 html_path.write_text(text, encoding="utf-8")
 print(f"fileSizes: pck={pck} wasm={wasm} (patched {n1 + n2 + n3} 处)")
+print(f"build meta: v{version} @ {built} (patched {n4 + n5 + n6 + n7} 处)")
 PY
 
 echo "本地已同步到 $DST"
-echo "自定义封面页 index.html 已保留（仅更新体积数字）"
+echo "自定义封面页 index.html 已保留（仅更新体积数字、版本与时间）"
 
 if [[ "$SKIP_R2" -eq 1 ]]; then
   echo "已跳过 R2 上传。本地可用 hexo server 预览。"

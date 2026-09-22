@@ -15,7 +15,7 @@ alwaysApply: true
 bash scripts/export-night-web.sh
 ```
 
-脚本会：用本机 Godot 无头导出 Web → 把 `night.js` / `night.wasm` / `night.pck` 等复制到 `myblog/source/night/` → 只改 `index.html` 里的 `fileSizes` → 把 `night.pck` 上传到 R2（`cdn.boomery.top/night.pck`）。
+脚本会：用本机 Godot 无头导出 Web → 把 `night.js` / `night.wasm` / `night.pck` 等复制到 `myblog/source/night/` → 只改 `index.html` 里的 `fileSizes`、游戏版本（`project.godot` 的 `config/version`）和更新时间 → 把 `night.pck` 上传到 R2（`cdn.boomery.top/night.pck`）。
 
 本地预览、先不传 CDN 时用 `bash scripts/export-night-web.sh --skip-r2`。
 
