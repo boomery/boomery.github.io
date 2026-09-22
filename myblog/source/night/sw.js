@@ -3,8 +3,7 @@ const CACHE_NAME = 'night-game-' + VERSION;
 
 function isGameAsset(url) {
   try {
-    const path = new URL(url).pathname;
-    return path.endsWith('/night.pck') || path.endsWith('/night.wasm') || path.endsWith('night.pck');
+    return new URL(url).pathname.endsWith('/night.wasm');
   } catch (err) {
     return false;
   }

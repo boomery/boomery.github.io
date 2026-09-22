@@ -453,7 +453,7 @@ const GODOT_THREADS_ENABLED = false;
 const engine = new Engine(GODOT_CONFIG);
 
 if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('sw.js?v=' + GODOT_CONFIG.fileSizes[NIGHT_PCK] + '.r2', { updateViaCache: 'none' });
+  navigator.serviceWorker.register('sw.js?v=' + GODOT_CONFIG.fileSizes[NIGHT_PCK] + '.r3', { updateViaCache: 'none' });
 }
 
 (function () {
@@ -491,11 +491,66 @@ if ('serviceWorker' in navigator) {
 
   async function waitForWorker(ms) {
     if (!('serviceWorker' in navigator)) return;
+    const ctrl = navigator.serviceWorker.controller;
+    if (!ctrl || (ctrl.scriptURL || '').indexOf('.r3') !== -1) return;
     try {
       await Promise.race([
-        navigator.serviceWorker.ready,
+        new Promise(function (resolve) {
+          navigator.serviceWorker.addEventListener('controllerchange', resolve, { once: true });
+        }),
         new Promise(function (resolve) { setTimeout(resolve, ms); }),
       ]);
+    } catch (err) {}
+  }
+
+  async function loadPack(onBytes) {
+    const expected = GODOT_CONFIG.fileSizes[NIGHT_PCK];
+    const cached = await localPack();
+    if (cached) {
+      const buf = await cached.arrayBuffer();
+      onBytes(buf.byteLength);
+      return buf;
+    }
+    const res = await fetch(NIGHT_PCK, { mode: 'cors' });
+    if (!res.ok) throw new Error('游戏包 night.pck 未能加载（HTTP ' + res.status + '）');
+    const total = Number(res.headers.get('Content-Length')) || expected;
+    if (!res.body || !res.body.getReader) {
+      const buf = await res.arrayBuffer();
+      onBytes(buf.byteLength);
+      await storePack(buf);
+      return buf;
+    }
+    const reader = res.body.getReader();
+    const chunks = [];
+    let loaded = 0;
+    for (;;) {
+      const step = await reader.read();
+      if (step.done) break;
+      chunks.push(step.value);
+      loaded += step.value.byteLength;
+      onBytes(loaded);
+    }
+    const bytes = new Uint8Array(loaded);
+    let offset = 0;
+    for (let i = 0; i < chunks.length; i++) {
+      bytes.set(chunks[i], offset);
+      offset += chunks[i].byteLength;
+    }
+    onBytes(total);
+    await storePack(bytes.buffer);
+    return bytes.buffer;
+  }
+
+  async function storePack(buf) {
+    if (!('caches' in window)) return;
+    try {
+      const cache = await caches.open('night-pck-' + GODOT_CONFIG.fileSizes[NIGHT_PCK]);
+      await cache.put(NIGHT_PCK, new Response(buf, {
+        headers: {
+          'Content-Type': 'application/octet-stream',
+          'Content-Length': String(buf.byteLength),
+        },
+      }));
     } catch (err) {}
   }
 
@@ -582,7 +637,7 @@ if ('serviceWorker' in navigator) {
     }
   }
 
-  function startGodot() {
+  async function startGodot() {
     const missing = Engine.getMissingFeatures({
       threads: GODOT_THREADS_ENABLED,
     });
@@ -594,30 +649,50 @@ if ('serviceWorker' in navigator) {
     }
 
     setStatusMode('progress');
-    engine.startGame({
-      onProgress: function (current, total) {
-        updateGateProgress(current, total);
-        if (current > 0 && total > 0) {
-          statusProgress.value = current;
-          statusProgress.max = total;
-        } else {
-          statusProgress.removeAttribute('value');
-          statusProgress.removeAttribute('max');
-        }
-      },
-    }).then(() => {
+    const pckSize = GODOT_CONFIG.fileSizes[NIGHT_PCK];
+    const wasmSize = GODOT_CONFIG.fileSizes['night.wasm'];
+    let pckLoaded = 0;
+    let wasmLoaded = 0;
+
+    function report() {
+      const current = pckLoaded + wasmLoaded;
+      const total = pckSize + wasmSize;
+      updateGateProgress(current, total);
+      if (current > 0 && total > 0) {
+        statusProgress.value = current;
+        statusProgress.max = total;
+      }
+    }
+
+    try {
+      engine.config.update({
+        onProgress: function (current) {
+          wasmLoaded = current || 0;
+          report();
+        },
+      });
+      engine.config.args = ['--main-pack', NIGHT_PCK];
+      const packPromise = loadPack(function (loaded) {
+        pckLoaded = loaded;
+        report();
+      });
+      const buf = (await Promise.all([packPromise, engine.init('night')]))[0];
+      await engine.preloadFile(buf, NIGHT_PCK);
+      await engine.start();
       setStatusMode('hidden');
       gate.classList.add('is-gone');
       markCachedPack();
-    }, displayFailureNotice);
+    } catch (err) {
+      displayFailureNotice(err);
+    }
   }
 
   enterBtn.addEventListener('click', async function () {
     enterBtn.disabled = true;
     backFab.classList.add('is-on');
-    await waitForWorker(1800);
-    await markCachedPack();
     showGateProgress();
+    await waitForWorker(4000);
+    await markCachedPack();
     const ready = await pckExists();
     if (!ready) {
       displayFailureNotice('游戏包 night.pck（约 140MB）未找到。GitHub/Vercel 无法托管超过 100MB 的单文件，请把 pck 放到 Cloudflare R2 等 CDN，并修改本页顶部的 NIGHT_PCK。');

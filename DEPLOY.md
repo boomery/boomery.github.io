@@ -381,7 +381,7 @@ const NIGHT_PCK = 'https://cdn.boomery.top/night.pck';
 
 CORS 已允许 `https://boomery.top`、`https://www.boomery.top`、`http://localhost:4000` 的 GET/HEAD。
 
-若希望 140MB 文件被 Cloudflare 边缘缓存，在 Cloudflare → Rules → Cache Rules 为 `cdn.boomery.top` 开启 Cache Everything。浏览器 HTTP 缓存装不下整包 pck，页面会用 Service Worker（`/night/sw.js`）把 `night.pck` / `night.wasm` 写入 Cache Storage，同一浏览器再次进入从本机读取。
+若希望 140MB 文件被 Cloudflare 边缘缓存，在 Cloudflare → Rules → Cache Rules 为 `cdn.boomery.top` 开启 Cache Everything。浏览器 HTTP 缓存装不下整包 pck。`night.wasm` 由 Service Worker 写入 Cache Storage；`night.pck` 由页面自己下载并写入 Cache Storage 后再交给 Godot（避免 SW 拦截跨域大文件导致进度卡死）。同一浏览器再次进入从本机读取。
 
 ### 印信云存档（换机）
 
