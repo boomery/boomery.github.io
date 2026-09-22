@@ -453,7 +453,7 @@ const GODOT_THREADS_ENABLED = false;
 const engine = new Engine(GODOT_CONFIG);
 
 if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('sw.js?v=' + GODOT_CONFIG.fileSizes[NIGHT_PCK], { updateViaCache: 'none' });
+  navigator.serviceWorker.register('sw.js?v=' + GODOT_CONFIG.fileSizes[NIGHT_PCK] + '.r2', { updateViaCache: 'none' });
 }
 
 (function () {
@@ -519,7 +519,6 @@ if ('serviceWorker' in navigator) {
   function updateGateProgress(current, total) {
     if (!(current > 0 && total > 0)) {
       gateLoad.classList.add('is-indeterminate');
-      gateLoadText.textContent = '正在接通夜路…';
       return;
     }
     const pct = Math.min(100, Math.round((current / total) * 100));
