@@ -110,9 +110,17 @@ text, n4 = put_const("NIGHT_GAME_VERSION", version, text)
 text, n5 = put_const("NIGHT_BUILT_AT", built, text)
 text, n6 = re.subn(r'(id="nightGameVer">)[^<]*', lambda m: m.group(1) + "v" + version, text, count=1)
 text, n7 = re.subn(r'(id="nightBuiltAt">)[^<]*', lambda m: m.group(1) + built, text, count=1)
+bust = f"{version}-{pck}"
+text, n8 = re.subn(
+    r"(const NIGHT_PCK\s*=\s*'https://cdn\.boomery\.top/night\.pck)(?:\?v=[^']*)?(')",
+    lambda m: m.group(1) + f"?v={bust}" + m.group(2),
+    text,
+    count=1,
+)
 html_path.write_text(text, encoding="utf-8")
 print(f"fileSizes: pck={pck} wasm={wasm} (patched {n1 + n2 + n3} 处)")
 print(f"build meta: v{version} @ {built} (patched {n4 + n5 + n6 + n7} 处)")
+print(f"pck url bust: ?v={bust} (patched {n8} 处)")
 PY
 
 echo "本地已同步到 $DST"
@@ -133,5 +141,5 @@ echo "上传 $DST/night.pck → R2 $R2_BUCKET/$R2_KEY"
 wrangler r2 object put "$R2_BUCKET/$R2_KEY" \
   --file "$DST/night.pck" \
   --content-type application/octet-stream \
-  --cache-control "public, max-age=31536000, immutable"
+  --cache-control "public, max-age=300"
 echo "R2 已覆盖 https://cdn.boomery.top/night.pck"

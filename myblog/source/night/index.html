@@ -183,8 +183,8 @@ window.addEventListener('pagehide', function () {
 });
 
 const NIGHT_GAME_VERSION = '0.19.2';
-const NIGHT_BUILT_AT = '2026-09-22 18:15';
-const NIGHT_PCK = 'https://cdn.boomery.top/night.pck';
+const NIGHT_BUILT_AT = '2026-09-22 18:20';
+const NIGHT_PCK = 'https://cdn.boomery.top/night.pck?v=0.19.2-148418380';
 (function stampBuildMeta() {
   const ver = document.getElementById('nightGameVer');
   const built = document.getElementById('nightBuiltAt');
@@ -243,7 +243,7 @@ if ('serviceWorker' in navigator) {
     if (!('caches' in window)) return null;
     try {
       const cache = await caches.open(PACK_CACHE);
-      const cached = await cache.match(NIGHT_PCK, { ignoreSearch: true });
+      const cached = await cache.match(NIGHT_PCK);
       if (!cached) return null;
       const expected = GODOT_CONFIG.fileSizes[NIGHT_PCK];
       const len = Number(cached.headers.get('Content-Length')) || 0;
@@ -361,6 +361,9 @@ if ('serviceWorker' in navigator) {
     const res = await fetch(NIGHT_PCK, { mode: 'cors', cache: 'no-store' });
     if (!res.ok) throw new Error('游戏包 night.pck 未能加载（HTTP ' + res.status + '）');
     const buf = await readBody(res, onBytes, expected);
+    if (expected && buf.byteLength !== expected) {
+      throw new Error('行囊体积不符（' + buf.byteLength + ' / ' + expected + '），CDN 可能仍是旧包，请稍后刷新重试。');
+    }
     await storePack(buf);
     return buf;
   }
