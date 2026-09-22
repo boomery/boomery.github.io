@@ -399,3 +399,5 @@ bash scripts/export-night-web.sh
 ```
 
 会无头导出 Web、同步到 `myblog/source/night/`（**不覆盖**自定义 `index.html`，只更新 `fileSizes`），并把 `night.pck` 传到 R2。本地预览可加 `--skip-r2`。
+
+Godot 源码仓库是独立的 `boomery/NightEscort`（`Desktop/night`，分支 `main`）。从博客对话里改完源码后会自动 commit/push 该仓库，再跑上面的导出。

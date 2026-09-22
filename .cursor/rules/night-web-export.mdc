@@ -5,7 +5,7 @@ alwaysApply: true
 
 # 夜行镖 Web 自动导出
 
-只要这次对话改了 **Godot 游戏源码**（`/Users/chaoxinzhang/Desktop/night` 下的脚本、场景、资源，不是已经导出的 `web/`），完成改动后必须导出到本仓库，不要让用户自己在编辑器里点导出。
+只要这次对话改了 **Godot 游戏源码**（`/Users/chaoxinzhang/Desktop/night` 下的脚本、场景、资源，不是已经导出的 `web/`），完成改动后必须：先提交并推送桌面源码仓库，再导出 Web 到本博客仓库。不要让用户自己点导出或再问「要不要 push 源码」。
 
 ## 怎么做
 
@@ -19,12 +19,24 @@ bash scripts/export-night-web.sh
 
 本地预览、先不传 CDN 时用 `bash scripts/export-night-web.sh --skip-r2`。
 
+## 桌面源码仓库也要自动 push
+
+源码仓库是 `/Users/chaoxinzhang/Desktop/night`，远程 `https://github.com/boomery/NightEscort.git`，默认分支 **`main`**（不是 master）。
+
+1. `git -C /Users/chaoxinzhang/Desktop/night status` / `diff` 确认改动
+2. 只 add 源码（脚本、场景、资源、测试、`.uid`）；**不要**提交 `.env`、密钥、`web/` 导出目录、`*.pck`
+3. 中文 commit message
+4. `git -C /Users/chaoxinzhang/Desktop/night push origin main`
+5. 告知提交哈希
+
+例外与博客仓库相同：用户说先别 push、含密钥、push 失败需用户介入。不要 force push。
+
 ## 不要做的事
 
 - **不要**用 Godot 生成的 HTML 覆盖 `myblog/source/night/index.html`（封面、进度条、印信 `NightSave` 都在这份自定义页里）
-- **不要**把 `night.pck` 提交进 git（已 gitignore；走 R2）
-- **不要**提交 `/Users/chaoxinzhang/Desktop/night` 那个仓库，除非用户明确要求
-- 只改博客 HTML/CSS/印信桥、没动 Godot 源码时，**不要**跑导出
+- **不要**把 `night.pck` 提交进任一 git（已 gitignore；走 R2）
+- **不要**把 `Desktop/night/web/` 提交进 NightEscort（那是本地导出产物，线上以博客 `/night/` + R2 为准）
+- 只改博客 HTML/CSS/印信桥、没动 Godot 源码时，**不要**跑导出，也**不要**空提交 NightEscort
 
 ## 导出之后
 
