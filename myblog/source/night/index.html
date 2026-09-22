@@ -93,7 +93,7 @@ body {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 24px;
+  padding: 72px 24px 88px;
   background:
     radial-gradient(ellipse 70% 55% at 50% 0%, rgba(120, 40, 28, 0.35), transparent 58%),
     radial-gradient(ellipse 50% 40% at 80% 90%, rgba(40, 32, 72, 0.4), transparent 60%),
@@ -155,13 +155,40 @@ body {
   text-align: center;
 }
 
-.gate-card img {
-  width: 120px;
-  height: 120px;
-  object-fit: cover;
-  border-radius: 8px;
+.gate-logo {
+  display: block;
+  margin: 0 auto;
+  width: 168px;
+  height: 168px;
+  object-fit: contain;
+  border-radius: 50%;
   border: 1px solid rgba(243, 201, 138, 0.28);
   box-shadow: 0 18px 50px rgba(0, 0, 0, 0.45);
+  background: #0b1214;
+}
+
+.gate-engine {
+  position: absolute;
+  right: 16px;
+  bottom: 14px;
+  z-index: 1;
+  width: 96px;
+  text-decoration: none;
+  opacity: 0.7;
+}
+
+.gate-engine:hover { opacity: 1; }
+
+.gate-engine img {
+  width: 96px;
+  height: auto;
+  display: block;
+}
+
+@media (max-width: 480px) {
+  .gate-logo { width: 132px; height: 132px; }
+  .gate-engine { width: 72px; right: 12px; bottom: 10px; }
+  .gate-engine img { width: 72px; }
 }
 
 .gate-kicker {
@@ -287,7 +314,7 @@ body {
       <a href="/space/">← 数字空间</a>
     </nav>
     <div class="gate-card">
-      <img src="night.png" alt="槐安夜雨">
+      <img class="gate-logo" src="night.icon.png" alt="槐安夜雨">
       <div class="gate-kicker">WEB GAME</div>
       <h1>槐安夜雨</h1>
       <p>七年之前，雨夜走镖，同门惨死。追凶之路漫漫，前路飘摇。</p>
@@ -300,6 +327,9 @@ body {
         <p class="gate-load__text" id="gateLoadText">正在装载行囊…</p>
       </div>
     </div>
+    <a class="gate-engine" href="https://godotengine.org" target="_blank" rel="noopener" title="Made with Godot">
+      <img src="night.png" alt="Godot">
+    </a>
   </div>
 
   <a class="back-fab" id="backFab" href="/night/">← 返回</a>
@@ -311,7 +341,7 @@ body {
   <noscript>需要启用 JavaScript 才能运行这款游戏。</noscript>
 
   <div id="status">
-    <img id="status-splash" class="show-image--true fullsize--true use-filter--true" src="night.png" alt="">
+    <img id="status-splash" class="show-image--true fullsize--true use-filter--true" src="night.icon.png" alt="">
     <progress id="status-progress"></progress>
     <div id="status-notice"></div>
   </div>
