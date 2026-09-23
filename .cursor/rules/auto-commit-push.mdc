@@ -15,7 +15,7 @@ alwaysApply: true
 4. `git push origin master`
 5. 简要告知提交哈希与推送结果
 
-若本次还改了桌面 Godot 源码 `/Users/chaoxinzhang/Desktop/night`，同一轮也要 commit 并 `git push origin main` 到 `boomery/NightEscort`（详见 `night-web-export` 规则）。
+若本次还改了夜行镖源码（Mac：`~/Desktop/night`，Windows：`~/Documents/GitHub/NightEscort`），同一轮也要 commit 并 `git push origin main` 到 `boomery/NightEscort`。推送会触发 Web 导出（详见 `night-web-export` 规则）。
 
 ## 例外（不自动 push）
 

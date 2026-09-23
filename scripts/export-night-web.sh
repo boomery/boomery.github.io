@@ -1,20 +1,103 @@
 #!/usr/bin/env bash
-# 从 Desktop/night 的 Godot 源码导出 Web，同步到博客 /night/，并把 pck 传到 R2。
+# 从 NightEscort 源码导出 Web，同步到博客 /night/，并把 pck 传到 R2。
+# Mac 默认 ~/Desktop/night，Windows 默认 ~/Documents/GitHub/NightEscort。
 # 不会覆盖 myblog/source/night/index.html（只改 fileSizes、版本号与更新时间）。
 set -euo pipefail
 
-if [[ -n "${GODOT_BIN:-}" ]]; then
-  GODOT="$GODOT_BIN"
-elif [[ -x "$HOME/Downloads/Godot.app/Contents/MacOS/Godot" ]]; then
-  GODOT="$HOME/Downloads/Godot.app/Contents/MacOS/Godot"
-elif [[ -f "/f/Backup/桌面/夜行镖/Godot_v4.7.2-stable_win64.exe" ]]; then
-  GODOT="/f/Backup/桌面/夜行镖/Godot_v4.7.2-stable_win64.exe"
-elif [[ -f "F:/Backup/桌面/夜行镖/Godot_v4.7.2-stable_win64.exe" ]]; then
-  GODOT="F:/Backup/桌面/夜行镖/Godot_v4.7.2-stable_win64.exe"
-else
-  GODOT="$HOME/Downloads/Godot.app/Contents/MacOS/Godot"
+if [[ -d "$HOME/.nvm/versions/node/v18.20.7/bin" ]]; then
+  PATH="$HOME/.nvm/versions/node/v18.20.7/bin:$PATH"
 fi
-SRC="${NIGHT_SRC:-$HOME/Desktop/night}"
+if [[ -d "/opt/homebrew/bin" ]]; then
+  PATH="/opt/homebrew/bin:$PATH"
+fi
+if [[ -d "/c/Program Files/nodejs" ]]; then
+  PATH="/c/Program Files/nodejs:$PATH"
+fi
+if [[ -d "$HOME/AppData/Roaming/npm" ]]; then
+  PATH="$HOME/AppData/Roaming/npm:$PATH"
+fi
+export PATH
+
+pick_python() {
+  local name bin
+  for name in python3 python; do
+    bin="$(command -v "$name" 2>/dev/null || true)"
+    [[ -n "$bin" ]] || continue
+    case "$bin" in
+      *[Ww]indows[Aa]pps*) continue ;;
+    esac
+    if "$bin" -c 'import sys; raise SystemExit(0 if sys.version_info[0] >= 3 else 1)' >/dev/null 2>&1; then
+      printf '%s\n' "$bin"
+      return 0
+    fi
+  done
+  return 1
+}
+
+if ! PYTHON="$(pick_python)"; then
+  echo "找不到可用的 Python 3。" >&2
+  exit 1
+fi
+
+run_wrangler() {
+  if command -v wrangler >/dev/null 2>&1; then
+    wrangler "$@"
+    return
+  fi
+  if command -v npx >/dev/null 2>&1; then
+    npx --yes wrangler "$@"
+    return
+  fi
+  echo "找不到 wrangler，也无法用 npx。" >&2
+  return 127
+}
+
+# Godot 路径含中文时，Git Bash 的 stat 会失败。交给 Python 按 Unicode 路径启动。
+run_godot() {
+  "$PYTHON" - "$@" <<'PY'
+import os, subprocess, sys
+from pathlib import Path
+
+args = sys.argv[1:]
+env = os.environ.get("GODOT_BIN", "").strip()
+candidates = []
+if env:
+    candidates.append(Path(env))
+candidates.append(Path.home() / "Downloads" / "Godot.app" / "Contents" / "MacOS" / "Godot")
+windows_root = Path("F:/Backup/桌面/夜行镖")
+windows_bundle = windows_root / "Godot_v4.7.2-stable_win64.exe"
+candidates.extend([
+    windows_bundle / "Godot_v4.7.2-stable_win64_console.exe",
+    windows_bundle / "Godot_v4.7.2-stable_win64.exe",
+    windows_root / "Godot_v4.7.2-stable_win64_console.exe",
+    windows_root / "Godot_v4.7.2-stable_win64.exe",
+])
+exe = next((p for p in candidates if p.is_file()), None)
+if exe is None:
+    sys.stderr.write("找不到 Godot。可设置 GODOT_BIN 指向可执行文件。\n")
+    raise SystemExit(1)
+print(f"Godot：{exe}", flush=True)
+raise SystemExit(subprocess.call([os.fspath(exe), *args]))
+PY
+}
+
+to_native_path() {
+  if command -v cygpath >/dev/null 2>&1; then
+    cygpath -w "$1"
+  else
+    printf '%s\n' "$1"
+  fi
+}
+
+if [[ -n "${NIGHT_SRC:-}" && -f "${NIGHT_SRC}/project.godot" ]]; then
+  SRC="$NIGHT_SRC"
+elif [[ -f "$HOME/Desktop/night/project.godot" ]]; then
+  SRC="$HOME/Desktop/night"
+elif [[ -f "$HOME/Documents/GitHub/NightEscort/project.godot" ]]; then
+  SRC="$HOME/Documents/GitHub/NightEscort"
+else
+  SRC="${NIGHT_SRC:-$HOME/Desktop/night}"
+fi
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 DST="$ROOT/myblog/source/night"
 HTML="$DST/index.html"
@@ -22,7 +105,6 @@ STAGING="${NIGHT_STAGING:-${TMPDIR:-/tmp}/night-web-export}"
 R2_BUCKET="${R2_BUCKET:-night}"
 R2_KEY="${R2_KEY:-night.pck}"
 export CLOUDFLARE_ACCOUNT_ID="${CLOUDFLARE_ACCOUNT_ID:-45386376a7a0aa77621692787c29f98b}"
-export PATH="$HOME/.nvm/versions/node/v18.20.7/bin:/opt/homebrew/bin:$PATH"
 
 SKIP_R2=0
 SKIP_EXPORT=0
@@ -43,11 +125,6 @@ for arg in "$@"; do
   esac
 done
 
-if [[ ! -e "$GODOT" ]]; then
-  echo "找不到 Godot：$GODOT" >&2
-  echo "可设置 GODOT_BIN 指向 Godot 可执行文件。" >&2
-  exit 1
-fi
 if [[ ! -f "$SRC/project.godot" ]]; then
   echo "找不到游戏工程：$SRC" >&2
   exit 1
@@ -57,11 +134,80 @@ if [[ ! -f "$HTML" ]]; then
   exit 1
 fi
 
+ensure_web_preset() {
+  local cfg="$SRC/export_presets.cfg"
+  if [[ -f "$cfg" ]] && grep -q 'name="Web"' "$cfg"; then
+    return 0
+  fi
+  if [[ -f "$cfg" ]]; then
+    echo "export_presets.cfg 里没有名为 Web 的预设：$cfg" >&2
+    exit 1
+  fi
+  cat > "$cfg" <<'EOF'
+[preset.0]
+
+name="Web"
+platform="Web"
+runnable=true
+dedicated_server=false
+custom_features=""
+export_filter="all_resources"
+include_filter=""
+exclude_filter=""
+export_path=""
+patches=PackedStringArray()
+encryption_include_filters=""
+encryption_exclude_filters=""
+encrypt_pck=false
+encrypt_directory=false
+script_export_mode=2
+
+[preset.0.options]
+
+custom_template/debug=""
+custom_template/release=""
+variant/extensions_support=false
+variant/thread_support=false
+vram_texture_compression/for_desktop=true
+vram_texture_compression/for_mobile=false
+html/export_icon=true
+html/custom_html_shell=""
+html/head_include=""
+html/canvas_resize_policy=2
+html/focus_canvas_on_start=true
+html/experimental_virtual_keyboard=false
+progressive_web_app/enabled=false
+progressive_web_app/ensure_cross_origin_isolation_headers=false
+progressive_web_app/offline_page=""
+progressive_web_app/display=1
+progressive_web_app/orientation=0
+progressive_web_app/icon_144x144=""
+progressive_web_app/icon_180x180=""
+progressive_web_app/icon_512x512=""
+progressive_web_app/background_color=Color(0, 0, 0, 1)
+threads/emscripten_pool_size=8
+threads/godot_pool_size=4
+EOF
+  echo "已写入本地 Web 导出预设（不进 git）：$cfg"
+}
+
+if [[ "$SKIP_R2" -eq 0 ]]; then
+  if ! run_wrangler whoami >/dev/null; then
+    echo "wrangler 还没在这台电脑登录，pck 传不了 R2。" >&2
+    echo "先执行：npx wrangler login" >&2
+    exit 1
+  fi
+fi
+
 if [[ "$SKIP_EXPORT" -eq 0 ]]; then
+  ensure_web_preset
   rm -rf "$STAGING"
   mkdir -p "$STAGING"
   echo "Godot 导出 Web → $STAGING/night.html"
-  "$GODOT" --headless --path "$SRC" --export-release "Web" "$STAGING/night.html"
+  echo "源码：$SRC"
+  godot_src="$(to_native_path "$SRC")"
+  godot_out="$(to_native_path "$STAGING/night.html")"
+  run_godot --headless --path "$godot_src" --export-release "Web" "$godot_out"
 fi
 
 if [[ ! -f "$STAGING/night.pck" ]]; then
@@ -89,7 +235,7 @@ fi
 GAME_VERSION="$(grep -E '^config/version=' "$SRC/project.godot" | head -1 | sed -E 's/^config\/version="?([^"]*)"?$/\1/')"
 GAME_VERSION="${GAME_VERSION:-0.0.0}"
 
-python3 - "$HTML" "$DST" "$GAME_VERSION" <<'PY'
+"$PYTHON" - "$HTML" "$DST" "$GAME_VERSION" <<'PY'
 import pathlib, re, sys
 from datetime import datetime, timedelta, timezone
 
@@ -133,7 +279,23 @@ print(f"build meta: v{version} @ {built} (patched {n4 + n5 + n6 + n7} 处)")
 print(f"pck url bust: ?v={bust} (patched {n8} 处)")
 PY
 
-python3 - "$DST/night.js" <<'PY'
+if [[ "${NIGHT_PUBLISH:-}" == 1 ]]; then
+  "$PYTHON" - "$ROOT/myblog/source/site-updated.js" <<'PY'
+import pathlib, re, sys
+from datetime import datetime, timedelta, timezone
+
+path = pathlib.Path(sys.argv[1])
+built = datetime.now(timezone(timedelta(hours=8))).strftime("%Y-%m-%d %H:%M")
+text = path.read_text(encoding="utf-8")
+text, n = re.subn(r"(var text = ')[^']*(')", rf"\g<1>{built}\2", text, count=1)
+if n != 1:
+    raise SystemExit("site-updated.js 的更新时间没写上")
+path.write_text(text, encoding="utf-8")
+print(f"site-updated.js: {built}")
+PY
+fi
+
+"$PYTHON" - "$DST/night.js" <<'PY'
 import pathlib, re, sys
 path = pathlib.Path(sys.argv[1])
 js = path.read_text(encoding="utf-8")
@@ -243,14 +405,8 @@ if [[ "$SKIP_R2" -eq 1 ]]; then
   exit 0
 fi
 
-if ! command -v wrangler >/dev/null 2>&1; then
-  echo "找不到 wrangler，无法上传 pck 到 R2。" >&2
-  echo "可再跑: $0 --skip-export    （在已安装 wrangler 后）" >&2
-  exit 1
-fi
-
 echo "上传 $DST/night.pck → R2 $R2_BUCKET/$R2_KEY"
-wrangler r2 object put "$R2_BUCKET/$R2_KEY" \
+run_wrangler r2 object put "$R2_BUCKET/$R2_KEY" \
   --file "$DST/night.pck" \
   --content-type application/octet-stream \
   --cache-control "public, max-age=300"
