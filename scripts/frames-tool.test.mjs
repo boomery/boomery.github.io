@@ -5,6 +5,7 @@ import {
   chromaKey,
   replaceWithTransparent,
   clearRect,
+  clearSimilarHue,
   previewChroma,
   markDuplicates,
   findLoop,
@@ -126,6 +127,21 @@ test('矩形遮罩把框住的区域变成透明', () => {
   assert.equal(shot.data[(1 * 4 + 2) * 4 + 3], 0);
   assert.equal(shot.data[(2 * 4 + 3) * 4 + 3], 0);
   assert.equal(shot.data[3], 255);
+});
+
+test('圈选替换只去掉色相接近的一整片，身体留着', () => {
+  const shot = frame(6, 6, (x, y) => {
+    if ((x === 4 && y === 1) || (x === 4 && y === 2) || (x === 5 && y === 2)) return [40, 180, 50, 255];
+    if (x === 5 && y === 1) return [150, 150, 150, 255];
+    return [180, 120, 90, 255];
+  });
+  const mask = clearSimilarHue(shot, { x0: 4, y0: 1, x1: 5, y1: 2 });
+  assert.equal(shot.data[(1 * 6 + 4) * 4 + 3], 0);
+  assert.equal(shot.data[(2 * 6 + 5) * 4 + 3], 0);
+  assert.equal(shot.data[(1 * 6 + 5) * 4 + 3], 255);
+  assert.equal(shot.data[(4 * 6 + 1) * 4 + 3], 255);
+  assert.equal(mask[(2 * 6 + 4)], 1);
+  assert.equal(mask[0], 0);
 });
 
 test('预览抠图时保留已经换成透明的像素', () => {

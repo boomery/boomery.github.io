@@ -194,6 +194,90 @@ export function clearRect(frame, rect) {
   return frame;
 }
 
+function pixelHue(r, g, b) {
+  const max = Math.max(r, g, b);
+  const min = Math.min(r, g, b);
+  const delta = max - min;
+  if (max === 0 || delta === 0) return null;
+  let hue;
+  if (max === r) hue = ((g - b) / delta) % 6;
+  else if (max === g) hue = (b - r) / delta + 2;
+  else hue = (r - g) / delta + 4;
+  hue *= 60;
+  if (hue < 0) hue += 360;
+  return { h: hue, s: delta / max };
+}
+
+function hueDistance(a, b) {
+  const delta = Math.abs(a - b);
+  return Math.min(delta, 360 - delta);
+}
+
+export function clearSimilarHue(frame, rect) {
+  const data = frame.data;
+  const width = frame.width;
+  const height = frame.height;
+  const x0 = Math.max(0, Math.min(width, Math.floor(Math.min(rect.x0, rect.x1))));
+  const x1 = Math.max(0, Math.min(width, Math.ceil(Math.max(rect.x0, rect.x1))));
+  const y0 = Math.max(0, Math.min(height, Math.floor(Math.min(rect.y0, rect.y1))));
+  const y1 = Math.max(0, Math.min(height, Math.ceil(Math.max(rect.y0, rect.y1))));
+  const samples = [];
+  for (let y = y0; y < y1; y += 1) {
+    for (let x = x0; x < x1; x += 1) {
+      const i = (y * width + x) * 4;
+      if (data[i + 3] < 16) continue;
+      const sample = pixelHue(data[i], data[i + 1], data[i + 2]);
+      if (sample && sample.s >= 0.12) samples.push(sample);
+    }
+  }
+  const seen = new Uint8Array(width * height);
+  if (!samples.length) return seen;
+  samples.sort((a, b) => b.s - a.s);
+  const vivid = samples.slice(0, Math.max(1, Math.ceil(samples.length * 0.5)));
+  let sin = 0;
+  let cos = 0;
+  let saturation = 0;
+  vivid.forEach((sample) => {
+    const rad = sample.h * Math.PI / 180;
+    sin += Math.sin(rad);
+    cos += Math.cos(rad);
+    saturation += sample.s;
+  });
+  let target = Math.atan2(sin, cos) * 180 / Math.PI;
+  if (target < 0) target += 360;
+  saturation /= vivid.length;
+  const minSaturation = Math.max(0.1, saturation * 0.45);
+  const matches = (i) => {
+    if (data[i + 3] < 16) return false;
+    const sample = pixelHue(data[i], data[i + 1], data[i + 2]);
+    if (!sample || sample.s < minSaturation) return false;
+    return hueDistance(sample.h, target) <= 32;
+  };
+  const stack = [];
+  const push = (p) => {
+    if (p < 0 || p >= seen.length || seen[p] || !matches(p * 4)) return;
+    seen[p] = 1;
+    stack.push(p);
+  };
+  for (let y = y0; y < y1; y += 1) {
+    for (let x = x0; x < x1; x += 1) push(y * width + x);
+  }
+  while (stack.length) {
+    const p = stack.pop();
+    const i = p * 4;
+    data[i] = 0;
+    data[i + 1] = 0;
+    data[i + 2] = 0;
+    data[i + 3] = 0;
+    const x = p % width;
+    if (x > 0) push(p - 1);
+    if (x + 1 < width) push(p + 1);
+    if (p - width >= 0) push(p - width);
+    if (p + width < seen.length) push(p + width);
+  }
+  return seen;
+}
+
 export function previewChroma(frame, options = {}) {
   const source = frame.original || frame.data;
   const copy = { width: frame.width, height: frame.height, data: new Uint8ClampedArray(source) };
