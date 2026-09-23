@@ -161,6 +161,29 @@ export function chromaKey(frame, options = {}) {
   return frame;
 }
 
+export function replaceWithTransparent(frame, options = {}) {
+  const color = options.color || [0, 255, 0];
+  const tolerance = Math.max(0, Number(options.tolerance) || 0);
+  const softness = Math.max(0, Number(options.softness) || 0);
+  const inner = Math.max(0, tolerance - softness);
+  const outer = tolerance + softness;
+  const data = frame.data;
+  for (let i = 0; i < data.length; i += 4) {
+    if (data[i + 3] === 0) continue;
+    const dist = colorDist(data, i, color[0], color[1], color[2]);
+    if (dist > outer) continue;
+    if (dist <= inner || outer <= inner) {
+      data[i] = 0;
+      data[i + 1] = 0;
+      data[i + 2] = 0;
+      data[i + 3] = 0;
+      continue;
+    }
+    data[i + 3] = Math.round(data[i + 3] * ((dist - inner) / (outer - inner)));
+  }
+  return frame;
+}
+
 export function fingerprint(frame, size = 16) {
   const out = new Float32Array(size * size);
   const sx = frame.width / size;

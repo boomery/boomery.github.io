@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import {
   CLIP_PRESETS,
   chromaKey,
+  replaceWithTransparent,
   markDuplicates,
   findLoop,
   keepIndices,
@@ -88,6 +89,18 @@ test('精灵图和素材包清单', () => {
   assert.equal(manifest.frameCount, 2);
   assert.ok(CLIP_PRESETS.some((item) => item.id === 'shen_duanshui'));
   assert.ok(CLIP_PRESETS.some((item) => item.id === 'yan_lueying' && item.loop === false));
+});
+
+test('透明替换去掉指定颜色，不要求连着边缘', () => {
+  const shot = frame(3, 3, (x, y) => {
+    if (x === 1 && y === 1) return [0, 250, 0, 255];
+    if (x === 2 && y === 1) return [0, 230, 0, 255];
+    return [180, 40, 40, 255];
+  });
+  replaceWithTransparent(shot, { color: [0, 255, 0], tolerance: 8, softness: 0 });
+  assert.equal(shot.data[(1 * 3 + 1) * 4 + 3], 0);
+  assert.equal(shot.data[(1 * 3 + 2) * 4 + 3], 255);
+  assert.equal(shot.data[3], 255);
 });
 
 test('编辑帧可以涂、擦、填、误除，并且能撤销', () => {

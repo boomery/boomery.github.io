@@ -347,10 +347,12 @@
           <div class="checks"><label><input id="previewKey" type="checkbox" /> 预览当前帧</label></div>
           <div class="actions">
             <button id="pick" type="button">吸管</button>
+            <button id="clearColor" type="button">透明替换</button>
+            <button id="clearAll" type="button">替换全部</button>
             <button id="applyChroma" type="button">应用到全部</button>
             <button class="ghost" id="restore" type="button">还原画面</button>
           </div>
-          <p class="hint">只去掉和画面边缘连成一片的纯色背景。容差过大、背景又和衣服连在一起时，先把容差降到 40 左右。视频里本身的拖影抠不掉。</p>
+          <p class="hint">只去掉和画面边缘连成一片的纯色背景。容差过大、背景又和衣服连在一起时，先把容差降到 40 左右。视频里本身的拖影抠不掉。透明替换会把点中的颜色，以及容差里相近的颜色，直接变成透明。</p>
         </section>
         <section class="panel">
           <h2>3. 整理和对齐</h2>
@@ -455,6 +457,7 @@
     import {
       CLIP_PRESETS,
       chromaKey,
+      replaceWithTransparent,
       hexToRgb,
       sampleBackgroundColor,
       markDuplicates,
@@ -533,7 +536,7 @@
       const has = frames.length > 0;
       preview.classList.toggle('is-on', has);
       empty.hidden = has;
-      ['applyChroma', 'restore', 'markDup', 'markJump', 'markCurrent', 'deleteMarked', 'reduce', 'cutLoop', 'align', 'download', 'prev', 'play', 'next', 'editFrame'].forEach((id) => {
+      ['applyChroma', 'clearColor', 'clearAll', 'restore', 'markDup', 'markJump', 'markCurrent', 'deleteMarked', 'reduce', 'cutLoop', 'align', 'download', 'prev', 'play', 'next', 'editFrame'].forEach((id) => {
         $(id).disabled = !has;
       });
       const scrub = $('frameScrub');
@@ -805,27 +808,57 @@
     });
 
     $('pick').addEventListener('click', () => {
-      picking = true;
+      picking = 'key';
       setStatus('在预览上点一下背景色');
+    });
+    $('clearColor').addEventListener('click', () => {
+      picking = 'clear';
+      setStatus('在预览上点要变成透明的颜色');
     });
     preview.addEventListener('click', (event) => {
       if (!picking || !frames.length) return;
       const frame = frames[index];
+      const shown = viewFrame(frame);
+      const rect = preview.getBoundingClientRect();
+      const x = Math.min(shown.width - 1, Math.max(0, Math.round((event.clientX - rect.left) / rect.width * shown.width)));
+      const y = Math.min(shown.height - 1, Math.max(0, Math.round((event.clientY - rect.top) / rect.height * shown.height)));
+      const i = (y * shown.width + x) * 4;
+      if (picking === 'clear') {
+        if (shown.data[i + 3] < 8) {
+          picking = false;
+          setStatus('这里已经是透明的，换一个有颜色的位置', true);
+          return;
+        }
+        const rgb = [shown.data[i], shown.data[i + 1], shown.data[i + 2]];
+        const hex = rgb.map((v) => v.toString(16).padStart(2, '0')).join('');
+        $('keyColor').value = `#${hex}`;
+        if (shown !== frame) frame.data = new Uint8ClampedArray(shown.data);
+        replaceWithTransparent(frame, { ...chromaOptions(), color: rgb });
+        $('previewKey').checked = false;
+        picking = false;
+        render();
+        setStatus(`已把 #${hex} 换成透明。其他帧用「替换全部」。`);
+        return;
+      }
       if (frame.width !== frame.sourceWidth || frame.height !== frame.sourceHeight) {
         picking = false;
         setStatus('对齐之后背景色对不上原图，先点还原画面再吸取', true);
         return;
       }
-      const rect = preview.getBoundingClientRect();
-      const x = Math.min(frame.width - 1, Math.max(0, Math.round((event.clientX - rect.left) / rect.width * frame.width)));
-      const y = Math.min(frame.height - 1, Math.max(0, Math.round((event.clientY - rect.top) / rect.height * frame.height)));
-      const i = (y * frame.width + x) * 4;
       const data = frame.original;
       const hex = [data[i], data[i + 1], data[i + 2]].map((v) => v.toString(16).padStart(2, '0')).join('');
-      $('keyColor').value = '#' + hex;
+      $('keyColor').value = `#${hex}`;
       picking = false;
       setStatus(`背景色已设为 #${hex}`);
       rerenderPreview();
+    });
+
+    $('clearAll').addEventListener('click', () => {
+      const options = chromaOptions();
+      frames.forEach((frame) => replaceWithTransparent(frame, options));
+      $('previewKey').checked = false;
+      render();
+      setStatus('已把这个颜色从全部帧里换成透明。');
     });
 
     $('applyChroma').addEventListener('click', () => {
