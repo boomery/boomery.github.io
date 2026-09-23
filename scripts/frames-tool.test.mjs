@@ -83,6 +83,26 @@ test('脚底对齐后锚点落在画面中下', () => {
   assert.ok(aligned.frames[0].data[i + 3] > 200);
 });
 
+test('对齐脚底时身体比脚更偏一边也不会被裁掉', () => {
+  const shot = frame(40, 24, (x, y) => {
+    if (y >= 16 && y <= 22 && x >= 1 && x <= 4) return [20, 20, 220, 255];
+    if (x >= 33 && x <= 36 && y >= 2 && y <= 15) return [10, 200, 10, 255];
+    if (y >= 2 && y <= 15 && x >= 0 && x <= 32) return [220, 30, 30, 255];
+    return [0, 0, 0, 0];
+  });
+  const aligned = alignFrames([shot], 24, 32, { pad: 2, smooth: false });
+  const data = aligned.frames[0].data;
+  let green = 0;
+  let blue = 0;
+  for (let i = 0; i < data.length; i += 4) {
+    if (data[i + 3] < 200) continue;
+    if (data[i + 1] > 150 && data[i] < 80) green += 1;
+    if (data[i + 2] > 150 && data[i] < 80) blue += 1;
+  }
+  assert.ok(green > 0);
+  assert.ok(blue > 0);
+});
+
 test('精灵图和素材包清单', () => {
   const shots = [frame(2, 2, () => [1, 2, 3, 255]), frame(2, 2, () => [4, 5, 6, 255])];
   const packed = packSheet(shots, 8);

@@ -446,26 +446,38 @@ export function opaqueBounds(frame, alpha = 16) {
   return { minX, minY, maxX, maxY };
 }
 
+function rowSpan(frame, y, minX, maxX, alpha) {
+  let left = frame.width;
+  let right = -1;
+  let sum = 0;
+  let n = 0;
+  const row = y * frame.width;
+  for (let x = minX; x <= maxX; x += 1) {
+    if (frame.data[(row + x) * 4 + 3] <= alpha) continue;
+    if (x < left) left = x;
+    if (x > right) right = x;
+    sum += x;
+    n += 1;
+  }
+  return { left, right, sum, n, span: n ? right - left + 1 : 0 };
+}
+
 export function footPoint(frame, alpha = 16) {
   const bounds = opaqueBounds(frame, alpha);
   if (!bounds) return { x: (frame.width - 1) / 2, y: frame.height - 1, bounds: null };
-  const y0 = Math.max(bounds.minY, bounds.maxY - 4);
-  let sum = 0;
-  let n = 0;
-  for (let y = y0; y <= bounds.maxY; y += 1) {
-    const row = y * frame.width;
-    for (let x = bounds.minX; x <= bounds.maxX; x += 1) {
-      if (frame.data[(row + x) * 4 + 3] > alpha) {
-        sum += x;
-        n += 1;
-      }
+  const bodyW = bounds.maxX - bounds.minX + 1;
+  const minSpan = Math.max(6, Math.round(bodyW * 0.08));
+  let groundY = bounds.maxY;
+  let groundX = (bounds.minX + bounds.maxX) / 2;
+  for (let y = bounds.maxY; y >= bounds.minY; y -= 1) {
+    const row = rowSpan(frame, y, bounds.minX, bounds.maxX, alpha);
+    if (row.span >= minSpan) {
+      groundY = y;
+      groundX = row.sum / row.n;
+      break;
     }
   }
-  return {
-    x: n ? sum / n : (bounds.minX + bounds.maxX) / 2,
-    y: bounds.maxY,
-    bounds,
-  };
+  return { x: groundX, y: groundY, bounds };
 }
 
 function samplePixel(frame, x, y, smooth) {
@@ -498,18 +510,24 @@ export function alignFrames(frames, width, height, options = {}) {
   const pad = Math.max(0, options.pad ?? 12);
   const smooth = options.smooth !== false;
   const feet = frames.map((frame) => footPoint(frame));
-  let maxW = 1;
-  let maxH = 1;
+  let maxLeft = 1;
+  let maxRight = 1;
+  let maxUp = 1;
+  let maxDown = 0;
   feet.forEach((foot) => {
     if (!foot.bounds) return;
-    maxW = Math.max(maxW, foot.bounds.maxX - foot.bounds.minX + 1);
-    maxH = Math.max(maxH, foot.y - foot.bounds.minY + 1);
+    const { minX, maxX, minY, maxY } = foot.bounds;
+    maxLeft = Math.max(maxLeft, foot.x - minX + 1);
+    maxRight = Math.max(maxRight, maxX - foot.x + 1);
+    maxUp = Math.max(maxUp, foot.y - minY + 1);
+    maxDown = Math.max(maxDown, maxY - foot.y);
   });
   const availW = Math.max(1, width - pad * 2);
   const availH = Math.max(1, height - pad * 2);
-  const scale = Math.min(availW / maxW, availH / maxH);
-  const anchorX = Math.round(width / 2);
-  const anchorY = height - pad;
+  const scale = Math.min(availW / (maxLeft + maxRight), availH / (maxUp + maxDown));
+  const usedW = (maxLeft + maxRight) * scale;
+  const anchorX = Math.round((width - usedW) / 2 + maxLeft * scale);
+  const anchorY = Math.round(height - pad - maxDown * scale);
   const aligned = frames.map((frame, index) => {
     const dest = blankFrame(width, height);
     const foot = feet[index];
