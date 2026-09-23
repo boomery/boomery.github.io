@@ -74,7 +74,7 @@
       <span class="surface-water" aria-hidden="true"></span>
     </div>
     <footer class="gate-footer">
-      <p class="gate-meta"><span id="nightGameVer">v0.19.2</span><span class="meta-dot">·</span><time id="nightBuiltAt">2026-09-23 21:31</time></p>
+      <p class="gate-meta"><span id="nightGameVer">v0.19.2</span><span class="meta-dot">·</span><time id="nightBuiltAt">2026-09-23 21:38</time></p>
       <p class="gate-listen" id="gateListen">轻触画面，听雨入夜</p>
       <a class="gate-engine" href="https://godotengine.org" target="_blank" rel="noopener">MADE WITH GODOT <span aria-hidden="true">↗</span></a>
     </footer>
@@ -183,7 +183,7 @@ window.addEventListener('pagehide', function () {
 });
 
 const NIGHT_GAME_VERSION = '0.19.2';
-const NIGHT_BUILT_AT = '2026-09-23 21:31';
+const NIGHT_BUILT_AT = '2026-09-23 21:38';
 const NIGHT_PCK = 'https://cdn.boomery.top/night.pck?v=0.19.2-157068568';
 (function stampBuildMeta() {
   const ver = document.getElementById('nightGameVer');
@@ -196,6 +196,7 @@ const NIGHT_PCK = 'https://cdn.boomery.top/night.pck?v=0.19.2-157068568';
 })();
 const GODOT_CONFIG = {
   args: [],
+  canvas: document.getElementById('canvas'),
   canvasResizePolicy: 2,
   emscriptenPoolSize: 8,
   ensureCrossOriginIsolationHeaders: false,
