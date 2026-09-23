@@ -41,3 +41,7 @@ bash scripts/export-night-web.sh
 ## 导出之后
 
 `night.wasm` / `night.js` / `index.html` 的体积数字若有变化，按自动提交规则 commit 并 push。pck 只在 R2。
+
+## 左下角更新时间
+
+只要这次改动会发布到 `/night/`（封面、`night.js`、样式、印信桥，或上面的 Godot 导出），提交前把页面左下角时间改成当前东八区时间，格式 `YYYY-MM-DD HH:mm`。两处一起改：`<time id="nightBuiltAt">` 和 `const NIGHT_BUILT_AT`。Godot 导出脚本会写这两处；只改博客、不跑导出时也要手改。游戏版本号仍只用 `project.godot` 的 `config/version`。
