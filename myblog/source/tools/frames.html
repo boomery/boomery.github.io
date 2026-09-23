@@ -260,6 +260,38 @@
     .status { min-height: 1.4em; margin-top: 12px; font-size: 0.9rem; }
     .status.is-error { color: #b42318; }
     .fine { margin-top: 8px; color: var(--muted); font-size: 0.75rem; }
+    .term { border-bottom: 1px dashed rgba(74, 95, 212, 0.45); cursor: help; }
+    .has-tip { position: relative; }
+    .has-tip:hover, .has-tip:focus-visible { z-index: 5; }
+    button.has-tip { text-decoration: underline dotted rgba(74, 95, 212, 0.4); text-underline-offset: 3px; }
+    .has-tip:hover::after, .has-tip:focus-visible::after {
+      content: attr(data-tip);
+      position: absolute;
+      z-index: 30;
+      left: 0;
+      top: calc(100% + 8px);
+      width: 220px;
+      padding: 8px 10px;
+      border-radius: 10px;
+      background: #1a1a2e;
+      color: white;
+      font-size: 0.75rem;
+      font-weight: 500;
+      line-height: 1.45;
+      white-space: normal;
+      text-align: left;
+      text-decoration: none;
+      box-shadow: 0 10px 24px rgba(20, 24, 40, 0.22);
+      pointer-events: none;
+    }
+    .has-tip.tip-up:hover::after, .has-tip.tip-up:focus-visible::after {
+      top: auto;
+      bottom: calc(100% + 8px);
+    }
+    .has-tip.tip-end:hover::after, .has-tip.tip-end:focus-visible::after {
+      left: auto;
+      right: 0;
+    }
     body.editor-open { overflow: hidden; }
     .editor {
       position: fixed;
@@ -314,7 +346,7 @@
   <main>
     <p class="kicker">Frames</p>
     <h1>动作序列帧</h1>
-    <p class="lead">把一段人物视频或一组图片抽成帧，抠掉纯色背景，对齐脚底，再导出透明序列和精灵图。文件只在这台浏览器里处理。</p>
+    <p class="lead">把一段人物视频或一组图片抽成<span class="term has-tip" tabindex="0" data-tip="按时间排好的一张张静止画面。连起来播，就是一段动作。">帧</span>，抠掉纯色背景，对齐脚底，再导出透明序列和<span class="term has-tip" tabindex="0" data-tip="很多帧排进同一张图。游戏读这一张，就能按顺序播放。">精灵图</span>。文件只在这台浏览器里处理。</p>
     <div class="layout">
       <div class="stack">
         <section class="panel">
@@ -325,11 +357,11 @@
             <input id="file" type="file" accept="video/mp4,video/webm,video/quicktime,image/png,image/jpeg,image/webp,image/gif,.mp4,.webm,.mov,.gif,.png,.jpg,.jpeg,.webp" multiple hidden />
           </label>
           <div class="fields">
-            <label class="field">帧率<input id="fps" type="number" min="1" max="30" value="12" /></label>
-            <label class="field">最长边<input id="maxEdge" type="number" min="128" max="1280" value="720" /></label>
-            <label class="field">开始（秒）<input id="start" type="number" min="0" step="0.1" value="0" /></label>
-            <label class="field">结束（秒）<input id="end" type="number" min="0" step="0.1" placeholder="到结尾" /></label>
-            <label class="field wide">最多帧数<input id="maxFrames" type="number" min="2" max="120" value="48" /></label>
+            <label class="field"><span class="term has-tip" tabindex="0" data-tip="每秒留几张图。调大，动作更顺，张数也更多。">帧率</span><input id="fps" type="number" min="1" max="30" value="12" /></label>
+            <label class="field"><span class="term has-tip" tabindex="0" data-tip="画面最长的一边最多多少像素。调小，文件更小，人物也会更糊。">最长边</span><input id="maxEdge" type="number" min="128" max="1280" value="720" /></label>
+            <label class="field"><span class="term has-tip" tabindex="0" data-tip="从视频的第几秒开始抽。前面用不到的部分可以跳过。">开始（秒）</span><input id="start" type="number" min="0" step="0.1" value="0" /></label>
+            <label class="field"><span class="term has-tip" tabindex="0" data-tip="抽到第几秒为止。空着就是一直抽到视频结束。">结束（秒）</span><input id="end" type="number" min="0" step="0.1" placeholder="到结尾" /></label>
+            <label class="field wide"><span class="term has-tip" tabindex="0" data-tip="最多留下多少张。到了这个数就停，避免一次抽出太多。">最多帧数</span><input id="maxFrames" type="number" min="2" max="120" value="48" /></label>
           </div>
           <div class="actions">
             <button class="primary" id="extract" type="button">提取画面</button>
@@ -339,50 +371,50 @@
         <section class="panel">
           <h2>2. 抠图</h2>
           <div class="fields">
-            <label class="field">背景色<input id="keyColor" type="color" value="#00ff00" /></label>
-            <label class="field"><span class="field-head">容差 <b data-for="tolerance">80</b></span><input id="tolerance" type="range" min="0" max="255" value="80" /></label>
-            <label class="field"><span class="field-head">边缘柔化 <b data-for="softness">18</b></span><input id="softness" type="range" min="0" max="80" value="18" /></label>
-            <label class="field"><span class="field-head">去色溢 <b data-for="despill">0.85</b></span><input id="despill" type="range" min="0" max="1" step="0.05" value="0.85" /></label>
+            <label class="field"><span class="term has-tip" tabindex="0" data-tip="要抠掉的那种颜色，多半是绿幕或蓝幕。用吸管在画面上点一下最准。">背景色</span><input id="keyColor" type="color" value="#00ff00" /></label>
+            <label class="field"><span class="field-head"><span class="term has-tip" tabindex="0" data-tip="和背景色有多接近，也当成背景。调大抠得更干净，衣服上相近的颜色也会被抠穿。">容差</span> <b data-for="tolerance">80</b></span><input id="tolerance" type="range" min="0" max="255" value="80" /></label>
+            <label class="field"><span class="field-head"><span class="term has-tip" tabindex="0" data-tip="人物轮廓交界处留一层半透明。调大边缘更软，调成 0 就是硬切边。">边缘柔化</span> <b data-for="softness">18</b></span><input id="softness" type="range" min="0" max="80" value="18" /></label>
+            <label class="field"><span class="field-head"><span class="term has-tip" tabindex="0" data-tip="把沾到头发和衣服边上的绿边洗淡。调大绿边更淡，调成 0 就保留原来的颜色。">去色溢</span> <b data-for="despill">0.85</b></span><input id="despill" type="range" min="0" max="1" step="0.05" value="0.85" /></label>
           </div>
-          <div class="checks"><label><input id="previewKey" type="checkbox" /> 预览当前帧</label></div>
+          <div class="checks"><label><input id="previewKey" type="checkbox" /> <span class="term has-tip" tabindex="0" data-tip="只在这一张上看抠图结果，还不会改掉全部画面。">预览当前帧</span></label></div>
           <div class="actions">
-            <button id="pick" type="button">吸管</button>
-            <button id="clearColor" type="button">透明替换</button>
-            <button id="clearAll" type="button">替换全部</button>
-            <button id="applyChroma" type="button">应用到全部</button>
-            <button class="ghost" id="restore" type="button">还原画面</button>
+            <button id="pick" class="has-tip" type="button" data-tip="在预览上点一种颜色，把它设成要抠的背景色。">吸管</button>
+            <button id="clearColor" class="has-tip" type="button" data-tip="在预览上点一种颜色，这种颜色会直接变成透明，不管它在不在画面边上。">透明替换</button>
+            <button id="clearAll" class="has-tip" type="button" data-tip="把背景色里选中的那种颜色，从每一帧里都变成透明。">替换全部</button>
+            <button id="applyChroma" class="has-tip" type="button" data-tip="按现在的背景色和容差，把每一帧边上连成一片的背景抠掉。">应用到全部</button>
+            <button class="ghost has-tip" id="restore" type="button" data-tip="丢掉抠图和手改，回到刚抽出来的样子。">还原画面</button>
           </div>
           <p class="hint">只去掉和画面边缘连成一片的纯色背景。容差过大、背景又和衣服连在一起时，先把容差降到 40 左右。视频里本身的拖影抠不掉。透明替换会把点中的颜色，以及容差里相近的颜色，直接变成透明。</p>
         </section>
         <section class="panel">
           <h2>3. 整理和对齐</h2>
           <div class="fields">
-            <label class="field">重复阈值<input id="dupThreshold" type="number" min="1" max="40" value="8" /></label>
-            <label class="field">每 N 帧留 1<input id="everyN" type="number" min="2" max="8" value="2" /></label>
-            <label class="field">导出宽<input id="outW" type="number" min="64" max="1024" value="480" /></label>
-            <label class="field">导出高<input id="outH" type="number" min="64" max="1280" value="720" /></label>
+            <label class="field"><span class="term has-tip" tabindex="0" data-tip="两张有多像才算重复。调小，更容易被标出来；调大，只标几乎一样的。">重复阈值</span><input id="dupThreshold" type="number" min="1" max="40" value="8" /></label>
+            <label class="field"><span class="term has-tip" tabindex="0" data-tip="比如填 2，就是每两张只留一张。数字越大，动作越疏。">每 N 帧留 1</span><input id="everyN" type="number" min="2" max="8" value="2" /></label>
+            <label class="field"><span class="term has-tip" tabindex="0" data-tip="对齐之后每一帧的宽度。人物会被放进这个尺寸里。">导出宽</span><input id="outW" type="number" min="64" max="1024" value="480" /></label>
+            <label class="field"><span class="term has-tip" tabindex="0" data-tip="对齐之后每一帧的高度。要能装下整个人，脚才不会被切掉。">导出高</span><input id="outH" type="number" min="64" max="1280" value="720" /></label>
           </div>
-          <div class="checks"><label><input id="smooth" type="checkbox" checked /> 平滑缩放</label></div>
+          <div class="checks"><label><input id="smooth" type="checkbox" checked /> <span class="term has-tip" tabindex="0" data-tip="缩小时边缘发虚、看起来更顺。关掉会留下硬边，适合像素图。">平滑缩放</span></label></div>
           <div class="actions">
-            <button id="markDup" type="button">标记重复</button>
-            <button id="markJump" type="button">标记跳变</button>
-            <button id="markCurrent" type="button">标记当前</button>
-            <button id="deleteMarked" type="button">删除标记</button>
-            <button id="reduce" type="button">减帧</button>
-            <button id="cutLoop" type="button">截成循环</button>
-            <button class="primary" id="align" type="button">对齐脚底</button>
+            <button id="markDup" class="has-tip" type="button" data-tip="找出几乎没变化的帧，方便后面删掉。">标记重复</button>
+            <button id="markJump" class="has-tip" type="button" data-tip="找出和前后差很多的帧，多半是抽错了，或者动作断了一下。">标记跳变</button>
+            <button id="markCurrent" class="has-tip" type="button" data-tip="手动把这一张标出来。再点一次就取消。">标记当前</button>
+            <button id="deleteMarked" class="has-tip" type="button" data-tip="把标过重复或跳变的帧删掉。">删除标记</button>
+            <button id="reduce" class="has-tip" type="button" data-tip="按「每 N 帧留 1」抽掉中间的帧，动作会变疏。">减帧</button>
+            <button id="cutLoop" class="has-tip" type="button" data-tip="找到和开头很像的那一张，把后面剪掉，这样动作能接上循环。">截成循环</button>
+            <button class="primary has-tip" id="align" type="button" data-tip="把每帧人物的脚踩到同一位置、同一大小。播放时人就不会上下乱跳。">对齐脚底</button>
           </div>
         </section>
         <section class="panel">
           <h2>4. 导出到游戏</h2>
           <div class="fields">
-            <label class="field wide">素材名
+            <label class="field wide"><span class="term has-tip" tabindex="0" data-tip="导出文件的名字，要和游戏里的招式对上。选错了，游戏就找不到这段动作。">素材名</span>
               <select id="clipId"></select>
             </label>
           </div>
-          <div class="checks"><label><input id="loop" type="checkbox" /> 循环播放（站姿勾上）</label></div>
+          <div class="checks"><label><input id="loop" type="checkbox" /> <span class="term has-tip" tabindex="0" data-tip="勾上会反复播放。站着不动要勾上，出手的招式一般不勾。">循环播放</span>（站姿勾上）</label></div>
           <div class="actions">
-            <button class="primary" id="download" type="button">下载素材包</button>
+            <button class="primary has-tip" id="download" type="button" data-tip="下载游戏能直接用的精灵图和说明文件。要先对齐脚底。">下载素材包</button>
           </div>
           <p class="fine">解压到游戏工程的 <code>assets/clips/</code>。文件名要和素材名一致，例如 <code>shen_duanshui.png</code> 和 <code>shen_duanshui.json</code>。没有这些文件时，战斗仍用原来的静态立绘。</p>
         </section>
@@ -418,11 +450,11 @@
       <button id="editorX" type="button" class="ghost">关闭</button>
     </header>
     <div class="editor-options">
-      <label>笔刷 <b data-for="brushSize">12</b><input id="brushSize" type="range" min="1" max="80" value="12" /></label>
-      <label>颜色<input id="brushColor" type="color" value="#ffffff" /></label>
-      <label>透明度 <b data-for="brushAlpha">100</b><input id="brushAlpha" type="range" min="0" max="100" value="100" /></label>
-      <label><input id="checker" type="checkbox" checked /> 棋盘格</label>
-      <label>底色<input id="matColor" type="color" value="#d5d8e0" /></label>
+      <label><span class="term has-tip" tabindex="0" data-tip="画笔有多粗。调大，一下涂得更宽。">笔刷</span> <b data-for="brushSize">12</b><input id="brushSize" type="range" min="1" max="80" value="12" /></label>
+      <label><span class="term has-tip" tabindex="0" data-tip="画笔、填色和形状用的颜色。">颜色</span><input id="brushColor" type="color" value="#ffffff" /></label>
+      <label><span class="term has-tip" tabindex="0" data-tip="画上去有多实。100 是实心，调小会变透，0 就看不见。">透明度</span> <b data-for="brushAlpha">100</b><input id="brushAlpha" type="range" min="0" max="100" value="100" /></label>
+      <label><input id="checker" type="checkbox" checked /> <span class="term has-tip" tabindex="0" data-tip="灰白格子表示这里是透明的。关掉后，透明的地方会垫上下面的底色。">棋盘格</span></label>
+      <label><span class="term has-tip" tabindex="0" data-tip="关掉棋盘格后，透明区域垫上的颜色，方便看清白色或黑色的毛边。">底色</span><input id="matColor" type="color" value="#d5d8e0" /></label>
       <span id="editorNote"></span>
     </div>
     <div class="editor-stage" id="editorStage">
@@ -438,9 +470,9 @@
       <div class="actions">
         <button id="editorUndo" type="button">撤销</button>
         <button id="editorRedo" type="button">重做</button>
-        <button id="editorReset" type="button">还原</button>
+        <button id="editorReset" class="has-tip" type="button" data-tip="回到刚打开这一帧时的样子，这次涂改都会丢掉。">还原</button>
         <button id="editorSave" type="button">保存</button>
-        <button id="editorBatch" type="button">批量应用</button>
+        <button id="editorBatch" class="has-tip" type="button" data-tip="把这一帧改过的像素，写到其他同样大小的帧的同一位置上。">批量应用</button>
         <button id="editorPrev" type="button">上一帧</button>
         <button id="editorNext" type="button">下一帧</button>
       </div>
@@ -472,6 +504,21 @@
     import { createEditSession, copyChangedPixels } from './frames-editor.mjs';
 
     const $ = (id) => document.getElementById(id);
+    let tipHost = null;
+    function placeTip(el) {
+      if (!el) return;
+      const rect = el.getBoundingClientRect();
+      el.classList.toggle('tip-up', rect.bottom + 128 > window.innerHeight && rect.top > 140);
+      el.classList.toggle('tip-end', rect.left + 236 > window.innerWidth);
+    }
+    document.addEventListener('pointermove', (event) => {
+      const hit = document.elementFromPoint(event.clientX, event.clientY);
+      const el = hit?.closest?.('.has-tip') || null;
+      if (el === tipHost) return;
+      tipHost = el;
+      placeTip(el);
+    });
+    document.addEventListener('focusin', (event) => placeTip(event.target.closest?.('.has-tip')));
     const drop = $('drop');
     const fileInput = $('file');
     const status = $('status');
@@ -1044,15 +1091,15 @@
     });
 
     const EDITOR_TOOLS = [
-      ['select', '选区'],
-      ['brush', '画笔'],
-      ['eraser', '橡皮'],
-      ['fill', '填充'],
-      ['tint', '填色'],
-      ['rect', '矩形'],
-      ['ellipse', '椭圆'],
-      ['blur', '柔化'],
-      ['restore', '误除'],
+      ['select', '选区', '先框一块地方。之后的涂改只发生在框里。'],
+      ['brush', '画笔', '按住涂上当前颜色。笔刷滑块决定有多粗。'],
+      ['eraser', '橡皮', '把涂过的地方擦成透明。'],
+      ['fill', '填充', '点一下，把连成一片、颜色相近的区域换成当前颜色。'],
+      ['tint', '填色', '不改形状，只把已有的颜色往当前颜色靠。透明的地方不会被填上。'],
+      ['rect', '矩形', '拖出一个实心方块，用的是当前颜色和透明度。'],
+      ['ellipse', '椭圆', '拖出一个实心圆，用的是当前颜色和透明度。'],
+      ['blur', '柔化', '把涂过的地方抹糊一点，用来把硬边收软。'],
+      ['restore', '误除', '把不小心擦掉的地方，从刚打开这一帧时的画面涂回来。'],
     ];
     const editorTools = $('editorTools');
     const editorCanvas = $('editorCanvas');
@@ -1079,11 +1126,13 @@
       return false;
     }
 
-    EDITOR_TOOLS.forEach(([id, label]) => {
+    EDITOR_TOOLS.forEach(([id, label, tip]) => {
       const button = document.createElement('button');
       button.type = 'button';
       button.textContent = label;
       button.dataset.tool = id;
+      button.dataset.tip = tip;
+      button.classList.add('has-tip');
       button.addEventListener('click', () => {
         editorTool = id;
         syncEditorTools();
