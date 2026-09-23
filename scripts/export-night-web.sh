@@ -3,7 +3,17 @@
 # 不会覆盖 myblog/source/night/index.html（只改 fileSizes、版本号与更新时间）。
 set -euo pipefail
 
-GODOT="${GODOT_BIN:-$HOME/Downloads/Godot.app/Contents/MacOS/Godot}"
+if [[ -n "${GODOT_BIN:-}" ]]; then
+  GODOT="$GODOT_BIN"
+elif [[ -x "$HOME/Downloads/Godot.app/Contents/MacOS/Godot" ]]; then
+  GODOT="$HOME/Downloads/Godot.app/Contents/MacOS/Godot"
+elif [[ -f "/f/Backup/桌面/夜行镖/Godot_v4.7.2-stable_win64.exe" ]]; then
+  GODOT="/f/Backup/桌面/夜行镖/Godot_v4.7.2-stable_win64.exe"
+elif [[ -f "F:/Backup/桌面/夜行镖/Godot_v4.7.2-stable_win64.exe" ]]; then
+  GODOT="F:/Backup/桌面/夜行镖/Godot_v4.7.2-stable_win64.exe"
+else
+  GODOT="$HOME/Downloads/Godot.app/Contents/MacOS/Godot"
+fi
 SRC="${NIGHT_SRC:-$HOME/Desktop/night}"
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 DST="$ROOT/myblog/source/night"
@@ -33,7 +43,7 @@ for arg in "$@"; do
   esac
 done
 
-if [[ ! -x "$GODOT" ]]; then
+if [[ ! -e "$GODOT" ]]; then
   echo "找不到 Godot：$GODOT" >&2
   echo "可设置 GODOT_BIN 指向 Godot 可执行文件。" >&2
   exit 1

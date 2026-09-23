@@ -17,6 +17,8 @@ bash scripts/export-night-web.sh
 
 脚本会：用本机 Godot 无头导出 Web → 把 `night.js` / `night.wasm` / `night.pck` 等复制到 `myblog/source/night/` → 只改 `index.html` 里的 `fileSizes`、游戏版本（`project.godot` 的 `config/version`）和更新时间 → 把 `night.pck` 上传到 R2（`cdn.boomery.top/night.pck`）。
 
+这台 Windows 电脑的 Godot 是 `F:\Backup\桌面\夜行镖\Godot_v4.7.2-stable_win64.exe`（4.7.2 stable）。无头导出、跑测试都用这个，不要再在本机搜索别的 Godot。Mac 上仍用 `~/Downloads/Godot.app`。
+
 本地预览、先不传 CDN 时用 `bash scripts/export-night-web.sh --skip-r2`。
 
 ## 桌面源码仓库也要自动 push
