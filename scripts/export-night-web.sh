@@ -406,8 +406,13 @@ if [[ "$SKIP_R2" -eq 1 ]]; then
 fi
 
 echo "上传 $DST/night.pck → R2 $R2_BUCKET/$R2_KEY"
-run_wrangler r2 object put "$R2_BUCKET/$R2_KEY" \
-  --file "$DST/night.pck" \
+pck_file="$(to_native_path "$DST/night.pck")"
+remote_flag=""
+if run_wrangler r2 object put --help 2>&1 | grep -q -- '--remote'; then
+  remote_flag=1
+fi
+run_wrangler r2 object put "$R2_BUCKET/$R2_KEY" ${remote_flag:+--remote} \
+  --file "$pck_file" \
   --content-type application/octet-stream \
   --cache-control "public, max-age=300"
 echo "R2 已覆盖 https://cdn.boomery.top/night.pck"
