@@ -220,6 +220,10 @@
     }
     #preview.is-on { display: block; }
     .empty { color: var(--muted); padding: 28px; text-align: center; }
+    .scrubber { display: block; margin-top: 8px; }
+    .editor-scrub-row { display: flex; align-items: center; gap: 8px; width: 100%; }
+    .editor-scrub-row input[type="range"] { flex: 1; width: auto; }
+    .editor-scrub-row span { min-width: 4.5em; color: var(--muted); font-size: 0.8rem; }
     .film {
       display: flex;
       gap: 8px;
@@ -391,6 +395,9 @@
           <span id="frameLabel">还没有画面</span>
           <span id="markLabel"></span>
         </div>
+        <label class="scrubber">
+          <input id="frameScrub" type="range" min="0" max="0" value="0" disabled aria-label="拖动预览各帧" />
+        </label>
         <div class="actions">
           <button id="prev" type="button">上一帧</button>
           <button id="play" type="button">播放</button>
@@ -420,7 +427,12 @@
       <canvas id="editorCanvas"></canvas>
     </div>
     <footer class="editor-foot">
-      <p class="hint">滚轮缩放，右键或中键拖拽平移，方向键切帧。Ctrl+S 保存，Ctrl+Z 撤销。</p>
+      <div class="editor-scrub-row">
+        <button id="editorPlay" type="button">播放</button>
+        <input id="editorScrub" type="range" min="0" max="0" value="0" aria-label="拖动预览各帧" />
+        <span id="editorFrameLabel"></span>
+      </div>
+      <p class="hint">拖动滑块或按左右方向键看整段效果。滚轮缩放，右键或中键平移。Ctrl+S 保存，Ctrl+Z 撤销。</p>
       <div class="actions">
         <button id="editorUndo" type="button">撤销</button>
         <button id="editorRedo" type="button">重做</button>
@@ -524,12 +536,19 @@
       ['applyChroma', 'restore', 'markDup', 'markJump', 'markCurrent', 'deleteMarked', 'reduce', 'cutLoop', 'align', 'download', 'prev', 'play', 'next', 'editFrame'].forEach((id) => {
         $(id).disabled = !has;
       });
+      const scrub = $('frameScrub');
       if (!has) {
         $('frameLabel').textContent = '还没有画面';
         $('markLabel').textContent = '';
+        scrub.disabled = true;
+        scrub.max = '0';
+        scrub.value = '0';
         return;
       }
       index = Math.min(index, frames.length - 1);
+      scrub.disabled = frames.length < 2;
+      scrub.max = String(frames.length - 1);
+      scrub.value = String(index);
       paint(preview, viewFrame(frames[index]));
       const marked = frames.filter((frame) => frame.mark).length;
       $('frameLabel').textContent = `第 ${index + 1} / ${frames.length} 帧 · ${frames[index].width}×${frames[index].height}${aligned ? ' · 已对齐' : ''}`;
@@ -1014,6 +1033,8 @@
     let editorDrag = null;
     let editorSpace = false;
     let editorClean = null;
+    let editorPlaying = false;
+    let editorPlayTimer = 0;
 
     function editorUnsaved() {
       if (!editorSession) return false;
@@ -1105,6 +1126,7 @@
       $('editorNote').textContent = '';
       fitEditor();
       syncEditorTools();
+      syncEditorScrub();
       drawEditor();
       render();
     }
@@ -1129,6 +1151,7 @@
     function closeEditor(force) {
       if (!editorSession) return;
       if (!force && editorUnsaved() && !window.confirm('关闭会丢掉还没保存的修改')) return;
+      stopEditorPlay();
       editorSession = null;
       editorDrag = null;
       $('editor').hidden = true;
@@ -1136,11 +1159,33 @@
       render();
     }
 
-    function shiftEditor(delta) {
-      if (!editorSession || frames.length < 2) return;
+    function repaintThumb(frameIndex) {
+      const canvas = film.children[frameIndex] && film.children[frameIndex].querySelector('canvas');
+      if (canvas && frames[frameIndex]) paint(canvas, frames[frameIndex]);
+    }
+
+    function stopEditorPlay() {
+      editorPlaying = false;
+      if (editorPlayTimer) clearInterval(editorPlayTimer);
+      editorPlayTimer = 0;
+      $('editorPlay').textContent = '播放';
+    }
+
+    function syncEditorScrub() {
+      const scrub = $('editorScrub');
+      scrub.disabled = frames.length < 2;
+      scrub.max = String(Math.max(0, frames.length - 1));
+      scrub.value = String(editorIndex);
+      $('editorFrameLabel').textContent = frames.length ? `${editorIndex + 1} / ${frames.length}` : '';
+    }
+
+    function jumpEditor(nextIndex) {
+      if (!editorSession || !frames.length) return;
+      const next = (nextIndex + frames.length) % frames.length;
+      if (next === editorIndex) return;
+      const left = editorIndex;
       const dirty = editorUnsaved();
-      if (dirty) frames[editorIndex].data = editorSession.commit();
-      const next = (editorIndex + delta + frames.length) % frames.length;
+      if (dirty) frames[left].data = editorSession.commit();
       const shown = viewFrame(frames[next]);
       if (dirty) $('previewKey').checked = false;
       editorIndex = next;
@@ -1149,9 +1194,15 @@
       editorSelection = null;
       editorClean = null;
       $('editorTitle').textContent = `编辑帧 #${String(next + 1).padStart(3, '0')}`;
-      fitEditor();
+      if (dirty) repaintThumb(left);
+      syncEditorScrub();
       drawEditor();
-      render();
+      renderPreview();
+    }
+
+    function shiftEditor(delta) {
+      stopEditorPlay();
+      jumpEditor(editorIndex + delta);
     }
 
     function syncEditorHistory() {
@@ -1256,6 +1307,7 @@
     editorCanvas.addEventListener('contextmenu', (event) => event.preventDefault());
     editorCanvas.addEventListener('pointerdown', (event) => {
       if (!editorSession) return;
+      stopEditorPlay();
       try { editorCanvas.setPointerCapture(event.pointerId); } catch { /* 合成事件没有捕获权限 */ }
       const point = editorPoint(event);
       if (event.button === 1 || event.button === 2 || editorSpace) {
@@ -1372,6 +1424,25 @@
     $('editorReset').addEventListener('click', () => { if (editorSession && editorSession.reset()) drawEditor(); });
     $('editorPrev').addEventListener('click', () => shiftEditor(-1));
     $('editorNext').addEventListener('click', () => shiftEditor(1));
+    $('editorPlay').addEventListener('click', () => {
+      if (!editorSession || frames.length < 2) return;
+      if (editorPlaying) {
+        stopEditorPlay();
+        return;
+      }
+      editorPlaying = true;
+      $('editorPlay').textContent = '暂停';
+      const fps = Math.max(1, Number($('fps').value) || 12);
+      editorPlayTimer = setInterval(() => jumpEditor(editorIndex + 1), 1000 / fps);
+    });
+    $('editorScrub').addEventListener('pointerdown', () => stopEditorPlay());
+    $('editorScrub').addEventListener('input', () => jumpEditor(Number($('editorScrub').value) || 0));
+    $('frameScrub').addEventListener('input', () => {
+      if (!frames.length || !$('editor').hidden) return;
+      stopPlay();
+      index = Number($('frameScrub').value) || 0;
+      renderPreview();
+    });
     $('editorSave').addEventListener('click', () => {
       if (!writeEditorFrame()) return;
       $('editorNote').textContent = '已保存到这一帧';
@@ -1402,10 +1473,22 @@
       drawEditor();
     });
     window.addEventListener('keydown', (event) => {
-      if ($('editor').hidden) return;
+      const typing = event.target.matches('input, textarea, select');
+      if ($('editor').hidden) {
+        if (typing || event.target.closest('button') || !frames.length) return;
+        if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
+          event.preventDefault();
+          stopPlay();
+          index = (index + (event.key === 'ArrowRight' ? 1 : -1) + frames.length) % frames.length;
+          renderPreview();
+        } else if (event.code === 'Space') {
+          event.preventDefault();
+          $('play').click();
+        }
+        return;
+      }
       if (event.code === 'Space') editorSpace = true;
       if (event.key === 'Escape') closeEditor(false);
-      const typing = event.target.matches('input, textarea, select');
       if (typing) return;
       if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'z') {
         event.preventDefault();
