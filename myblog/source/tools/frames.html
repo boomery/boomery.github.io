@@ -433,6 +433,7 @@
           <div class="actions">
             <button id="pick" class="has-tip" type="button" data-tip="在预览上点一种颜色，把它设成要抠的背景色。">吸管</button>
             <button id="clearColor" class="has-tip" type="button" data-tip="在预览上点一种颜色，这种颜色会直接变成透明，不管它在不在画面边上。">透明替换</button>
+            <button id="undoClear" class="has-tip" type="button" disabled data-tip="退回上一次透明替换。可以连续退，每次只退一步。">撤销替换</button>
             <button id="clearAll" class="has-tip" type="button" data-tip="把背景色里选中的那种颜色，从每一帧里都变成透明。">替换全部</button>
             <button id="applyChroma" class="has-tip" type="button" data-tip="按现在的背景色和容差，把每一帧边上连成一片的背景抠掉。">应用到全部</button>
             <button class="ghost has-tip" id="restore" type="button" data-tip="丢掉抠图和手改，回到刚抽出来的样子。">还原画面</button>
@@ -609,6 +610,7 @@
     let previewFit = true;
     let previewSized = '';
     let previewDrag = null;
+    const clearUndo = [];
     const empty = $('empty');
     const film = $('film');
     const clipSelect = $('clipId');
@@ -720,6 +722,7 @@
         scrub.max = '0';
         scrub.value = '0';
         $('previewZoom').textContent = '100%';
+        syncUndoClear();
         return;
       }
       index = Math.min(index, frames.length - 1);
@@ -745,6 +748,7 @@
         if (left < film.scrollLeft) film.scrollLeft = Math.max(0, left - 8);
         else if (right > film.scrollLeft + film.clientWidth) film.scrollLeft = right - film.clientWidth + 8;
       }
+      syncUndoClear();
     }
 
     function renderFilm() {
@@ -962,6 +966,7 @@
         if (!next.length) throw new Error('没有抽出画面');
         frames = next;
         index = 0;
+        forgetClear();
         const bg = sampleBackgroundColor(frames[0]);
         $('keyColor').value = `#${bg.map((v) => v.toString(16).padStart(2, '0')).join('')}`;
         $('previewKey').checked = true;
@@ -1001,6 +1006,41 @@
     function syncPreviewCursor() {
       preview.classList.toggle('is-picking', Boolean(picking));
     }
+    function syncUndoClear() {
+      $('undoClear').disabled = clearUndo.length === 0;
+    }
+    function rememberClear(shots) {
+      clearUndo.push({
+        previewKey: $('previewKey').checked,
+        keyColor: $('keyColor').value,
+        shots,
+      });
+      if (clearUndo.length > 12) clearUndo.shift();
+      syncUndoClear();
+    }
+    function forgetClear() {
+      clearUndo.length = 0;
+      syncUndoClear();
+    }
+    function undoClear() {
+      const step = clearUndo.pop();
+      syncUndoClear();
+      if (!step) return;
+      let restored = 0;
+      step.shots.forEach((shot) => {
+        if (!frames.includes(shot.frame)) return;
+        if (shot.frame.width * shot.frame.height * 4 !== shot.data.length) return;
+        shot.frame.data = shot.data;
+        restored += 1;
+      });
+      $('previewKey').checked = step.previewKey;
+      $('keyColor').value = step.keyColor;
+      picking = false;
+      syncPreviewCursor();
+      render();
+      setStatus(restored ? `已撤销上一次透明替换${clearUndo.length ? `，还可以再退 ${clearUndo.length} 次` : ''}。` : '这一步已经对不上当前画面了', !restored);
+    }
+    $('undoClear').addEventListener('click', undoClear);
     $('pick').addEventListener('click', () => {
       picking = 'key';
       syncPreviewCursor();
@@ -1096,6 +1136,7 @@
         }
         const rgb = [shown.data[i], shown.data[i + 1], shown.data[i + 2]];
         const hex = rgb.map((v) => v.toString(16).padStart(2, '0')).join('');
+        rememberClear([{ frame, data: new Uint8ClampedArray(frame.data) }]);
         $('keyColor').value = `#${hex}`;
         if (shown !== frame) frame.data = new Uint8ClampedArray(shown.data);
         replaceWithTransparent(frame, { ...chromaOptions(), color: rgb });
@@ -1103,7 +1144,7 @@
         picking = false;
         syncPreviewCursor();
         render();
-        setStatus(`已把 #${hex} 换成透明。其他帧用「替换全部」。`);
+        setStatus(`已把 #${hex} 换成透明。点错了可以撤销替换。`);
         return;
       }
       if (frame.width !== frame.sourceWidth || frame.height !== frame.sourceHeight) {
@@ -1123,10 +1164,11 @@
 
     $('clearAll').addEventListener('click', () => {
       const options = chromaOptions();
+      rememberClear(frames.map((frame) => ({ frame, data: new Uint8ClampedArray(frame.data) })));
       frames.forEach((frame) => replaceWithTransparent(frame, options));
       $('previewKey').checked = false;
       render();
-      setStatus('已把这个颜色从全部帧里换成透明。');
+      setStatus('已把这个颜色从全部帧里换成透明。点错了可以撤销替换。');
     });
 
     $('applyChroma').addEventListener('click', () => {
@@ -1150,6 +1192,7 @@
       });
       aligned = false;
       $('previewKey').checked = false;
+      forgetClear();
       render();
       setStatus('已还原成刚提取的画面');
     });
@@ -1231,6 +1274,7 @@
       aligned = true;
       showStep('export');
       $('previewKey').checked = false;
+      forgetClear();
       render();
       setStatus(`已对齐到 ${width}×${height}，脚底锚点 ${anchor[0]}, ${anchor[1]}`);
     });
@@ -1779,6 +1823,11 @@
     window.addEventListener('keydown', (event) => {
       const typing = event.target.matches('input, textarea, select');
       if ($('editor').hidden) {
+        if (!typing && (event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'z' && !event.shiftKey) {
+          event.preventDefault();
+          undoClear();
+          return;
+        }
         if (typing || event.target.closest('button') || !frames.length) return;
         if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
           event.preventDefault();
