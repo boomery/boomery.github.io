@@ -135,6 +135,8 @@
       font-weight: 500;
     }
     input[type="color"] { padding: 4px; height: 38px; }
+    input.scrub { cursor: ew-resize; touch-action: none; }
+    body.is-scrubbing, body.is-scrubbing * { cursor: ew-resize !important; user-select: none; }
     .checks { display: flex; gap: 14px; align-items: center; margin-top: 8px; font-size: 0.82rem; color: #445; }
     .actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
     button {
@@ -265,9 +267,9 @@
           <h2>2. 抠图</h2>
           <div class="fields">
             <label class="field">背景色<input id="keyColor" type="color" value="#00ff00" /></label>
-            <label class="field">容差<input id="tolerance" type="number" min="0" max="255" value="80" /></label>
-            <label class="field">边缘柔化<input id="softness" type="number" min="0" max="80" value="18" /></label>
-            <label class="field">去色溢<input id="despill" type="number" min="0" max="1" step="0.05" value="0.85" /></label>
+            <label class="field">容差<input id="tolerance" class="scrub" type="number" min="0" max="255" value="80" /></label>
+            <label class="field">边缘柔化<input id="softness" class="scrub" type="number" min="0" max="80" value="18" /></label>
+            <label class="field">去色溢<input id="despill" class="scrub" type="number" min="0" max="1" step="0.05" value="0.85" /></label>
           </div>
           <div class="checks"><label><input id="previewKey" type="checkbox" /> 预览当前帧</label></div>
           <div class="actions">
@@ -275,7 +277,7 @@
             <button id="applyChroma" type="button">应用到全部</button>
             <button class="ghost" id="restore" type="button">还原画面</button>
           </div>
-          <p class="hint">只去掉和画面边缘连成一片的纯色背景。容差过大、背景又和衣服连在一起时，先把容差降到 40 左右。视频里本身的拖影抠不掉。</p>
+          <p class="hint">只去掉和画面边缘连成一片的纯色背景。容差过大、背景又和衣服连在一起时，先把容差降到 40 左右。视频里本身的拖影抠不掉。容差、边缘柔化和去色溢可以按住左右拖。</p>
         </section>
         <section class="panel">
           <h2>3. 整理和对齐</h2>
@@ -655,6 +657,65 @@
       if (!frames.length) return;
       paint(preview, viewFrame(frames[index]));
     }
+
+    function enableScrub(input) {
+      const stepOf = () => {
+        const step = Number(input.step);
+        return Number.isFinite(step) && step > 0 ? step : 1;
+      };
+      const placesOf = () => {
+        const text = String(stepOf());
+        const dot = text.indexOf('.');
+        return dot < 0 ? 0 : text.length - dot - 1;
+      };
+      const bound = (value) => {
+        const min = input.min === '' ? -Infinity : Number(input.min);
+        const max = input.max === '' ? Infinity : Number(input.max);
+        return Math.min(max, Math.max(min, value));
+      };
+      let pointerId = null;
+      let startX = 0;
+      let startValue = 0;
+      let scrubbing = false;
+
+      const end = (event) => {
+        if (pointerId !== event.pointerId) return;
+        if (scrubbing && input.hasPointerCapture(event.pointerId)) input.releasePointerCapture(event.pointerId);
+        pointerId = null;
+        scrubbing = false;
+        document.body.classList.remove('is-scrubbing');
+      };
+
+      input.addEventListener('pointerdown', (event) => {
+        if (event.button !== 0) return;
+        pointerId = event.pointerId;
+        startX = event.clientX;
+        startValue = Number(input.value);
+        if (!Number.isFinite(startValue)) startValue = input.min === '' ? 0 : Number(input.min);
+        scrubbing = false;
+        try { input.setPointerCapture(event.pointerId); } catch { /* 合成事件没有捕获权限 */ }
+      });
+      input.addEventListener('pointermove', (event) => {
+        if (pointerId !== event.pointerId || (event.buttons & 1) === 0) return;
+        const dx = event.clientX - startX;
+        if (!scrubbing) {
+          if (Math.abs(dx) < 4) return;
+          scrubbing = true;
+          document.body.classList.add('is-scrubbing');
+        }
+        event.preventDefault();
+        const step = stepOf();
+        const pixels = step < 1 ? 8 : 2;
+        const next = bound(Number((startValue + Math.round(dx / pixels) * step).toFixed(placesOf())));
+        if (Number(input.value) === next) return;
+        input.value = String(next);
+        input.dispatchEvent(new Event('input', { bubbles: true }));
+      });
+      input.addEventListener('pointerup', end);
+      input.addEventListener('pointercancel', end);
+    }
+    ['tolerance', 'softness', 'despill'].forEach((id) => enableScrub($(id)));
+
     ['keyColor', 'tolerance', 'softness', 'despill', 'previewKey'].forEach((id) => {
       $(id).addEventListener('input', rerenderPreview);
       $(id).addEventListener('change', rerenderPreview);
