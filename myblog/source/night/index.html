@@ -239,6 +239,7 @@ if ('serviceWorker' in navigator) {
   let gatePhase = 'idle';
   let holdLabel = '';
   let packStore = Promise.resolve();
+  let gamePack = null;
   const PACK_CACHE = 'night-pck-' + NIGHT_GAME_VERSION + '-' + GODOT_CONFIG.fileSizes[NIGHT_PCK];
 
   async function localPack() {
@@ -445,7 +446,7 @@ if ('serviceWorker' in navigator) {
     if (expected && buf.byteLength !== expected) {
       throw new Error('行囊体积不符（' + buf.byteLength + ' / ' + expected + '），CDN 可能仍是旧包，请稍后刷新重试。');
     }
-    packStore = storePack(buf);
+    gamePack = buf;
     return buf;
   }
 
@@ -620,6 +621,7 @@ if ('serviceWorker' in navigator) {
     }
 
     try {
+      gamePack = null;
       engine.config.update({
         onProgress: function (current) {
           wasmLoaded = current || 0;
@@ -632,6 +634,7 @@ if ('serviceWorker' in navigator) {
         report();
       });
       const buf = (await Promise.all([packPromise, engine.init('night')]))[0];
+      gamePack = buf;
       await engine.preloadFile(buf, NIGHT_PCK);
       showReadyToStart();
     } catch (err) {
@@ -642,12 +645,17 @@ if ('serviceWorker' in navigator) {
   async function launchGame() {
     showBusy('正在入夜…');
     enterBtn.classList.add('is-hidden');
-    if (window.NightGateAtmosphere && window.NightGateAtmosphere.ease) window.NightGateAtmosphere.ease();
     await yieldPaint();
+    if (window.NightGateAtmosphere) window.NightGateAtmosphere.stop();
     try {
-      await packStore;
       await engine.start();
-      if (window.NightGateAtmosphere) window.NightGateAtmosphere.stop();
+      if (gamePack && !packCached) {
+        const saving = gamePack;
+        gamePack = null;
+        packStore = storePack(saving);
+      } else {
+        gamePack = null;
+      }
       stopBootHints();
       setStatusMode('hidden');
       gate.classList.add('is-gone');

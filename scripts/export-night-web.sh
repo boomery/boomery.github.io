@@ -127,15 +127,87 @@ python3 - "$DST/night.js" <<'PY'
 import pathlib, re, sys
 path = pathlib.Path(sys.argv[1])
 js = path.read_text(encoding="utf-8")
-owned = "FS.writeFile(path,buffer instanceof ArrayBuffer?new Uint8Array(buffer,0,buffer.byteLength):ArrayBuffer.isView(buffer)?new Uint8Array(buffer.buffer,buffer.byteOffset,buffer.byteLength):new Uint8Array(buffer),{canOwn:true})"
-plain = "FS.writeFile(path,new Uint8Array(buffer))"
-if owned in js:
-    print("night.js 行囊已是零拷贝写入")
-elif plain in js:
-    js = js.replace(plain, owned, 1)
-    print("night.js 已改为零拷贝写入行囊")
+safe_copy = (
+    "copy_to_fs:function(path,buffer){const idx=path.lastIndexOf(\"/\");let dir=\"/\";if(idx>0){dir=path.slice(0,idx)}"
+    "try{FS.stat(dir)}catch(e){if(e.errno!==GodotFS.ENOENT){GodotRuntime.error(e)}FS.mkdirTree(dir)}"
+    "const src=buffer instanceof ArrayBuffer?new Uint8Array(buffer,0,buffer.byteLength):ArrayBuffer.isView(buffer)?new Uint8Array(buffer.buffer,buffer.byteOffset,buffer.byteLength):new Uint8Array(buffer);"
+    "function commit(owned){FS.writeFile(path,owned)}"
+    "if(src.length<=1048576){commit(src.slice());return}"
+    "return new Promise(function(resolve,reject){let owned=null;let offset=0;const chunk=1048576;function step(){try{if(!owned)owned=new Uint8Array(src.length);const end=Math.min(offset+chunk,src.length);owned.set(src.subarray(offset,end),offset);offset=end;if(offset<src.length){setTimeout(step,0);return}commit(owned);resolve()}catch(err){reject(err)}}setTimeout(step,0)})}"
+)
+stock_copy = (
+    "copy_to_fs:function(path,buffer){const idx=path.lastIndexOf(\"/\");let dir=\"/\";if(idx>0){dir=path.slice(0,idx)}"
+    "try{FS.stat(dir)}catch(e){if(e.errno!==GodotFS.ENOENT){GodotRuntime.error(e)}FS.mkdirTree(dir)}"
+    "FS.writeFile(path,new Uint8Array(buffer))}"
+)
+shared_copy = (
+    "copy_to_fs:function(path,buffer){const idx=path.lastIndexOf(\"/\");let dir=\"/\";if(idx>0){dir=path.slice(0,idx)}"
+    "try{FS.stat(dir)}catch(e){if(e.errno!==GodotFS.ENOENT){GodotRuntime.error(e)}FS.mkdirTree(dir)}"
+    "FS.writeFile(path,buffer instanceof ArrayBuffer?new Uint8Array(buffer,0,buffer.byteLength):ArrayBuffer.isView(buffer)?new Uint8Array(buffer.buffer,buffer.byteOffset,buffer.byteLength):new Uint8Array(buffer),{canOwn:true})}"
+)
+if "owned.set(src.subarray(offset,end),offset)" in js:
+    print("night.js 行囊已会复制后再交给引擎")
+elif stock_copy in js:
+    js = js.replace(stock_copy, safe_copy, 1)
+    print("night.js 已改为独立复制行囊")
+elif shared_copy in js:
+    js = js.replace(shared_copy, safe_copy, 1)
+    print("night.js 已从共享内存改为独立复制")
 else:
-    raise SystemExit("night.js 的 copy_to_fs 变了，零拷贝补丁对不上")
+    raise SystemExit("night.js 的 copy_to_fs 变了，行囊补丁对不上")
+stock_drop = "const files=[];FS.mkdir(DROP.slice(0,-1));GodotInputDragDrop.pending_files.forEach(elem=>{const path=elem[\"path\"];GodotFS.copy_to_fs(DROP+path,elem[\"data\"]);"
+safe_drop = "const files=[];const copies=[];FS.mkdir(DROP.slice(0,-1));GodotInputDragDrop.pending_files.forEach(elem=>{const path=elem[\"path\"];copies.push(Promise.resolve(GodotFS.copy_to_fs(DROP+path,elem[\"data\"])));"
+if "copies.push(Promise.resolve(GodotFS.copy_to_fs" in js:
+    print("night.js 拖放已等待行囊写入")
+elif stock_drop in js:
+    js = js.replace(stock_drop, safe_drop, 1)
+    js = js.replace(
+        "GodotInputDragDrop.promises=[];GodotInputDragDrop.pending_files=[];callback(drops);if(GodotConfig.persistent_drops){GodotOS.atexit(function(resolve,reject){GodotInputDragDrop.remove_drop(files,DROP);resolve()})}else{GodotInputDragDrop.remove_drop(files,DROP)}",
+        "GodotInputDragDrop.promises=[];GodotInputDragDrop.pending_files=[];Promise.all(copies).then(function(){callback(drops);if(GodotConfig.persistent_drops){GodotOS.atexit(function(resolve,reject){GodotInputDragDrop.remove_drop(files,DROP);resolve()})}else{GodotInputDragDrop.remove_drop(files,DROP)}})",
+        1,
+    )
+    print("night.js 拖放会等行囊写入完成")
+else:
+    raise SystemExit("night.js 的拖放写入变了，补丁对不上")
+stock_start = """return new Promise(function (resolve, reject) {
+						for (const file of preloader.preloadedFiles) {
+							me.rtenv['copyToFS'](file.path, file.buffer);
+						}
+						preloader.preloadedFiles.length = 0; // Clear memory
+						me.rtenv['callMain'](me.config.args);
+						initPromise = null;
+						me.installServiceWorker();
+						resolve();
+					});"""
+safe_start = """return new Promise(function (resolve, reject) {
+						const files = preloader.preloadedFiles.slice();
+						const writeNext = function (index) {
+							if (index >= files.length) {
+								preloader.preloadedFiles.length = 0;
+								try {
+									me.rtenv['callMain'](me.config.args);
+								} catch (err) {
+									reject(err);
+									return;
+								}
+								initPromise = null;
+								me.installServiceWorker();
+								resolve();
+								return;
+							}
+							Promise.resolve(me.rtenv['copyToFS'](files[index].path, files[index].buffer)).then(function () {
+								writeNext(index + 1);
+							}).catch(reject);
+						};
+						writeNext(0);
+					});"""
+if "const writeNext = function (index)" in js:
+    print("night.js 启动会等行囊写入完成")
+elif stock_start in js:
+    js = js.replace(stock_start, safe_start, 1)
+    print("night.js 启动改为等行囊写入后再进入游戏")
+else:
+    raise SystemExit("night.js 的启动流程变了，补丁对不上")
 preload_pat = re.compile(
     r"\} else if \(pathOrBuffer instanceof ArrayBuffer\) \{\s*"
     r"buffer = new Uint8Array\(pathOrBuffer\);\s*"
