@@ -148,6 +148,8 @@
     }
     .drop:hover, .drop.is-over { border-color: var(--accent); background: rgba(74, 95, 212, 0.08); }
     .drop span, .hint { color: var(--muted); font-size: 0.78rem; }
+    .drop.is-picked { border-color: var(--accent); background: rgba(74, 95, 212, 0.08); }
+    .drop span.picked { color: var(--text); font-weight: 650; word-break: break-all; }
     .fields { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 10px; margin-top: 12px; }
     label.field { display: flex; flex-direction: column; gap: 4px; font-size: 0.75rem; color: #667; font-weight: 650; }
     label.field.wide { grid-column: 1 / -1; }
@@ -404,6 +406,7 @@
           <label class="drop" id="drop">
             <strong>选择或拖入视频 / 图片</strong>
             <span>MP4、WebM、GIF、PNG、JPG，可多选图片</span>
+            <span class="picked" id="picked" hidden></span>
             <input id="file" type="file" accept="video/mp4,video/webm,video/quicktime,image/png,image/jpeg,image/webp,image/gif,.mp4,.webm,.mov,.gif,.png,.jpg,.jpeg,.webp" multiple hidden />
           </label>
           <div class="fields">
@@ -787,7 +790,16 @@
 
     function rememberFiles(list) {
       files = [...list];
-      setStatus(files.length ? `已选择 ${files.map((file) => file.name).join('、')}` : '');
+      const picked = $('picked');
+      if (!files.length) {
+        picked.hidden = true;
+        picked.textContent = '';
+        drop.classList.remove('is-picked');
+        return;
+      }
+      picked.hidden = false;
+      picked.textContent = `已选择 ${files.map((file) => file.name).join('、')}`;
+      drop.classList.add('is-picked');
     }
 
     fileInput.addEventListener('change', () => rememberFiles(fileInput.files || []));
