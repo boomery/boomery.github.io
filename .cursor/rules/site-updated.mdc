@@ -1,0 +1,12 @@
+---
+description: 网站右下角的最后更新时间，改公开页面时要一起改
+alwaysApply: true
+---
+
+# 网站右下角更新时间
+
+全站右下角的「更新于 YYYY-MM-DD HH:mm」来自 `myblog/source/site-updated.js` 里的时间字符串。博客、工具、数字空间、Gallery 都引用这份脚本。
+
+只要这次改动会发布到网站上（`myblog/` 下访客能看到的页面、样式、脚本），提交前把这个时间改成当前东八区时间，格式 `YYYY-MM-DD HH:mm`。只改仓库根目录文档、没动 `myblog/` 时不用改。
+
+夜行镖页面左下角仍用 `nightBuiltAt`，两处各写各的。
