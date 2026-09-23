@@ -5,7 +5,8 @@ import {
   chromaKey,
   replaceWithTransparent,
   clearRect,
-  clearSimilarHue,
+  sampleHue,
+  clearHueBlobs,
   previewChroma,
   markDuplicates,
   findLoop,
@@ -129,19 +130,31 @@ test('矩形遮罩把框住的区域变成透明', () => {
   assert.equal(shot.data[3], 255);
 });
 
-test('圈选替换只去掉色相接近的一整片，身体留着', () => {
-  const shot = frame(6, 6, (x, y) => {
-    if ((x === 4 && y === 1) || (x === 4 && y === 2) || (x === 5 && y === 2)) return [40, 180, 50, 255];
+test('圈选替换按色相去掉每一帧的整块，身体留着', () => {
+  const paint = (greenAt) => frame(6, 6, (x, y) => {
+    if (greenAt.some(([gx, gy]) => gx === x && gy === y)) return [40, 180, 50, 255];
     if (x === 5 && y === 1) return [150, 150, 150, 255];
     return [180, 120, 90, 255];
   });
-  const mask = clearSimilarHue(shot, { x0: 4, y0: 1, x1: 5, y1: 2 });
-  assert.equal(shot.data[(1 * 6 + 4) * 4 + 3], 0);
-  assert.equal(shot.data[(2 * 6 + 5) * 4 + 3], 0);
-  assert.equal(shot.data[(1 * 6 + 5) * 4 + 3], 255);
-  assert.equal(shot.data[(4 * 6 + 1) * 4 + 3], 255);
-  assert.equal(mask[(2 * 6 + 4)], 1);
-  assert.equal(mask[0], 0);
+  const current = paint([[4, 1], [4, 2], [5, 2]]);
+  const other = paint([[1, 4], [1, 5]]);
+  const loop = [
+    { x: 3.2, y: 0.2 },
+    { x: 5.8, y: 0.2 },
+    { x: 5.8, y: 2.8 },
+    { x: 3.2, y: 2.8 },
+  ];
+  const target = sampleHue(current, loop);
+  assert.ok(target);
+  clearHueBlobs(current, target);
+  clearHueBlobs(other, target);
+  assert.equal(current.data[(1 * 6 + 4) * 4 + 3], 0);
+  assert.equal(current.data[(2 * 6 + 5) * 4 + 3], 0);
+  assert.equal(current.data[(1 * 6 + 5) * 4 + 3], 255);
+  assert.equal(current.data[(4 * 6 + 1) * 4 + 3], 255);
+  assert.equal(other.data[(4 * 6 + 1) * 4 + 3], 0);
+  assert.equal(other.data[(5 * 6 + 1) * 4 + 3], 0);
+  assert.equal(other.data[(3 * 6 + 3) * 4 + 3], 255);
 });
 
 test('预览抠图时保留已经换成透明的像素', () => {

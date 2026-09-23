@@ -434,14 +434,14 @@
           <div class="actions">
             <button id="pick" class="has-tip" type="button" data-tip="在预览上点一种颜色，把它设成要抠的背景色。">吸管</button>
             <button id="clearColor" class="has-tip" type="button" data-tip="在预览上点一种颜色，这种颜色会直接变成透明，不管它在不在画面边上。">透明替换</button>
-            <button id="huePick" class="has-tip" type="button" data-tip="拖一个框圈住要去掉的那一团。色相接近、连成一片的颜色会变成透明，身体上不一样的颜色会留下。">圈选替换</button>
+            <button id="huePick" class="has-tip" type="button" data-tip="按住绕着要去掉的颜色画一圈。每一帧里色相接近的整块都会变成透明，身体上不一样的颜色会留下。">圈选替换</button>
             <button id="undoClear" class="has-tip" type="button" disabled data-tip="退回上一次透明替换或水印遮罩。可以连续退，每次只退一步。">撤销替换</button>
             <button id="maskWatermark" class="has-tip" type="button" data-tip="在预览上拖一个方框盖住水印。松开后，每一帧的同一位置都会变成透明。">遮水印</button>
             <button id="clearAll" class="has-tip" type="button" data-tip="把背景色里选中的那种颜色，从每一帧里都变成透明。">替换全部</button>
             <button id="applyChroma" class="has-tip" type="button" data-tip="按现在的背景色和容差，把每一帧边上连成一片的背景抠掉。">应用到全部</button>
             <button class="ghost has-tip" id="restore" type="button" data-tip="丢掉抠图和手改，回到刚抽出来的样子。">还原画面</button>
           </div>
-          <p class="hint">只去掉和画面边缘连成一片的纯色背景。容差过大、背景又和衣服连在一起时，先把容差降到 40 左右。水印如果总在同一个位置，点「遮水印」拖一个方框。衣服旁边剩一小团颜色时，点「圈选替换」，框住那一团，只去掉色相接近的一整片。</p>
+          <p class="hint">只去掉和画面边缘连成一片的纯色背景。容差过大、背景又和衣服连在一起时，先把容差降到 40 左右。水印如果总在同一个位置，点「遮水印」拖一个方框。每一帧都有同一团颜色时，点「圈选替换」，绕着那团颜色画一圈，所有帧里色相接近的整块都会变透明。</p>
         </section>
         <section class="panel step-panel" id="step-tidy" data-step="tidy" role="tabpanel" aria-labelledby="tab-tidy" hidden>
           <h2>整理和对齐</h2>
@@ -555,7 +555,8 @@
       previewChroma,
       replaceWithTransparent,
       clearRect,
-      clearSimilarHue,
+      sampleHue,
+      clearHueBlobs,
       hexToRgb,
       sampleBackgroundColor,
       markDuplicates,
@@ -616,6 +617,7 @@
     let previewSized = '';
     let previewDrag = null;
     let maskDrag = null;
+    let hueDrag = null;
     const clearUndo = [];
     const empty = $('empty');
     const film = $('film');
@@ -700,6 +702,20 @@
       ctx.imageSmoothingEnabled = previewView.scale < 2;
       ctx.setTransform(ratio * previewView.scale, 0, 0, ratio * previewView.scale, ratio * previewView.x, ratio * previewView.y);
       ctx.drawImage(previewBuffer, 0, 0);
+      if (hueDrag && hueDrag.points.length) {
+        const path = hueDrag.points;
+        ctx.save();
+        ctx.beginPath();
+        ctx.moveTo(path[0].x, path[0].y);
+        for (let i = 1; i < path.length; i += 1) ctx.lineTo(path[i].x, path[i].y);
+        ctx.closePath();
+        ctx.fillStyle = 'rgba(74, 95, 212, 0.28)';
+        ctx.strokeStyle = '#4a5fd4';
+        ctx.lineWidth = 2 / previewView.scale;
+        ctx.fill();
+        ctx.stroke();
+        ctx.restore();
+      }
       if (!maskDrag) return;
       const x = Math.min(maskDrag.x0, maskDrag.x1);
       const y = Math.min(maskDrag.y0, maskDrag.y1);
@@ -1082,7 +1098,7 @@
     $('huePick').addEventListener('click', () => {
       picking = picking === 'hue' ? false : 'hue';
       syncPreviewCursor();
-      setStatus(picking === 'hue' ? '按住拖一个框，圈住要去掉的那一团颜色。松开后，色相接近的一整片会变成透明。' : '');
+      setStatus(picking === 'hue' ? '按住绕着要去掉的颜色画一圈。松开后，每一帧里同样色相的整块都会变成透明。' : '');
     });
     function previewPixel(event) {
       const frame = frames[index];
@@ -1112,45 +1128,69 @@
       render();
       setStatus(`已把这块区域变成透明，共 ${targets.length} 帧。点错了可以撤销替换。`);
     }
-    function applyHue(rect) {
+    function applyHue(points) {
       const frame = frames[index];
-      const shown = viewFrame(frame);
-      const working = { width: frame.width, height: frame.height, data: new Uint8ClampedArray(shown.data) };
-      const mask = clearSimilarHue(working, rect);
-      let count = 0;
-      for (let i = 0; i < mask.length; i += 1) if (mask[i]) count += 1;
-      if (!count) {
+      const target = sampleHue(viewFrame(frame), points);
+      if (!target) {
         blitPreview();
-        setStatus('这块里没有够鲜明的颜色。把框圈在要去掉的那一团上。', true);
+        setStatus('这一圈里没有够鲜明的颜色。沿着要去掉的那一团画。', true);
         return;
       }
-      rememberClear([{
-        frame,
-        data: new Uint8ClampedArray(frame.data),
-        original: frame.original ? new Uint8ClampedArray(frame.original) : null,
-      }], '圈选替换');
-      frame.data = working.data;
-      if (frame.original && frame.original.length === working.data.length) {
-        for (let p = 0; p < mask.length; p += 1) {
-          if (!mask[p]) continue;
-          const i = p * 4;
-          frame.original[i] = 0;
-          frame.original[i + 1] = 0;
-          frame.original[i + 2] = 0;
-          frame.original[i + 3] = 0;
-        }
+      const targets = frames.filter((item) => item.width === frame.width && item.height === frame.height);
+      const jobs = targets.map((item) => {
+        const view = viewFrame(item);
+        const working = { width: item.width, height: item.height, data: new Uint8ClampedArray(view.data) };
+        const mask = clearHueBlobs(working, target);
+        let count = 0;
+        for (let i = 0; i < mask.length; i += 1) if (mask[i]) count += 1;
+        return { item, mask, count };
+      });
+      const touched = jobs.filter((job) => job.count > 0);
+      if (!touched.length) {
+        blitPreview();
+        setStatus('没有找到色相接近的整块。', true);
+        return;
       }
+      rememberClear(touched.map((job) => ({
+        frame: job.item,
+        data: new Uint8ClampedArray(job.item.data),
+        original: job.item.original ? new Uint8ClampedArray(job.item.original) : null,
+      })), '圈选替换');
+      touched.forEach((job) => {
+        const item = job.item;
+        for (let p = 0; p < job.mask.length; p += 1) {
+          if (!job.mask[p]) continue;
+          const i = p * 4;
+          item.data[i] = 0;
+          item.data[i + 1] = 0;
+          item.data[i + 2] = 0;
+          item.data[i + 3] = 0;
+          if (item.original && item.original.length === item.data.length) {
+            item.original[i] = 0;
+            item.original[i + 1] = 0;
+            item.original[i + 2] = 0;
+            item.original[i + 3] = 0;
+          }
+        }
+      });
       picking = false;
       syncPreviewCursor();
       render();
-      setStatus('已把圈住的这一片相近颜色换成透明。身体上不一样的颜色还在。点错了可以撤销替换。');
+      setStatus(`已在 ${touched.length} 帧里把这种颜色的整块换成透明。身体上不一样的颜色还在。点错了可以撤销替换。`);
     }
     preview.addEventListener('pointerdown', (event) => {
       if (!frames.length) return;
-      if (event.button === 0 && (picking === 'mask' || picking === 'hue')) {
+      if (event.button === 0 && picking === 'hue') {
         const point = previewPixel(event);
         if (!point) return;
-        maskDrag = { id: event.pointerId, mode: picking, x0: point.x, y0: point.y, x1: point.x, y1: point.y };
+        hueDrag = { id: event.pointerId, points: [point] };
+        try { preview.setPointerCapture(event.pointerId); } catch (error) { /* 指针已经松开时浏览器会拒绝捕获 */ }
+        return;
+      }
+      if (event.button === 0 && picking === 'mask') {
+        const point = previewPixel(event);
+        if (!point) return;
+        maskDrag = { id: event.pointerId, x0: point.x, y0: point.y, x1: point.x, y1: point.y };
         try { preview.setPointerCapture(event.pointerId); } catch (error) { /* 指针已经松开时浏览器会拒绝捕获 */ }
         return;
       }
@@ -1161,6 +1201,14 @@
       preview.classList.add('is-panning');
     });
     preview.addEventListener('pointermove', (event) => {
+      if (hueDrag && hueDrag.id === event.pointerId) {
+        const point = previewPixel(event);
+        if (!point) return;
+        const last = hueDrag.points[hueDrag.points.length - 1];
+        if (Math.hypot(point.x - last.x, point.y - last.y) >= 1.5) hueDrag.points.push(point);
+        blitPreview();
+        return;
+      }
       if (maskDrag && maskDrag.id === event.pointerId) {
         const point = previewPixel(event);
         if (!point) return;
@@ -1181,15 +1229,33 @@
       blitPreview();
     });
     function endPreviewDrag(event) {
+      if (hueDrag && hueDrag.id === event.pointerId) {
+        const points = hueDrag.points;
+        hueDrag = null;
+        let minX = Infinity;
+        let maxX = -Infinity;
+        let minY = Infinity;
+        let maxY = -Infinity;
+        points.forEach((point) => {
+          minX = Math.min(minX, point.x);
+          maxX = Math.max(maxX, point.x);
+          minY = Math.min(minY, point.y);
+          maxY = Math.max(maxY, point.y);
+        });
+        if (points.length >= 3 && maxX - minX >= 2 && maxY - minY >= 2) applyHue(points);
+        else {
+          blitPreview();
+          setStatus('圈得太小了，绕着要去掉的颜色画一圈', true);
+        }
+        return;
+      }
       if (maskDrag && maskDrag.id === event.pointerId) {
         const rect = maskDrag;
         maskDrag = null;
-        if (Math.abs(rect.x1 - rect.x0) >= 2 && Math.abs(rect.y1 - rect.y0) >= 2) {
-          if (rect.mode === 'hue') applyHue(rect);
-          else applyMask(rect);
-        } else {
+        if (Math.abs(rect.x1 - rect.x0) >= 2 && Math.abs(rect.y1 - rect.y0) >= 2) applyMask(rect);
+        else {
           blitPreview();
-          setStatus(rect.mode === 'hue' ? '框得太小了，圈住要去掉的那一团颜色' : '框得太小了，按住拖出一块能盖住水印的区域', true);
+          setStatus('框得太小了，按住拖出一块能盖住水印的区域', true);
         }
         return;
       }

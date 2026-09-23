@@ -213,27 +213,44 @@ function hueDistance(a, b) {
   return Math.min(delta, 360 - delta);
 }
 
-export function clearSimilarHue(frame, rect) {
-  const data = frame.data;
-  const width = frame.width;
-  const height = frame.height;
-  const x0 = Math.max(0, Math.min(width, Math.floor(Math.min(rect.x0, rect.x1))));
-  const x1 = Math.max(0, Math.min(width, Math.ceil(Math.max(rect.x0, rect.x1))));
-  const y0 = Math.max(0, Math.min(height, Math.floor(Math.min(rect.y0, rect.y1))));
-  const y1 = Math.max(0, Math.min(height, Math.ceil(Math.max(rect.y0, rect.y1))));
-  const samples = [];
-  for (let y = y0; y < y1; y += 1) {
-    for (let x = x0; x < x1; x += 1) {
-      const i = (y * width + x) * 4;
-      if (data[i + 3] < 16) continue;
-      const sample = pixelHue(data[i], data[i + 1], data[i + 2]);
-      if (sample && sample.s >= 0.12) samples.push(sample);
-    }
+function pointInPolygon(x, y, points) {
+  let inside = false;
+  for (let i = 0, j = points.length - 1; i < points.length; j = i, i += 1) {
+    const yi = points[i].y;
+    const yj = points[j].y;
+    if ((yi > y) === (yj > y)) continue;
+    const xCross = ((points[j].x - points[i].x) * (y - yi)) / (yj - yi) + points[i].x;
+    if (x < xCross) inside = !inside;
   }
-  const seen = new Uint8Array(width * height);
-  if (!samples.length) return seen;
+  return inside;
+}
+
+function distToSegment(x, y, a, b) {
+  const dx = b.x - a.x;
+  const dy = b.y - a.y;
+  const len = dx * dx + dy * dy;
+  const t = len ? Math.max(0, Math.min(1, ((x - a.x) * dx + (y - a.y) * dy) / len)) : 0;
+  const px = a.x + dx * t - x;
+  const py = a.y + dy * t - y;
+  return Math.hypot(px, py);
+}
+
+function strokeHits(points, x, y) {
+  const cx = x + 0.5;
+  const cy = y + 0.5;
+  if (pointInPolygon(cx, cy, points)) return true;
+  for (let i = 1; i < points.length; i += 1) {
+    if (distToSegment(cx, cy, points[i - 1], points[i]) <= 3) return true;
+  }
+  const last = points[points.length - 1];
+  return distToSegment(cx, cy, last, points[0]) <= 3;
+}
+
+function hueTargetFromSamples(samples) {
+  if (!samples.length) return null;
   samples.sort((a, b) => b.s - a.s);
-  const vivid = samples.slice(0, Math.max(1, Math.ceil(samples.length * 0.5)));
+  const floor = samples[0].s * 0.72;
+  const vivid = samples.filter((sample) => sample.s >= floor);
   let sin = 0;
   let cos = 0;
   let saturation = 0;
@@ -243,37 +260,77 @@ export function clearSimilarHue(frame, rect) {
     cos += Math.cos(rad);
     saturation += sample.s;
   });
-  let target = Math.atan2(sin, cos) * 180 / Math.PI;
-  if (target < 0) target += 360;
+  let hue = Math.atan2(sin, cos) * 180 / Math.PI;
+  if (hue < 0) hue += 360;
   saturation /= vivid.length;
-  const minSaturation = Math.max(0.1, saturation * 0.45);
+  return { h: hue, minS: Math.max(0.1, saturation * 0.45) };
+}
+
+export function sampleHue(frame, points) {
+  if (!points || points.length < 3) return null;
+  const data = frame.data;
+  const width = frame.width;
+  const height = frame.height;
+  let x0 = width;
+  let x1 = 0;
+  let y0 = height;
+  let y1 = 0;
+  points.forEach((point) => {
+    x0 = Math.min(x0, point.x);
+    x1 = Math.max(x1, point.x);
+    y0 = Math.min(y0, point.y);
+    y1 = Math.max(y1, point.y);
+  });
+  x0 = Math.max(0, Math.floor(x0 - 3));
+  y0 = Math.max(0, Math.floor(y0 - 3));
+  x1 = Math.min(width, Math.ceil(x1 + 3));
+  y1 = Math.min(height, Math.ceil(y1 + 3));
+  const samples = [];
+  for (let y = y0; y < y1; y += 1) {
+    for (let x = x0; x < x1; x += 1) {
+      if (!strokeHits(points, x, y)) continue;
+      const i = (y * width + x) * 4;
+      if (data[i + 3] < 16) continue;
+      const sample = pixelHue(data[i], data[i + 1], data[i + 2]);
+      if (sample && sample.s >= 0.12) samples.push(sample);
+    }
+  }
+  return hueTargetFromSamples(samples);
+}
+
+export function clearHueBlobs(frame, target) {
+  const data = frame.data;
+  const width = frame.width;
+  const seen = new Uint8Array(width * frame.height);
+  if (!target) return seen;
   const matches = (i) => {
     if (data[i + 3] < 16) return false;
     const sample = pixelHue(data[i], data[i + 1], data[i + 2]);
-    if (!sample || sample.s < minSaturation) return false;
-    return hueDistance(sample.h, target) <= 32;
+    if (!sample || sample.s < target.minS) return false;
+    return hueDistance(sample.h, target.h) <= 32;
   };
   const stack = [];
-  const push = (p) => {
-    if (p < 0 || p >= seen.length || seen[p] || !matches(p * 4)) return;
-    seen[p] = 1;
-    stack.push(p);
-  };
-  for (let y = y0; y < y1; y += 1) {
-    for (let x = x0; x < x1; x += 1) push(y * width + x);
-  }
-  while (stack.length) {
-    const p = stack.pop();
-    const i = p * 4;
-    data[i] = 0;
-    data[i + 1] = 0;
-    data[i + 2] = 0;
-    data[i + 3] = 0;
-    const x = p % width;
-    if (x > 0) push(p - 1);
-    if (x + 1 < width) push(p + 1);
-    if (p - width >= 0) push(p - width);
-    if (p + width < seen.length) push(p + width);
+  for (let start = 0; start < seen.length; start += 1) {
+    if (seen[start] || !matches(start * 4)) continue;
+    seen[start] = 1;
+    stack.push(start);
+    while (stack.length) {
+      const p = stack.pop();
+      const i = p * 4;
+      data[i] = 0;
+      data[i + 1] = 0;
+      data[i + 2] = 0;
+      data[i + 3] = 0;
+      const x = p % width;
+      const next = [p - 1, p + 1, p - width, p + width];
+      if (x === 0) next[0] = -1;
+      if (x + 1 === width) next[1] = -1;
+      next.forEach((q) => {
+        if (q < 0 || q >= seen.length || seen[q] || !matches(q * 4)) return;
+        seen[q] = 1;
+        stack.push(q);
+      });
+    }
   }
   return seen;
 }
