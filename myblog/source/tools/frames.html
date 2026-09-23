@@ -426,7 +426,7 @@
             <label class="field"><span class="field-head"><span class="term has-tip" tabindex="0" data-tip="人物轮廓交界处留一层半透明。调大边缘更软，调成 0 就是硬切边。">边缘柔化</span> <b data-for="softness">18</b></span><input id="softness" type="range" min="0" max="80" value="18" /></label>
             <label class="field"><span class="field-head"><span class="term has-tip" tabindex="0" data-tip="把沾到头发和衣服边上的绿边洗淡。调大绿边更淡，调成 0 就保留原来的颜色。">去色溢</span> <b data-for="despill">0.85</b></span><input id="despill" type="range" min="0" max="1" step="0.05" value="0.85" /></label>
           </div>
-          <div class="checks"><label><input id="previewKey" type="checkbox" /> <span class="term has-tip" tabindex="0" data-tip="只在这一张上看抠图结果，还不会改掉全部画面。">预览当前帧</span></label></div>
+          <div class="checks"><label><input id="previewKey" type="checkbox" /> <span class="term has-tip" tabindex="0" data-tip="只在这一张上看抠图结果，还不会改掉全部画面。已经换成透明的地方会留着。">预览当前帧</span></label></div>
           <div class="actions">
             <button id="pick" class="has-tip" type="button" data-tip="在预览上点一种颜色，把它设成要抠的背景色。">吸管</button>
             <button id="clearColor" class="has-tip" type="button" data-tip="在预览上点一种颜色，这种颜色会直接变成透明，不管它在不在画面边上。">透明替换</button>
@@ -545,6 +545,7 @@
     import {
       CLIP_PRESETS,
       chromaKey,
+      previewChroma,
       replaceWithTransparent,
       hexToRgb,
       sampleBackgroundColor,
@@ -648,9 +649,7 @@
 
     function viewFrame(frame) {
       if (!$('previewKey').checked || aligned) return frame;
-      const copy = { width: frame.width, height: frame.height, data: new Uint8ClampedArray(frame.original) };
-      chromaKey(copy, chromaOptions());
-      return copy;
+      return previewChroma(frame, chromaOptions());
     }
 
     function paint(canvas, frame, fitHeight) {

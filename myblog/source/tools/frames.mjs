@@ -184,6 +184,24 @@ export function replaceWithTransparent(frame, options = {}) {
   return frame;
 }
 
+export function previewChroma(frame, options = {}) {
+  const source = frame.original || frame.data;
+  const copy = { width: frame.width, height: frame.height, data: new Uint8ClampedArray(source) };
+  chromaKey(copy, options);
+  const current = frame.data;
+  const out = copy.data;
+  const n = Math.min(current.length, out.length);
+  for (let i = 0; i < n; i += 4) {
+    if (current[i + 3] < out[i + 3]) {
+      out[i] = current[i];
+      out[i + 1] = current[i + 1];
+      out[i + 2] = current[i + 2];
+      out[i + 3] = current[i + 3];
+    }
+  }
+  return copy;
+}
+
 export function fingerprint(frame, size = 16) {
   const out = new Float32Array(size * size);
   const sx = frame.width / size;

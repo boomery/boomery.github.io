@@ -4,6 +4,7 @@ import {
   CLIP_PRESETS,
   chromaKey,
   replaceWithTransparent,
+  previewChroma,
   markDuplicates,
   findLoop,
   keepIndices,
@@ -101,6 +102,18 @@ test('透明替换去掉指定颜色，不要求连着边缘', () => {
   assert.equal(shot.data[(1 * 3 + 1) * 4 + 3], 0);
   assert.equal(shot.data[(1 * 3 + 2) * 4 + 3], 255);
   assert.equal(shot.data[3], 255);
+});
+
+test('预览抠图时保留已经换成透明的像素', () => {
+  const shot = frame(3, 3, (x, y) => {
+    if (x === 1 && y === 1) return [200, 30, 30, 255];
+    return [0, 255, 0, 255];
+  });
+  shot.original = new Uint8ClampedArray(shot.data);
+  replaceWithTransparent(shot, { color: [200, 30, 30], tolerance: 0, softness: 0 });
+  const preview = previewChroma(shot, { color: [0, 255, 0], tolerance: 8, softness: 0, despill: 0 });
+  assert.equal(preview.data[(1 * 3 + 1) * 4 + 3], 0);
+  assert.equal(preview.data[3], 0);
 });
 
 test('编辑帧可以涂、擦、填、误除，并且能撤销', () => {
