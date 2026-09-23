@@ -127,9 +127,9 @@ button:focus-visible, a:focus-visible { outline: 2px solid #d8c6a4; outline-offs
 .gate.is-still .gate-rainfall, .gate.is-still .gate-glass, .gate.is-still .gate-mist, .gate.is-still .surface-water, .gate.is-still .gate-lightning, .gate.is-still .gate-flash, .gate.is-still .gate-cloudlight { visibility: hidden; }
 .gate.is-paused *, .gate.is-gone * { animation-play-state: paused !important; }
 .gate.is-paused .gate-load, .gate.is-paused .gate-load *, .gate.is-paused .gate-load__bar::after { animation-play-state: running !important; }
-.gate-load.is-entering .gate-load__bar { position: relative; overflow: hidden; }
-.gate-load.is-entering .gate-load__bar::after { content: ""; position: absolute; top: 0; bottom: 0; left: 0; width: 42%; background: linear-gradient(90deg, transparent, #fff8, transparent); animation: load-slide 1.15s ease-in-out infinite; }
-
+.gate-load.is-meter { position: relative; }
+.gate-load.is-meter .gate-load__track, .gate-load.is-meter .gate-load__text { opacity: 0; }
+.gate-load__meter { position: absolute; left: 0; top: 0; width: 100%; height: 100%; pointer-events: none; }
 @media (min-width: 1600px) { .gate-card { left: 12%; } }
 @media (max-height: 780px) and (min-width: 701px) {
   .gate-card { transform: translateY(-44%); }

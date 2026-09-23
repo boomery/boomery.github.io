@@ -74,7 +74,7 @@
       <span class="surface-water" aria-hidden="true"></span>
     </div>
     <footer class="gate-footer">
-      <p class="gate-meta"><span id="nightGameVer">v0.19.2</span><span class="meta-dot">·</span><time id="nightBuiltAt">2026-09-23 21:19</time></p>
+      <p class="gate-meta"><span id="nightGameVer">v0.19.2</span><span class="meta-dot">·</span><time id="nightBuiltAt">2026-09-23 21:31</time></p>
       <p class="gate-listen" id="gateListen">轻触画面，听雨入夜</p>
       <a class="gate-engine" href="https://godotengine.org" target="_blank" rel="noopener">MADE WITH GODOT <span aria-hidden="true">↗</span></a>
     </footer>
@@ -183,7 +183,7 @@ window.addEventListener('pagehide', function () {
 });
 
 const NIGHT_GAME_VERSION = '0.19.2';
-const NIGHT_BUILT_AT = '2026-09-23 21:19';
+const NIGHT_BUILT_AT = '2026-09-23 21:31';
 const NIGHT_PCK = 'https://cdn.boomery.top/night.pck?v=0.19.2-157068568';
 (function stampBuildMeta() {
   const ver = document.getElementById('nightGameVer');
@@ -648,15 +648,101 @@ if ('serviceWorker' in navigator) {
     holdLabel = '正在入夜';
     gateLoad.classList.remove('is-error', 'is-ready', 'is-indeterminate', 'is-booting');
     gateLoad.classList.add('is-on');
-    if (pct >= 100) gateLoad.classList.add('is-entering');
     gateBar.style.width = pct + '%';
     gateLoadText.textContent = '正在入夜 ' + pct + '%';
+  }
+
+  let readMeter = null;
+
+  function stopReadMeter() {
+    if (!readMeter) return;
+    var meter = readMeter;
+    readMeter = null;
+    meter.stop();
+  }
+
+  function mountReadMeter() {
+    stopReadMeter();
+    var canvas = document.createElement('canvas');
+    canvas.className = 'gate-load__meter';
+    canvas.setAttribute('aria-hidden', 'true');
+    gateLoad.appendChild(canvas);
+    var cssW = Math.max(1, Math.round(gateLoad.clientWidth || 315));
+    var cssH = Math.max(1, Math.round(gateLoad.clientHeight || 40));
+    var dpr = Math.min(window.devicePixelRatio || 1, 2);
+    canvas.width = Math.round(cssW * dpr);
+    canvas.height = Math.round(cssH * dpr);
+    canvas.style.width = cssW + 'px';
+    canvas.style.height = cssH + 'px';
+    var source = [
+      'var canvas,ctx,W,H,cssW;',
+      'function draw(loaded,total){',
+      'if(!ctx)return;',
+      'ctx.clearRect(0,0,W,H);',
+      'var dpr=W/cssW;',
+      'var barH=Math.max(2,2*dpr);',
+      'ctx.fillStyle="rgba(150,164,163,0.17)";',
+      'ctx.fillRect(0,0,W,barH);',
+      'var label="正在入夜…";',
+      'if(total>0&&loaded>0){',
+      'var pct=Math.max(0,Math.min(1,loaded/total));',
+      'var grad=ctx.createLinearGradient(0,0,Math.max(1,W*pct),0);',
+      'grad.addColorStop(0,"#78513c");',
+      'grad.addColorStop(1,"#d5c19c");',
+      'ctx.fillStyle=grad;',
+      'ctx.fillRect(0,0,Math.max(1,W*pct),barH);',
+      'label="正在入夜 "+Math.round(pct*100)+"%";',
+      '}',
+      'ctx.fillStyle="#bbc3c1";',
+      'ctx.font=(11*dpr)+"px sans-serif";',
+      'ctx.textBaseline="top";',
+      'ctx.fillText(label,0,barH+12*dpr);',
+      '}',
+      'self.onmessage=function(ev){',
+      'var data=ev.data||{};',
+      'if(data.canvas){canvas=data.canvas;ctx=canvas.getContext("2d");W=data.w;H=data.h;cssW=data.cssW;draw(0,0);return;}',
+      'draw(data.loaded||0,data.total||0);',
+      '};'
+    ].join('');
+    var url = '';
+    var worker = null;
+    try {
+      url = URL.createObjectURL(new Blob([source], { type: 'application/javascript' }));
+      worker = new Worker(url);
+      var offscreen = canvas.transferControlToOffscreen();
+      worker.postMessage({ canvas: offscreen, w: canvas.width, h: canvas.height, cssW: cssW }, [offscreen]);
+    } catch (err) {
+      if (worker) worker.terminate();
+      if (url) URL.revokeObjectURL(url);
+      canvas.remove();
+      readMeter = {
+        push: function (loaded, total) { reportNightEntry(loaded, total); },
+        stop: function () {}
+      };
+      return;
+    }
+    gateLoad.classList.add('is-meter');
+    readMeter = {
+      push: function (loaded, total) {
+        reportNightEntry(loaded, total);
+        try { worker.postMessage({ loaded: loaded, total: total }); } catch (err) {}
+      },
+      stop: function () {
+        try { worker.terminate(); } catch (err) {}
+        if (url) URL.revokeObjectURL(url);
+        canvas.remove();
+        gateLoad.classList.remove('is-meter');
+      }
+    };
   }
 
   async function launchGame() {
     showBusy('正在入夜…');
     enterBtn.classList.add('is-hidden');
-    window.NightPackProgress = reportNightEntry;
+    mountReadMeter();
+    window.NightPackRead = function (loaded, total) {
+      if (readMeter) readMeter.push(loaded, total);
+    };
     await yieldPaint();
     if (window.NightGateAtmosphere) window.NightGateAtmosphere.stop();
     try {
@@ -675,7 +761,8 @@ if ('serviceWorker' in navigator) {
     } catch (err) {
       displayFailureNotice(err);
     } finally {
-      window.NightPackProgress = null;
+      window.NightPackRead = null;
+      stopReadMeter();
     }
   }
 
