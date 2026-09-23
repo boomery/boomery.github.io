@@ -631,9 +631,8 @@
     });
 
     function rerenderPreview() {
-      if (!frames.length || !$('previewKey').checked) return;
-      const shown = viewFrame(frames[index]);
-      paint(preview, shown);
+      if (!frames.length) return;
+      paint(preview, viewFrame(frames[index]));
     }
     ['keyColor', 'tolerance', 'softness', 'despill', 'previewKey'].forEach((id) => {
       $(id).addEventListener('input', rerenderPreview);
@@ -684,6 +683,7 @@
         frame.mark = '';
       });
       aligned = false;
+      $('previewKey').checked = false;
       render();
       setStatus('已还原成刚提取的画面');
     });
