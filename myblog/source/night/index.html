@@ -237,6 +237,8 @@ if ('serviceWorker' in navigator) {
   let packCached = false;
   let packStale = false;
   let gatePhase = 'idle';
+  let holdLabel = '';
+  let packStore = Promise.resolve();
   const PACK_CACHE = 'night-pck-' + NIGHT_GAME_VERSION + '-' + GODOT_CONFIG.fileSizes[NIGHT_PCK];
 
   async function localPack() {
@@ -307,72 +309,151 @@ if ('serviceWorker' in navigator) {
   }
 
   function yieldPaint() {
-    return new Promise(function (resolve) { requestAnimationFrame(resolve); });
+    if (typeof scheduler !== 'undefined' && typeof scheduler.yield === 'function') return scheduler.yield();
+    return new Promise(function (resolve) {
+      var done = false;
+      function finish() {
+        if (done) return;
+        done = true;
+        resolve();
+      }
+      requestAnimationFrame(function () { setTimeout(finish, 0); });
+      setTimeout(finish, 48);
+    });
+  }
+
+  function showBusy(text) {
+    holdLabel = text || '请稍候…';
+    if (bootTimer) {
+      clearInterval(bootTimer);
+      bootTimer = null;
+    }
+    gateLoad.classList.remove('is-error', 'is-ready', 'is-indeterminate');
+    gateLoad.classList.add('is-on', 'is-booting');
+    gateBar.style.width = '';
+    gateLoadText.textContent = holdLabel;
   }
 
   async function readBody(res, onBytes, expected) {
     const hinted = Number(res.headers.get('Content-Length')) || expected || 0;
     if (!res.body || !res.body.getReader) {
       const buf = await res.arrayBuffer();
-      onBytes(buf.byteLength);
+      holdLabel = '';
+      onBytes(buf.byteLength || hinted);
       return buf;
     }
     const reader = res.body.getReader();
     const chunks = [];
     let loaded = 0;
-    let sincePaint = 0;
+    let frameBudget = performance.now() + 12;
     for (;;) {
       const step = await reader.read();
       if (step.done) break;
+      holdLabel = '';
       chunks.push(step.value);
       loaded += step.value.byteLength;
-      sincePaint += step.value.byteLength;
-      onBytes(loaded);
-      if (sincePaint >= 2 * 1024 * 1024) {
-        sincePaint = 0;
+      if (performance.now() >= frameBudget) {
+        onBytes(loaded);
         await yieldPaint();
+        frameBudget = performance.now() + 12;
       }
     }
     onBytes(Math.max(loaded, hinted));
-    const bytes = new Uint8Array(loaded);
-    let offset = 0;
-    sincePaint = 0;
-    for (let i = 0; i < chunks.length; i++) {
-      bytes.set(chunks[i], offset);
-      offset += chunks[i].byteLength;
-      sincePaint += chunks[i].byteLength;
-      if (sincePaint >= 8 * 1024 * 1024) {
-        sincePaint = 0;
-        await yieldPaint();
-      }
+    if (!loaded) return new ArrayBuffer(0);
+    if (chunks.length === 1) {
+      const only = chunks[0];
+      const owned = only.byteOffset === 0 && only.byteLength === only.buffer.byteLength;
+      if (owned && (!expected || only.byteLength === expected)) return only.buffer;
     }
-    onBytes(loaded);
+    const buf = await concatChunks(chunks);
+    holdLabel = '';
+    onBytes(buf.byteLength);
+    return buf;
+  }
+
+  function allocPack(size) {
+    var source = 'self.onmessage=function(ev){var bytes=new Uint8Array(ev.data);self.postMessage(bytes.buffer,[bytes.buffer]);};';
+    return new Promise(function (resolve) {
+      var url = '';
+      var worker = null;
+      try {
+        url = URL.createObjectURL(new Blob([source], { type: 'application/javascript' }));
+        worker = new Worker(url);
+      } catch (err) {
+        if (url) URL.revokeObjectURL(url);
+        resolve(new Uint8Array(size));
+        return;
+      }
+      worker.onmessage = function (ev) {
+        worker.terminate();
+        URL.revokeObjectURL(url);
+        resolve(new Uint8Array(ev.data));
+      };
+      worker.onerror = function () {
+        worker.terminate();
+        URL.revokeObjectURL(url);
+        resolve(new Uint8Array(size));
+      };
+      worker.postMessage(size);
+    });
+  }
+
+  async function concatChunks(chunks) {
+    var total = 0;
+    for (var i = 0; i < chunks.length; i++) total += chunks[i].byteLength;
+    showBusy('正在整理行囊…');
+    await yieldPaint();
+    var bytes = await allocPack(total);
+    var offset = 0;
+    var frameBudget = performance.now() + 12;
+    for (var c = 0; c < chunks.length; c++) {
+      var chunk = chunks[c];
+      var off = 0;
+      while (off < chunk.byteLength) {
+        var n = Math.min(256 * 1024, chunk.byteLength - off);
+        bytes.set(chunk.subarray(off, off + n), offset);
+        offset += n;
+        off += n;
+        if (performance.now() >= frameBudget) {
+          await yieldPaint();
+          frameBudget = performance.now() + 12;
+        }
+      }
+      chunks[c] = null;
+    }
     return bytes.buffer;
   }
 
   async function loadPack(onBytes) {
     const expected = GODOT_CONFIG.fileSizes[NIGHT_PCK];
+    const reading = packCached
+      ? '正在从本机读取行囊…'
+      : (packStale ? '发现新版本，正在重新下载…' : '正在装载行囊…');
+    showBusy(reading);
+    await yieldPaint();
     const cached = await localPack();
     if (cached) {
       const buf = await readBody(cached, onBytes, expected);
       if (!expected || buf.byteLength === expected) return buf;
     }
     await purgeOldPacks();
+    showBusy(packStale ? '发现新版本，正在重新下载…' : '正在装载行囊…');
+    await yieldPaint();
     const res = await fetch(NIGHT_PCK, { mode: 'cors', cache: 'no-store' });
     if (!res.ok) throw new Error('游戏包 night.pck 未能加载（HTTP ' + res.status + '）');
     const buf = await readBody(res, onBytes, expected);
     if (expected && buf.byteLength !== expected) {
       throw new Error('行囊体积不符（' + buf.byteLength + ' / ' + expected + '），CDN 可能仍是旧包，请稍后刷新重试。');
     }
-    await storePack(buf);
+    packStore = storePack(buf);
     return buf;
   }
 
   async function storePack(buf) {
-    if (!('caches' in window)) return;
+    if (!('caches' in window) || !buf) return;
     try {
       const cache = await caches.open(PACK_CACHE);
-      await cache.put(NIGHT_PCK, new Response(buf, {
+      await cache.put(NIGHT_PCK, new Response(new Blob([buf]), {
         headers: {
           'Content-Type': 'application/octet-stream',
           'Content-Length': String(buf.byteLength),
@@ -380,7 +461,9 @@ if ('serviceWorker' in navigator) {
         },
       }));
       await purgeOldPacks();
-    } catch (err) {}
+    } catch (err) {
+      console.warn('夜行镖行囊未能写入本机缓存', err);
+    }
   }
 
   function formatMB(bytes) {
@@ -404,6 +487,7 @@ if ('serviceWorker' in navigator) {
   }
 
   function showReadyToStart() {
+    holdLabel = '';
     stopBootHints();
     gateLoad.classList.remove('is-indeterminate', 'is-booting', 'is-error');
     gateLoad.classList.add('is-on', 'is-ready');
@@ -413,9 +497,15 @@ if ('serviceWorker' in navigator) {
     enterBtn.disabled = false;
     setEnterLabel('开始游戏');
     gatePhase = 'ready';
+    packStore.then(function () {
+      if (gatePhase === 'ready' && window.NightGateAtmosphere && window.NightGateAtmosphere.restore) {
+        window.NightGateAtmosphere.restore();
+      }
+    });
   }
 
   function showGateProgress() {
+    holdLabel = '';
     stopBootHints();
     enterBtn.classList.add('is-hidden');
     gateLoad.classList.remove('is-error', 'is-ready');
@@ -431,13 +521,13 @@ if ('serviceWorker' in navigator) {
   }
 
   function updateGateProgress(current, total) {
-    if (gateLoad.classList.contains('is-booting')) return;
+    if (holdLabel) return;
     if (!(current > 0 && total > 0)) {
       gateLoad.classList.add('is-indeterminate');
       return;
     }
     const pct = Math.min(100, Math.round((current / total) * 100));
-    gateLoad.classList.remove('is-indeterminate');
+    gateLoad.classList.remove('is-indeterminate', 'is-booting');
     gateBar.style.width = pct + '%';
     const label = packCached ? '本机读取 ' : (packStale ? '更新中 ' : '装载中 ');
     gateLoadText.textContent = label + pct + '% · ' + formatMB(current) + ' / ' + formatMB(total);
@@ -468,6 +558,8 @@ if ('serviceWorker' in navigator) {
   }
 
   function displayFailureNotice(err) {
+    holdLabel = '';
+    if (window.NightGateAtmosphere && window.NightGateAtmosphere.restore) window.NightGateAtmosphere.restore();
     console.error(err);
     let message = 'An unknown error occurred.';
     if (err instanceof Error) message = err.message;
@@ -548,10 +640,14 @@ if ('serviceWorker' in navigator) {
   }
 
   async function launchGame() {
-    if (window.NightGateAtmosphere) window.NightGateAtmosphere.stop();
+    showBusy('正在入夜…');
+    enterBtn.classList.add('is-hidden');
+    if (window.NightGateAtmosphere && window.NightGateAtmosphere.ease) window.NightGateAtmosphere.ease();
     await yieldPaint();
     try {
+      await packStore;
       await engine.start();
+      if (window.NightGateAtmosphere) window.NightGateAtmosphere.stop();
       stopBootHints();
       setStatusMode('hidden');
       gate.classList.add('is-gone');
@@ -573,6 +669,7 @@ if ('serviceWorker' in navigator) {
     initializing = true;
     statusMode = '';
     enterBtn.disabled = true;
+    if (window.NightGateAtmosphere && window.NightGateAtmosphere.ease) window.NightGateAtmosphere.ease();
     backFab.classList.add('is-on');
     showGateProgress();
     await waitForWorker(4000);

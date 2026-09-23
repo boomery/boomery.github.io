@@ -123,6 +123,41 @@ print(f"build meta: v{version} @ {built} (patched {n4 + n5 + n6 + n7} 处)")
 print(f"pck url bust: ?v={bust} (patched {n8} 处)")
 PY
 
+python3 - "$DST/night.js" <<'PY'
+import pathlib, re, sys
+path = pathlib.Path(sys.argv[1])
+js = path.read_text(encoding="utf-8")
+owned = "FS.writeFile(path,buffer instanceof ArrayBuffer?new Uint8Array(buffer,0,buffer.byteLength):ArrayBuffer.isView(buffer)?new Uint8Array(buffer.buffer,buffer.byteOffset,buffer.byteLength):new Uint8Array(buffer),{canOwn:true})"
+plain = "FS.writeFile(path,new Uint8Array(buffer))"
+if owned in js:
+    print("night.js 行囊已是零拷贝写入")
+elif plain in js:
+    js = js.replace(plain, owned, 1)
+    print("night.js 已改为零拷贝写入行囊")
+else:
+    raise SystemExit("night.js 的 copy_to_fs 变了，零拷贝补丁对不上")
+preload_pat = re.compile(
+    r"\} else if \(pathOrBuffer instanceof ArrayBuffer\) \{\s*"
+    r"buffer = new Uint8Array\(pathOrBuffer\);\s*"
+    r"\} else if \(ArrayBuffer\.isView\(pathOrBuffer\)\) \{\s*"
+    r"buffer = new Uint8Array\(pathOrBuffer\.buffer\);\s*"
+    r"\}"
+)
+new_preload = (
+    "} else if (pathOrBuffer instanceof ArrayBuffer || ArrayBuffer.isView(pathOrBuffer)) {\n"
+    "\t\t\tbuffer = pathOrBuffer;\n"
+    "\t\t}"
+)
+if "pathOrBuffer instanceof ArrayBuffer || ArrayBuffer.isView(pathOrBuffer)" in js:
+    print("night.js 预加载已避免整包拷贝")
+else:
+    js, n = preload_pat.subn(new_preload, js, count=1)
+    if n != 1:
+        raise SystemExit("night.js 的 preload 变了，去拷贝补丁对不上")
+    print("night.js 预加载已去掉整包拷贝")
+path.write_text(js, encoding="utf-8")
+PY
+
 echo "本地已同步到 $DST"
 echo "自定义封面页 index.html 已保留（仅更新体积数字、版本与时间）"
 

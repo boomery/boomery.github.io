@@ -89,10 +89,9 @@ button:focus-visible, a:focus-visible { outline: 2px solid #d8c6a4; outline-offs
 .gate-load__bar { width: 0; height: 100%; background: linear-gradient(90deg, #78513c, #d5c19c); transition: width .2s; }
 .gate-load__text { font: 11px/1.8 "PingFang SC", system-ui, sans-serif; color: #bbc3c1; margin: 12px 0 0; overflow-wrap: anywhere; }
 .gate-load.is-indeterminate .gate-load__bar { width: 32%; animation: load-slide 1.6s ease-in-out infinite; }
-.gate-load.is-booting .gate-load__bar { width: 100%; animation: load-pulse 1.5s ease-in-out infinite; }
+.gate-load.is-booting .gate-load__bar { width: 32%; animation: load-slide 1.15s ease-in-out infinite; }
 .gate-load.is-error .gate-load__text { color: #e1a998; }
 @keyframes load-slide { from { transform: translateX(-110%); } to { transform: translateX(420%); } }
-@keyframes load-pulse { 50% { opacity: .35; } }
 
 .surface-water { position: absolute; inset: 0; pointer-events: none; overflow: visible; }
 .water-drop, .water-spray, .water-rim, .water-impact { position: absolute; left: 0; top: 0; opacity: 0; pointer-events: none; }

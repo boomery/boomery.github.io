@@ -22,6 +22,7 @@
   let glassContext = null;
   let glassStarting = false;
   let glassTick = null;
+  let heavyPaused = false;
   let lightningCall = null;
   let thunderCall = null;
   let resizeTimer = null;
@@ -229,12 +230,12 @@
     return background;
   }
   async function startGlass() {
-    if (!window.RaindropFX || !gsap || glassStarting || glass || !moving() || gate.clientWidth < 900) return;
+    if (heavyPaused || !window.RaindropFX || !gsap || glassStarting || glass || !moving() || gate.clientWidth < 900) return;
     glassStarting = true;
     let fx = null;
     try {
       if (!scene.complete) await scene.decode();
-      if (!alive || !moving()) return;
+      if (!alive || !moving() || heavyPaused) return;
       glassContext = canvas.getContext('webgl2');
       if (!glassContext) return;
       // Render at bounded resolution; the original sharp photograph remains underneath.
@@ -252,7 +253,12 @@
       await fx.setBackground(background);
       await fx.start();
       fx.stop();
-      if (!alive) { destroyGlass(); return; }
+      if (!alive || heavyPaused) {
+        try { fx.stop(); } catch (_) {}
+        canvas.classList.remove('is-on');
+        if (!alive) destroyGlass();
+        return;
+      }
       glass = fx;
       // The pinned library exposes update(); share GSAP's lifecycle instead of a second RAF loop.
       let last = 0;
@@ -318,6 +324,20 @@
     if (!timelines.size && gsap && !motionQuery.matches) buildMotion();
     else applyWeather();
   }
+  function ease() {
+    heavyPaused = true;
+    if (glassTick && gsap) gsap.ticker.remove(glassTick);
+    glassTick = null;
+    if (glass) {
+      try { glass.stop(); } catch (_) {}
+      glass = null;
+    }
+    if (canvas) canvas.classList.remove('is-on');
+  }
+  function restore() {
+    heavyPaused = false;
+    if (alive && moving()) startGlass();
+  }
   function stopAll() {
     if (!alive) return;
     alive = false;
@@ -335,7 +355,7 @@
     gate.classList.add('is-paused');
   }
 
-  window.NightGateAtmosphere = { stop: stopAll };
+  window.NightGateAtmosphere = { stop: stopAll, ease: ease, restore: restore };
   soundButton.addEventListener('click', (event) => {
     event.stopPropagation();
     if (!touched) { touched = true; muted = false; }
