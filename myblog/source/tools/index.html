@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>boomery · 工具</title>
+  <meta name="description" content="boomery 工具专区。在浏览器里把 Excel 导出为 PDF，文件不会上传。" />
+  <link rel="icon" href="/images/boomery-logo.svg" type="image/svg+xml" />
+  <script src="/tools/vendor/exceljs.min.js"></script>
+  <script src="/tools/vendor/pdf-lib.min.js"></script>
+  <script src="/tools/vendor/fontkit.umd.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #f5f7f9;
+      --accent: #4a5fd4;
+      --accent-2: #8b5cf6;
+      --text: #1a1a2e;
+      --muted: #888;
+      --radius: 14px;
+      --nav-h: 56px;
+    }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'Inter', 'PingFang SC', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+    body::before, body::after {
+      content: '';
+      position: fixed;
+      inset: 0;
+      z-index: -2;
+      pointer-events: none;
+      filter: blur(90px);
+    }
+    body::before {
+      background:
+        radial-gradient(ellipse 55% 45% at 18% 20%, rgba(180, 200, 255, 0.55) 0%, transparent 70%),
+        radial-gradient(ellipse 50% 40% at 85% 75%, rgba(220, 190, 255, 0.4) 0%, transparent 70%);
+    }
+    body::after {
+      background: radial-gradient(ellipse 40% 35% at 60% 10%, rgba(190, 230, 255, 0.35) 0%, transparent 70%);
+    }
+    .grid-bg {
+      position: fixed;
+      inset: 0;
+      z-index: -1;
+      pointer-events: none;
+      background-image:
+        linear-gradient(rgba(74, 95, 212, 0.05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(74, 95, 212, 0.05) 1px, transparent 1px);
+      background-size: 48px 48px;
+      mask-image: radial-gradient(ellipse 90% 80% at 50% 30%, black 10%, transparent 80%);
+    }
+    .nav {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      height: var(--nav-h);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 0 clamp(16px, 4vw, 40px);
+      background: rgba(255, 255, 255, 0.92);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.7);
+      backdrop-filter: blur(14px);
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: var(--text);
+      font-weight: 800;
+      text-decoration: none;
+      letter-spacing: -0.02em;
+      flex: none;
+    }
+    .brand img { width: 32px; height: 32px; }
+    .brand span {
+      background: linear-gradient(90deg, #4a5fd4, #8b5cf6);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .nav-links { display: flex; flex-wrap: wrap; gap: 4px; justify-content: flex-end; }
+    .nav-links a {
+      text-decoration: none;
+      color: var(--muted);
+      font-size: 0.78rem;
+      font-weight: 500;
+      padding: 6px 12px;
+      border-radius: 999px;
+    }
+    .nav-links a:hover { background: rgba(74, 95, 212, 0.08); color: var(--accent); }
+    .nav-links a.is-active { background: linear-gradient(135deg, #4a5fd4, #5a4fd4); color: #fff; }
+    main { max-width: 980px; margin: 0 auto; padding: 42px clamp(16px, 4vw, 28px) 72px; }
+    .kicker {
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+    h1 { font-size: clamp(1.8rem, 4vw, 2.4rem); letter-spacing: -0.03em; margin: 8px 0 10px; }
+    .lead { max-width: 62ch; color: #4b5168; }
+    .layout { display: grid; grid-template-columns: 240px 1fr; gap: 22px; margin-top: 32px; }
+    .tool-list { display: flex; flex-direction: column; gap: 10px; }
+    .tool-tab {
+      text-align: left;
+      border: 1px solid rgba(255, 255, 255, 0.8);
+      background: rgba(255, 255, 255, 0.78);
+      border-radius: var(--radius);
+      padding: 14px 14px 12px;
+      box-shadow: 0 10px 30px rgba(100, 120, 180, 0.08);
+      cursor: default;
+    }
+    .tool-tab strong { display: block; font-size: 0.95rem; }
+    .tool-tab span { display: block; margin-top: 4px; color: var(--muted); font-size: 0.78rem; }
+    .tool-tab.is-active { outline: 2px solid rgba(74, 95, 212, 0.45); }
+    .panel {
+      background: rgba(255, 255, 255, 0.86);
+      border: 1px solid rgba(255, 255, 255, 0.9);
+      border-radius: 18px;
+      box-shadow: 0 16px 40px rgba(100, 120, 180, 0.12);
+      padding: clamp(18px, 3vw, 28px);
+    }
+    .panel h2 { font-size: 1.25rem; letter-spacing: -0.02em; }
+    .panel p { color: #4b5168; margin: 8px 0 18px; font-size: 0.95rem; }
+    .drop {
+      border: 1.5px dashed rgba(74, 95, 212, 0.35);
+      border-radius: 16px;
+      background: rgba(74, 95, 212, 0.04);
+      min-height: 180px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      gap: 8px;
+      padding: 24px;
+      cursor: pointer;
+      transition: border-color 0.15s, background 0.15s;
+    }
+    .drop:hover, .drop.is-over { border-color: var(--accent); background: rgba(74, 95, 212, 0.08); }
+    .drop strong { font-size: 1rem; }
+    .drop span, .hint { color: var(--muted); font-size: 0.82rem; }
+    .file-row {
+      display: none;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-top: 14px;
+      padding: 12px 14px;
+      border-radius: 12px;
+      background: #f4f6fb;
+    }
+    .file-row.is-on { display: flex; }
+    .file-name { font-weight: 650; word-break: break-all; }
+    .actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 16px; }
+    button, .btn {
+      border: 0;
+      border-radius: 999px;
+      padding: 10px 18px;
+      font: inherit;
+      font-size: 0.92rem;
+      font-weight: 650;
+      cursor: pointer;
+    }
+    .primary { background: linear-gradient(135deg, #4a5fd4, #6d4fd4); color: white; }
+    .primary:disabled { opacity: 0.55; cursor: wait; }
+    .ghost { background: transparent; color: var(--accent); }
+    .status { min-height: 1.4em; margin-top: 14px; font-size: 0.9rem; color: #333; }
+    .status.is-error { color: #b42318; }
+    .preview {
+      display: none;
+      width: 100%;
+      height: min(78vh, 860px);
+      margin-top: 16px;
+      border: 0;
+      border-radius: 12px;
+      background: white;
+      box-shadow: inset 0 0 0 1px rgba(74, 95, 212, 0.12);
+    }
+    .preview.is-on { display: block; }
+    .fine {
+      margin-top: 18px;
+      color: var(--muted);
+      font-size: 0.75rem;
+    }
+    .fine a { color: var(--accent); }
+    @media (max-width: 760px) {
+      .layout { grid-template-columns: 1fr; }
+      .nav { height: auto; min-height: var(--nav-h); padding-top: 8px; padding-bottom: 8px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="grid-bg" aria-hidden="true"></div>
+  <nav class="nav">
+    <a class="brand" href="/">
+      <img src="/images/boomery-logo.svg" width="32" height="32" alt="" />
+      boomery <span>Tools</span>
+    </a>
+    <div class="nav-links">
+      <a href="/tools/" class="is-active">工具</a>
+      <a href="/space/">数字空间</a>
+      <a href="/gallery/">Gallery</a>
+      <a href="/night/">夜行镖</a>
+      <a href="/">博客</a>
+    </div>
+  </nav>
+  <main>
+    <p class="kicker">Tools</p>
+    <h1>工具专区</h1>
+    <p class="lead">放一些自己用的小工具。文件只在这台浏览器里处理，不会上传到服务器。</p>
+    <div class="layout">
+      <div class="tool-list">
+        <div class="tool-tab is-active">
+          <strong>Excel 转 PDF</strong>
+          <span>保留表格版式，导出 A4</span>
+        </div>
+      </div>
+      <section class="panel" aria-labelledby="excel-title">
+        <h2 id="excel-title">Excel 转 PDF</h2>
+        <p>上传 .xlsx，按单元格、合并区域、边框、底色和图片排成 A4。整改通知单会按「混凝土工程/」分项分页，并在后续页重复表头。</p>
+        <label class="drop" id="drop">
+          <strong>选择或拖入 Excel</strong>
+          <span>支持 .xlsx，单个文件不超过 30MB</span>
+          <input id="file" type="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" hidden />
+        </label>
+        <div class="file-row" id="fileRow">
+          <div class="file-name" id="fileName"></div>
+          <button class="ghost" id="clear" type="button">移除</button>
+        </div>
+        <div class="actions">
+          <button class="primary" id="export" type="button" disabled>导出 PDF</button>
+        </div>
+        <div class="status" id="status" role="status"></div>
+        <iframe class="preview" id="preview" title="PDF 预览"></iframe>
+        <p class="fine">中文使用 <a href="/tools/fonts/OFL.txt">Noto Sans SC（SIL Open Font License）</a>。旧版 .xls 请先另存为 .xlsx。</p>
+      </section>
+    </div>
+  </main>
+  <script type="module">
+    import { excelToPdf } from './excel-pdf.mjs';
+
+    const drop = document.querySelector('#drop');
+    const input = document.querySelector('#file');
+    const fileRow = document.querySelector('#fileRow');
+    const fileName = document.querySelector('#fileName');
+    const clearBtn = document.querySelector('#clear');
+    const exportBtn = document.querySelector('#export');
+    const status = document.querySelector('#status');
+    const preview = document.querySelector('#preview');
+    const fontReady = fetch('/tools/fonts/NotoSansSC-Regular.ttf').then((res) => {
+      if (!res.ok) throw new Error('中文字体加载失败');
+      return res.arrayBuffer();
+    });
+
+    let current = null;
+    let previewUrl = '';
+    let busy = false;
+
+    function setStatus(message, isError) {
+      status.textContent = message || '';
+      status.classList.toggle('is-error', Boolean(isError));
+    }
+
+    function resetPreview() {
+      if (previewUrl) URL.revokeObjectURL(previewUrl);
+      previewUrl = '';
+      preview.removeAttribute('src');
+      preview.classList.remove('is-on');
+    }
+
+    function showFile(file) {
+      resetPreview();
+      if (!file) {
+        current = null;
+        fileRow.classList.remove('is-on');
+        fileName.textContent = '';
+        exportBtn.disabled = true;
+        return;
+      }
+      const lower = file.name.toLowerCase();
+      if (!lower.endsWith('.xlsx')) {
+        current = null;
+        exportBtn.disabled = true;
+        setStatus('请上传 .xlsx。如果是旧版 .xls，先在 Excel 里另存为 .xlsx。', true);
+        return;
+      }
+      if (file.size > 30 * 1024 * 1024) {
+        current = null;
+        exportBtn.disabled = true;
+        setStatus('文件超过 30MB，请先拆分。', true);
+        return;
+      }
+      current = file;
+      fileName.textContent = file.name;
+      fileRow.classList.add('is-on');
+      exportBtn.disabled = false;
+      setStatus('');
+    }
+
+    input.addEventListener('change', () => showFile(input.files && input.files[0]));
+    clearBtn.addEventListener('click', () => {
+      input.value = '';
+      showFile(null);
+      setStatus('');
+    });
+    ['dragenter', 'dragover'].forEach((name) => {
+      drop.addEventListener(name, (event) => {
+        event.preventDefault();
+        drop.classList.add('is-over');
+      });
+    });
+    drop.addEventListener('dragleave', () => drop.classList.remove('is-over'));
+    drop.addEventListener('drop', (event) => {
+      event.preventDefault();
+      drop.classList.remove('is-over');
+      showFile(event.dataTransfer.files && event.dataTransfer.files[0]);
+    });
+
+    exportBtn.addEventListener('click', async () => {
+      if (!current || busy) return;
+      if (!window.ExcelJS || !window.PDFLib || !window.fontkit) {
+        setStatus('转换组件没有加载出来，请刷新页面再试。', true);
+        return;
+      }
+      busy = true;
+      exportBtn.disabled = true;
+      resetPreview();
+      setStatus('正在准备中文字体…');
+      try {
+        const fontBytes = await fontReady;
+        const fileBuffer = await current.arrayBuffer();
+        const result = await excelToPdf(fileBuffer, {
+          filename: current.name,
+          fontBytes,
+          ExcelJS: window.ExcelJS,
+          PDFDocument: window.PDFLib.PDFDocument,
+          rgb: window.PDFLib.rgb,
+          fontkit: window.fontkit,
+          onProgress: (message) => setStatus(message + '…'),
+        });
+        const blob = new Blob([result.pdfBytes], { type: 'application/pdf' });
+        previewUrl = URL.createObjectURL(blob);
+        preview.src = previewUrl;
+        preview.classList.add('is-on');
+        const link = document.createElement('a');
+        link.href = previewUrl;
+        link.download = current.name.replace(/\.xlsx$/i, '') + '.pdf';
+        link.click();
+        const sheets = result.sheets.map((sheet) => `${sheet.name} ${sheet.pages} 页`).join('，');
+        const extra = result.warnings.length ? ` ${result.warnings.join(' ')}` : '';
+        setStatus(`已导出 ${result.pageCount} 页（${sheets}）。${extra}`);
+      } catch (error) {
+        setStatus(error && error.message ? error.message : '导出失败', true);
+      } finally {
+        busy = false;
+        exportBtn.disabled = !current;
+      }
+    });
+  </script>
+</body>
+</html>
