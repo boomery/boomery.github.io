@@ -261,7 +261,7 @@
             <button id="applyChroma" type="button">应用到全部</button>
             <button class="ghost" id="restore" type="button">还原画面</button>
           </div>
-          <p class="hint">纯绿或纯色背景效果最好。半透明的刀光、火焰会按容差留一层边缘。</p>
+          <p class="hint">只去掉和画面边缘连成一片的纯色背景。容差过大、背景又和衣服连在一起时，先把容差降到 40 左右。视频里本身的拖影抠不掉。</p>
         </section>
         <section class="panel">
           <h2>3. 整理和对齐</h2>
@@ -321,6 +321,7 @@
       CLIP_PRESETS,
       chromaKey,
       hexToRgb,
+      sampleBackgroundColor,
       markDuplicates,
       findLoop,
       findJumps,
@@ -614,8 +615,11 @@
         if (!next.length) throw new Error('没有抽出画面');
         frames = next;
         index = 0;
+        const bg = sampleBackgroundColor(frames[0]);
+        $('keyColor').value = `#${bg.map((v) => v.toString(16).padStart(2, '0')).join('')}`;
+        $('previewKey').checked = true;
         render();
-        setStatus(`已提取 ${frames.length} 帧`);
+        setStatus(`已提取 ${frames.length} 帧，背景色按画面边缘取了一下。先看预览，再应用到全部。`);
       } catch (error) {
         if (gen === extractGen) setStatus(error && error.message ? error.message : '提取失败', true);
       } finally {

@@ -32,36 +32,131 @@ export function hexToRgb(hex) {
   return [(value >> 16) & 255, (value >> 8) & 255, value & 255];
 }
 
-export function chromaKey(frame, options) {
+function colorDist(data, i, kr, kg, kb) {
+  const dr = data[i] - kr;
+  const dg = data[i + 1] - kg;
+  const db = data[i + 2] - kb;
+  return Math.sqrt(dr * dr + dg * dg + db * db);
+}
+
+function pixelStep(data, a, b) {
+  const dr = data[a] - data[b];
+  const dg = data[a + 1] - data[b + 1];
+  const db = data[a + 2] - data[b + 2];
+  return Math.sqrt(dr * dr + dg * dg + db * db);
+}
+
+export function sampleBackgroundColor(frame) {
+  const pts = [];
+  const stepX = Math.max(1, Math.floor(frame.width / 8));
+  const stepY = Math.max(1, Math.floor(frame.height / 8));
+  const push = (x, y) => {
+    const i = (y * frame.width + x) * 4;
+    pts.push([frame.data[i], frame.data[i + 1], frame.data[i + 2]]);
+  };
+  for (let x = 0; x < frame.width; x += stepX) {
+    push(x, 0);
+    push(Math.min(frame.width - 1, x), frame.height - 1);
+  }
+  for (let y = 0; y < frame.height; y += stepY) {
+    push(0, y);
+    push(frame.width - 1, Math.min(frame.height - 1, y));
+  }
+  const median = (channel) => {
+    const values = pts.map((point) => point[channel]).sort((a, b) => a - b);
+    return values[Math.floor(values.length / 2)] || 0;
+  };
+  return [median(0), median(1), median(2)];
+}
+
+export function chromaKey(frame, options = {}) {
   const color = options.color || [0, 255, 0];
   const kr = color[0];
   const kg = color[1];
   const kb = color[2];
-  let keyChan = 0;
-  if (kg >= kr && kg >= kb) keyChan = 1;
-  else if (kb >= kr && kb >= kg) keyChan = 2;
   const tolerance = Math.max(0, Number(options.tolerance) || 0);
   const softness = Math.max(0, Number(options.softness) || 0);
   const despill = Math.min(1, Math.max(0, Number(options.despill) || 0));
   const inner = Math.max(0, tolerance - softness);
   const outer = tolerance + softness;
+  const stepLimit = Math.min(32, Math.max(16, tolerance * 0.4));
   const data = frame.data;
-  for (let i = 0; i < data.length; i += 4) {
-    const r = data[i];
-    const g = data[i + 1];
-    const b = data[i + 2];
-    const dist = Math.hypot(r - kr, g - kg, b - kb);
-    let alpha = data[i + 3];
-    if (dist <= inner) alpha = 0;
-    else if (softness > 0 && dist < outer) alpha = Math.round(alpha * ((dist - inner) / (outer - inner)));
-    const rgb = [r, g, b];
-    const other = keyChan === 0 ? Math.max(g, b) : keyChan === 1 ? Math.max(r, b) : Math.max(r, g);
+  const w = frame.width;
+  const h = frame.height;
+  const n = w * h;
+  const mask = new Uint8Array(n);
+  const stack = new Int32Array(n);
+  let top = 0;
+  const push = (p, from) => {
+    if (p < 0 || p >= n || mask[p]) return;
+    const i = p * 4;
+    if (colorDist(data, i, kr, kg, kb) > outer) return;
+    if (from >= 0 && pixelStep(data, i, from * 4) > stepLimit) return;
+    mask[p] = 1;
+    stack[top] = p;
+    top += 1;
+  };
+  for (let x = 0; x < w; x += 1) {
+    push(x, -1);
+    push((h - 1) * w + x, -1);
+  }
+  for (let y = 1; y < h - 1; y += 1) {
+    push(y * w, -1);
+    push(y * w + w - 1, -1);
+  }
+  while (top) {
+    top -= 1;
+    const p = stack[top];
+    const x = p % w;
+    if (x > 0) push(p - 1, p);
+    if (x + 1 < w) push(p + 1, p);
+    if (p - w >= 0) push(p - w, p);
+    if (p + w < n) push(p + w, p);
+  }
+
+  const spread = Math.max(kr, kg, kb) - Math.min(kr, kg, kb);
+  let keyChan = 0;
+  if (kg >= kr && kg >= kb) keyChan = 1;
+  else if (kb >= kr && kb >= kg) keyChan = 2;
+  const spillOn = despill > 0 && spread >= 48;
+  const wash = (i, amount) => {
+    const rgb = [data[i], data[i + 1], data[i + 2]];
+    const other = keyChan === 0 ? Math.max(rgb[1], rgb[2]) : keyChan === 1 ? Math.max(rgb[0], rgb[2]) : Math.max(rgb[0], rgb[1]);
     const spill = rgb[keyChan] - other;
-    if (spill > 0 && despill > 0) rgb[keyChan] = Math.max(0, rgb[keyChan] - spill * despill);
-    data[i] = rgb[0];
-    data[i + 1] = rgb[1];
-    data[i + 2] = rgb[2];
+    if (spill > 0 && amount > 0) {
+      rgb[keyChan] = Math.max(0, rgb[keyChan] - spill * amount);
+      data[i] = rgb[0];
+      data[i + 1] = rgb[1];
+      data[i + 2] = rgb[2];
+    }
+  };
+
+  for (let p = 0; p < n; p += 1) {
+    if (!mask[p]) continue;
+    const i = p * 4;
+    const dist = colorDist(data, i, kr, kg, kb);
+    const prev = data[i + 3];
+    let alpha = prev;
+    if (dist <= inner || outer <= inner) alpha = 0;
+    else alpha = Math.round(prev * ((dist - inner) / (outer - inner)));
+    if (spillOn && alpha < prev) wash(i, despill * (1 - alpha / 255));
     data[i + 3] = alpha;
+  }
+
+  if (spillOn) {
+    for (let y = 0; y < h; y += 1) {
+      for (let x = 0; x < w; x += 1) {
+        const p = y * w + x;
+        const i = p * 4;
+        if (mask[p] || data[i + 3] === 0) continue;
+        let touch = false;
+        if (x > 0 && data[i - 4 + 3] === 0) touch = true;
+        else if (x + 1 < w && data[i + 4 + 3] === 0) touch = true;
+        else if (y > 0 && data[i - w * 4 + 3] === 0) touch = true;
+        else if (y + 1 < h && data[i + w * 4 + 3] === 0) touch = true;
+        if (touch) wash(i, despill);
+      }
+    }
   }
   return frame;
 }

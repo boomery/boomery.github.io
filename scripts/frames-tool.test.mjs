@@ -36,6 +36,19 @@ test('色键去掉绿幕并洗掉绿边', () => {
   assert.ok(shot.data[5] < 40);
 });
 
+test('纯色背景不会把人物暗部抠穿', () => {
+  const shot = frame(7, 7, (x, y) => {
+    const inside = x >= 2 && x <= 4 && y >= 2 && y <= 4;
+    if (!inside) return [12, 28, 14, 255];
+    return [52, 28, 14, 255];
+  });
+  chromaKey(shot, { color: [12, 28, 14], tolerance: 80, softness: 21, despill: 0.85 });
+  assert.equal(shot.data[3], 0);
+  const cloth = (3 * 7 + 3) * 4;
+  assert.equal(shot.data[cloth + 3], 255);
+  assert.equal(shot.data[cloth], 52);
+});
+
 test('柔化边缘保留半透明', () => {
   const shot = frame(1, 1, () => [0, 215, 0, 255]);
   chromaKey(shot, { color: [0, 255, 0], tolerance: 40, softness: 10, despill: 0 });
