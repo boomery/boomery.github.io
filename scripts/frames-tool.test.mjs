@@ -1,0 +1,87 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {
+  CLIP_PRESETS,
+  chromaKey,
+  markDuplicates,
+  findLoop,
+  keepIndices,
+  alignFrames,
+  packSheet,
+  zipStore,
+  crc32,
+  buildClipManifest,
+} from '../myblog/source/tools/frames.mjs';
+
+function frame(width, height, paint) {
+  const data = new Uint8ClampedArray(width * height * 4);
+  for (let y = 0; y < height; y += 1) {
+    for (let x = 0; x < width; x += 1) {
+      const pixel = paint(x, y);
+      const i = (y * width + x) * 4;
+      data[i] = pixel[0];
+      data[i + 1] = pixel[1];
+      data[i + 2] = pixel[2];
+      data[i + 3] = pixel[3];
+    }
+  }
+  return { width, height, data };
+}
+
+test('色键去掉绿幕并洗掉绿边', () => {
+  const shot = frame(2, 1, (x) => (x === 0 ? [0, 255, 0, 255] : [10, 200, 10, 255]));
+  chromaKey(shot, { color: [0, 255, 0], tolerance: 40, softness: 0, despill: 1 });
+  assert.equal(shot.data[3], 0);
+  assert.equal(shot.data[7], 255);
+  assert.ok(shot.data[5] < 40);
+});
+
+test('柔化边缘保留半透明', () => {
+  const shot = frame(1, 1, () => [0, 215, 0, 255]);
+  chromaKey(shot, { color: [0, 255, 0], tolerance: 40, softness: 10, despill: 0 });
+  assert.equal(shot.data[3], 128);
+});
+
+test('重复帧、循环点和减帧', () => {
+  const a = frame(4, 4, () => [20, 20, 20, 255]);
+  const b = frame(4, 4, () => [20, 20, 20, 255]);
+  const c = frame(4, 4, (x) => [x * 40, 10, 10, 255]);
+  const back = frame(4, 4, () => [20, 20, 20, 255]);
+  assert.deepEqual(markDuplicates([a, b, c], 8), [1]);
+  const loop = findLoop([a, c, back]);
+  assert.equal(loop.index, 2);
+  assert.deepEqual(keepIndices(7, 2), [0, 2, 4, 6]);
+});
+
+test('脚底对齐后锚点落在画面中下', () => {
+  const shot = frame(4, 4, (x, y) => (x === 1 && y === 3 ? [180, 40, 40, 255] : [0, 0, 0, 0]));
+  const aligned = alignFrames([shot], 10, 10, { pad: 1, smooth: false });
+  assert.deepEqual(aligned.anchor, [5, 9]);
+  const i = (9 * 10 + 5) * 4;
+  assert.ok(aligned.frames[0].data[i + 3] > 200);
+});
+
+test('精灵图和素材包清单', () => {
+  const shots = [frame(2, 2, () => [1, 2, 3, 255]), frame(2, 2, () => [4, 5, 6, 255])];
+  const packed = packSheet(shots, 8);
+  assert.equal(packed.columns, 2);
+  assert.equal(packed.sheet.width, 4);
+  const manifest = buildClipManifest('shen_duanshui', shots, packed, { fps: 12, loop: false, anchor: [1, 1] });
+  assert.equal(manifest.id, 'shen_duanshui');
+  assert.equal(manifest.frameCount, 2);
+  assert.ok(CLIP_PRESETS.some((item) => item.id === 'shen_duanshui'));
+  assert.ok(CLIP_PRESETS.some((item) => item.id === 'yan_lueying' && item.loop === false));
+});
+
+test('zip 能按原样装回文件', () => {
+  const hello = new TextEncoder().encode('hello');
+  assert.equal(crc32(hello), 0x3610a686);
+  const zip = zipStore([{ name: 'clips/a.json', data: hello }]);
+  assert.equal(zip[0], 0x50);
+  assert.equal(zip[1], 0x4b);
+  const nameAt = 30;
+  const name = new TextDecoder().decode(zip.subarray(nameAt, nameAt + 'clips/a.json'.length));
+  assert.equal(name, 'clips/a.json');
+  const payload = zip.subarray(nameAt + name.length, nameAt + name.length + hello.length);
+  assert.equal(new TextDecoder().decode(payload), 'hello');
+});

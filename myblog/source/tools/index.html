@@ -121,6 +121,8 @@
     .tool-tab strong { display: block; font-size: 0.95rem; }
     .tool-tab span { display: block; margin-top: 4px; color: var(--muted); font-size: 0.78rem; }
     .tool-tab.is-active { outline: 2px solid rgba(74, 95, 212, 0.45); }
+    a.tool-tab { display: block; text-decoration: none; color: inherit; cursor: pointer; }
+    a.tool-tab:hover { outline: 2px solid rgba(74, 95, 212, 0.28); }
     .panel {
       background: rgba(255, 255, 255, 0.86);
       border: 1px solid rgba(255, 255, 255, 0.9);
@@ -223,6 +225,10 @@
           <strong>Excel 转 PDF</strong>
           <span>保留表格版式，导出 A4</span>
         </div>
+        <a class="tool-tab" href="/tools/frames.html">
+          <strong>动作序列帧</strong>
+          <span>视频抽帧、抠图、导出精灵图</span>
+        </a>
       </div>
       <section class="panel" aria-labelledby="excel-title">
         <h2 id="excel-title">Excel 转 PDF</h2>

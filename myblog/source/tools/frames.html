@@ -1,0 +1,847 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>boomery · 动作序列帧</title>
+  <meta name="description" content="在浏览器里把人物视频抽成透明序列帧和精灵图，文件不会上传。" />
+  <link rel="icon" href="/images/boomery-logo.svg" type="image/svg+xml" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #f5f7f9;
+      --accent: #4a5fd4;
+      --text: #1a1a2e;
+      --muted: #888;
+      --radius: 14px;
+      --nav-h: 56px;
+    }
+    body {
+      font-family: 'Inter', 'PingFang SC', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+    body::before, body::after {
+      content: '';
+      position: fixed;
+      inset: 0;
+      z-index: -2;
+      pointer-events: none;
+      filter: blur(90px);
+    }
+    body::before {
+      background:
+        radial-gradient(ellipse 55% 45% at 18% 20%, rgba(180, 200, 255, 0.55) 0%, transparent 70%),
+        radial-gradient(ellipse 50% 40% at 85% 75%, rgba(220, 190, 255, 0.4) 0%, transparent 70%);
+    }
+    body::after {
+      background: radial-gradient(ellipse 40% 35% at 60% 10%, rgba(190, 230, 255, 0.35) 0%, transparent 70%);
+    }
+    .grid-bg {
+      position: fixed;
+      inset: 0;
+      z-index: -1;
+      pointer-events: none;
+      background-image:
+        linear-gradient(rgba(74, 95, 212, 0.05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(74, 95, 212, 0.05) 1px, transparent 1px);
+      background-size: 48px 48px;
+      mask-image: radial-gradient(ellipse 90% 80% at 50% 30%, black 10%, transparent 80%);
+    }
+    .nav {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      height: var(--nav-h);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 0 clamp(16px, 4vw, 40px);
+      background: rgba(255, 255, 255, 0.92);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.7);
+      backdrop-filter: blur(14px);
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: var(--text);
+      font-weight: 800;
+      text-decoration: none;
+      letter-spacing: -0.02em;
+    }
+    .brand img { width: 32px; height: 32px; }
+    .brand span {
+      background: linear-gradient(90deg, #4a5fd4, #8b5cf6);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .nav-links { display: flex; flex-wrap: wrap; gap: 4px; justify-content: flex-end; }
+    .nav-links a {
+      text-decoration: none;
+      color: var(--muted);
+      font-size: 0.78rem;
+      font-weight: 500;
+      padding: 6px 12px;
+      border-radius: 999px;
+    }
+    .nav-links a:hover { background: rgba(74, 95, 212, 0.08); color: var(--accent); }
+    .nav-links a.is-active { background: linear-gradient(135deg, #4a5fd4, #5a4fd4); color: #fff; }
+    main { max-width: 1180px; margin: 0 auto; padding: 36px clamp(16px, 4vw, 28px) 72px; }
+    .kicker { font-size: 0.72rem; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); }
+    h1 { font-size: clamp(1.8rem, 4vw, 2.3rem); letter-spacing: -0.03em; margin: 8px 0 10px; }
+    .lead { max-width: 70ch; color: #4b5168; }
+    .layout { display: grid; grid-template-columns: 340px 1fr; gap: 22px; margin-top: 28px; align-items: start; }
+    .stack { display: flex; flex-direction: column; gap: 14px; }
+    .panel {
+      background: rgba(255, 255, 255, 0.88);
+      border: 1px solid rgba(255, 255, 255, 0.9);
+      border-radius: 18px;
+      box-shadow: 0 16px 40px rgba(100, 120, 180, 0.1);
+      padding: 16px;
+    }
+    .panel h2 { font-size: 1rem; letter-spacing: -0.02em; margin-bottom: 10px; }
+    .drop {
+      border: 1.5px dashed rgba(74, 95, 212, 0.35);
+      border-radius: 16px;
+      background: rgba(74, 95, 212, 0.04);
+      min-height: 112px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      gap: 6px;
+      padding: 16px;
+      cursor: pointer;
+    }
+    .drop:hover, .drop.is-over { border-color: var(--accent); background: rgba(74, 95, 212, 0.08); }
+    .drop span, .hint { color: var(--muted); font-size: 0.78rem; }
+    .fields { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 10px; margin-top: 12px; }
+    label.field { display: flex; flex-direction: column; gap: 4px; font-size: 0.75rem; color: #667; font-weight: 650; }
+    label.field.wide { grid-column: 1 / -1; }
+    input, select {
+      border: 1px solid rgba(74, 95, 212, 0.18);
+      background: #fff;
+      border-radius: 10px;
+      padding: 8px 10px;
+      font: inherit;
+      color: var(--text);
+      font-weight: 500;
+    }
+    input[type="color"] { padding: 4px; height: 38px; }
+    .checks { display: flex; gap: 14px; align-items: center; margin-top: 8px; font-size: 0.82rem; color: #445; }
+    .actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+    button {
+      border: 0;
+      border-radius: 999px;
+      padding: 8px 14px;
+      font: inherit;
+      font-size: 0.86rem;
+      font-weight: 650;
+      cursor: pointer;
+      background: #eef1f8;
+      color: #243;
+    }
+    button:disabled { opacity: 0.45; cursor: not-allowed; }
+    button.primary { background: linear-gradient(135deg, #4a5fd4, #6d4fd4); color: white; }
+    button.ghost { background: transparent; color: var(--accent); }
+    .stage-wrap {
+      background:
+        linear-gradient(45deg, #e4e7ee 25%, transparent 25%),
+        linear-gradient(-45deg, #e4e7ee 25%, transparent 25%),
+        linear-gradient(45deg, transparent 75%, #e4e7ee 75%),
+        linear-gradient(-45deg, transparent 75%, #e4e7ee 75%);
+      background-size: 24px 24px;
+      background-position: 0 0, 0 12px, 12px -12px, -12px 0;
+      background-color: #f7f8fb;
+      border-radius: 16px;
+      min-height: 320px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+    #preview { width: 100%; height: auto; max-height: 64vh; display: none; cursor: crosshair; }
+    #preview.is-on { display: block; }
+    .empty { color: var(--muted); padding: 28px; text-align: center; }
+    .film {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding: 10px 2px 4px;
+    }
+    .thumb {
+      flex: none;
+      width: 72px;
+      border: 0;
+      border-radius: 10px;
+      padding: 4px;
+      background: #f3f5fa;
+      position: relative;
+    }
+    .thumb canvas { width: 100%; height: 64px; object-fit: contain; background: repeating-conic-gradient(#eceff5 0% 25%, #f8f9fb 0% 50%) 50% / 12px 12px; border-radius: 6px; }
+    .thumb.is-on { outline: 2px solid var(--accent); }
+    .thumb .tag {
+      position: absolute;
+      left: 6px;
+      top: 6px;
+      font-size: 0.65rem;
+      background: #4a5fd4;
+      color: white;
+      border-radius: 999px;
+      padding: 0 6px;
+    }
+    .thumb .tag.is-jump { background: #b45309; }
+    .meta { display: flex; justify-content: space-between; gap: 8px; color: var(--muted); font-size: 0.8rem; margin-top: 8px; }
+    .status { min-height: 1.4em; margin-top: 12px; font-size: 0.9rem; }
+    .status.is-error { color: #b42318; }
+    .fine { margin-top: 8px; color: var(--muted); font-size: 0.75rem; }
+    @media (max-width: 860px) {
+      .layout { grid-template-columns: 1fr; }
+      .nav { height: auto; min-height: var(--nav-h); padding-top: 8px; padding-bottom: 8px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="grid-bg" aria-hidden="true"></div>
+  <nav class="nav">
+    <a class="brand" href="/">
+      <img src="/images/boomery-logo.svg" width="32" height="32" alt="" />
+      boomery <span>Tools</span>
+    </a>
+    <div class="nav-links">
+      <a href="/tools/" class="is-active">工具</a>
+      <a href="/space/">数字空间</a>
+      <a href="/gallery/">Gallery</a>
+      <a href="/night/">夜行镖</a>
+      <a href="/">博客</a>
+    </div>
+  </nav>
+  <main>
+    <p class="kicker">Frames</p>
+    <h1>动作序列帧</h1>
+    <p class="lead">把一段人物视频或一组图片抽成帧，抠掉纯色背景，对齐脚底，再导出透明序列和精灵图。文件只在这台浏览器里处理。</p>
+    <div class="layout">
+      <div class="stack">
+        <section class="panel">
+          <h2>1. 提取画面</h2>
+          <label class="drop" id="drop">
+            <strong>选择或拖入视频 / 图片</strong>
+            <span>MP4、WebM、GIF、PNG、JPG，可多选图片</span>
+            <input id="file" type="file" accept="video/mp4,video/webm,video/quicktime,image/png,image/jpeg,image/webp,image/gif,.mp4,.webm,.mov,.gif,.png,.jpg,.jpeg,.webp" multiple hidden />
+          </label>
+          <div class="fields">
+            <label class="field">帧率<input id="fps" type="number" min="1" max="30" value="12" /></label>
+            <label class="field">最长边<input id="maxEdge" type="number" min="128" max="1280" value="720" /></label>
+            <label class="field">开始（秒）<input id="start" type="number" min="0" step="0.1" value="0" /></label>
+            <label class="field">结束（秒）<input id="end" type="number" min="0" step="0.1" placeholder="到结尾" /></label>
+            <label class="field wide">最多帧数<input id="maxFrames" type="number" min="2" max="120" value="48" /></label>
+          </div>
+          <div class="actions">
+            <button class="primary" id="extract" type="button">提取画面</button>
+            <button id="stop" type="button" hidden>停止</button>
+          </div>
+        </section>
+        <section class="panel">
+          <h2>2. 抠图</h2>
+          <div class="fields">
+            <label class="field">背景色<input id="keyColor" type="color" value="#00ff00" /></label>
+            <label class="field">容差<input id="tolerance" type="number" min="0" max="255" value="80" /></label>
+            <label class="field">边缘柔化<input id="softness" type="number" min="0" max="80" value="18" /></label>
+            <label class="field">去色溢<input id="despill" type="number" min="0" max="1" step="0.05" value="0.85" /></label>
+          </div>
+          <div class="checks"><label><input id="previewKey" type="checkbox" /> 预览当前帧</label></div>
+          <div class="actions">
+            <button id="pick" type="button">吸管</button>
+            <button id="applyChroma" type="button">应用到全部</button>
+            <button class="ghost" id="restore" type="button">还原画面</button>
+          </div>
+          <p class="hint">纯绿或纯色背景效果最好。半透明的刀光、火焰会按容差留一层边缘。</p>
+        </section>
+        <section class="panel">
+          <h2>3. 整理和对齐</h2>
+          <div class="fields">
+            <label class="field">重复阈值<input id="dupThreshold" type="number" min="1" max="40" value="8" /></label>
+            <label class="field">每 N 帧留 1<input id="everyN" type="number" min="2" max="8" value="2" /></label>
+            <label class="field">导出宽<input id="outW" type="number" min="64" max="1024" value="480" /></label>
+            <label class="field">导出高<input id="outH" type="number" min="64" max="1280" value="720" /></label>
+          </div>
+          <div class="checks"><label><input id="smooth" type="checkbox" checked /> 平滑缩放</label></div>
+          <div class="actions">
+            <button id="markDup" type="button">标记重复</button>
+            <button id="markJump" type="button">标记跳变</button>
+            <button id="markCurrent" type="button">标记当前</button>
+            <button id="deleteMarked" type="button">删除标记</button>
+            <button id="reduce" type="button">减帧</button>
+            <button id="cutLoop" type="button">截成循环</button>
+            <button class="primary" id="align" type="button">对齐脚底</button>
+          </div>
+        </section>
+        <section class="panel">
+          <h2>4. 导出到游戏</h2>
+          <div class="fields">
+            <label class="field wide">素材名
+              <select id="clipId"></select>
+            </label>
+          </div>
+          <div class="checks"><label><input id="loop" type="checkbox" /> 循环播放（站姿勾上）</label></div>
+          <div class="actions">
+            <button class="primary" id="download" type="button">下载素材包</button>
+          </div>
+          <p class="fine">解压到游戏工程的 <code>assets/clips/</code>。文件名要和素材名一致，例如 <code>shen_duanshui.png</code> 和 <code>shen_duanshui.json</code>。没有这些文件时，战斗仍用原来的静态立绘。</p>
+        </section>
+      </div>
+      <section class="panel">
+        <h2>预览</h2>
+        <div class="stage-wrap" id="stage">
+          <canvas id="preview"></canvas>
+          <p class="empty" id="empty">提取之后会在这里播放。</p>
+        </div>
+        <div class="meta">
+          <span id="frameLabel">还没有画面</span>
+          <span id="markLabel"></span>
+        </div>
+        <div class="actions">
+          <button id="prev" type="button">上一帧</button>
+          <button id="play" type="button">播放</button>
+          <button id="next" type="button">下一帧</button>
+        </div>
+        <div class="film" id="film"></div>
+        <div class="status" id="status" role="status"></div>
+      </section>
+    </div>
+  </main>
+  <script type="module">
+    import {
+      CLIP_PRESETS,
+      chromaKey,
+      hexToRgb,
+      markDuplicates,
+      findLoop,
+      findJumps,
+      keepIndices,
+      alignFrames,
+      packSheet,
+      buildClipManifest,
+      zipStore,
+    } from './frames.mjs';
+
+    const $ = (id) => document.getElementById(id);
+    const drop = $('drop');
+    const fileInput = $('file');
+    const status = $('status');
+    const preview = $('preview');
+    const empty = $('empty');
+    const film = $('film');
+    const clipSelect = $('clipId');
+
+    let files = [];
+    let frames = [];
+    let index = 0;
+    let playing = false;
+    let playTimer = 0;
+    let extractGen = 0;
+    let picking = false;
+    let aligned = false;
+    let anchor = [240, 708];
+
+    CLIP_PRESETS.forEach((item) => {
+      const option = document.createElement('option');
+      option.value = item.id;
+      option.textContent = item.label;
+      option.dataset.loop = item.loop ? '1' : '0';
+      clipSelect.appendChild(option);
+    });
+    clipSelect.addEventListener('change', () => {
+      const option = clipSelect.selectedOptions[0];
+      $('loop').checked = option && option.dataset.loop === '1';
+    });
+    $('loop').checked = true;
+
+    function setStatus(message, isError) {
+      status.textContent = message || '';
+      status.classList.toggle('is-error', Boolean(isError));
+    }
+
+    function chromaOptions() {
+      return {
+        color: hexToRgb($('keyColor').value),
+        tolerance: Number($('tolerance').value),
+        softness: Number($('softness').value),
+        despill: Number($('despill').value),
+      };
+    }
+
+    function viewFrame(frame) {
+      if (!$('previewKey').checked || aligned) return frame;
+      const copy = { width: frame.width, height: frame.height, data: new Uint8ClampedArray(frame.original) };
+      chromaKey(copy, chromaOptions());
+      return copy;
+    }
+
+    function paint(canvas, frame, fitHeight) {
+      canvas.width = frame.width;
+      canvas.height = frame.height;
+      const ctx = canvas.getContext('2d');
+      ctx.putImageData(new ImageData(new Uint8ClampedArray(frame.data), frame.width, frame.height), 0, 0);
+      if (fitHeight) canvas.style.height = fitHeight + 'px';
+    }
+
+    function renderPreview() {
+      const has = frames.length > 0;
+      preview.classList.toggle('is-on', has);
+      empty.hidden = has;
+      ['applyChroma', 'restore', 'markDup', 'markJump', 'markCurrent', 'deleteMarked', 'reduce', 'cutLoop', 'align', 'download', 'prev', 'play', 'next'].forEach((id) => {
+        $(id).disabled = !has;
+      });
+      if (!has) {
+        $('frameLabel').textContent = '还没有画面';
+        $('markLabel').textContent = '';
+        return;
+      }
+      index = Math.min(index, frames.length - 1);
+      paint(preview, viewFrame(frames[index]));
+      const marked = frames.filter((frame) => frame.mark).length;
+      $('frameLabel').textContent = `第 ${index + 1} / ${frames.length} 帧 · ${frames[index].width}×${frames[index].height}${aligned ? ' · 已对齐' : ''}`;
+      $('markLabel').textContent = marked ? `已标记 ${marked}` : '';
+      film.querySelectorAll('.thumb').forEach((button, i) => button.classList.toggle('is-on', i === index));
+    }
+
+    function renderFilm() {
+      film.replaceChildren();
+      frames.forEach((frame, i) => {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'thumb' + (i === index ? ' is-on' : '');
+        const canvas = document.createElement('canvas');
+        paint(canvas, frame);
+        button.appendChild(canvas);
+        if (frame.mark) {
+          const tag = document.createElement('span');
+          tag.className = 'tag' + (frame.mark === 'jump' ? ' is-jump' : '');
+          tag.textContent = frame.mark === 'jump' ? '跳变' : '重复';
+          button.appendChild(tag);
+        }
+        button.addEventListener('click', () => {
+          stopPlay();
+          index = i;
+          renderPreview();
+        });
+        film.appendChild(button);
+      });
+    }
+
+    function render() {
+      if (!frames.length) film.replaceChildren();
+      renderFilm();
+      renderPreview();
+    }
+
+    function stopPlay() {
+      playing = false;
+      $('play').textContent = '播放';
+      if (playTimer) clearInterval(playTimer);
+      playTimer = 0;
+    }
+
+    function rememberFiles(list) {
+      files = [...list];
+      setStatus(files.length ? `已选择 ${files.map((file) => file.name).join('、')}` : '');
+    }
+
+    fileInput.addEventListener('change', () => rememberFiles(fileInput.files || []));
+    ['dragenter', 'dragover'].forEach((name) => drop.addEventListener(name, (event) => {
+      event.preventDefault();
+      drop.classList.add('is-over');
+    }));
+    drop.addEventListener('dragleave', () => drop.classList.remove('is-over'));
+    drop.addEventListener('drop', (event) => {
+      event.preventDefault();
+      drop.classList.remove('is-over');
+      rememberFiles(event.dataTransfer.files || []);
+    });
+
+    function fitSize(width, height, maxEdge) {
+      const edge = Math.max(width, height);
+      if (edge <= maxEdge) return { width, height };
+      const scale = maxEdge / edge;
+      return { width: Math.max(1, Math.round(width * scale)), height: Math.max(1, Math.round(height * scale)) };
+    }
+
+    function canvasFrame(source, width, height, sourceWidth, sourceHeight) {
+      const canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d', { willReadFrequently: true });
+      ctx.drawImage(source, 0, 0, sourceWidth, sourceHeight, 0, 0, width, height);
+      const image = ctx.getImageData(0, 0, width, height);
+      return {
+        width,
+        height,
+        data: image.data,
+        original: new Uint8ClampedArray(image.data),
+        sourceWidth: width,
+        sourceHeight: height,
+        mark: '',
+      };
+    }
+
+    function seek(video, time) {
+      return new Promise((resolve, reject) => {
+        const target = Math.min(Math.max(time, 0), Math.max(0, (video.duration || 0) - 0.001));
+        if (Math.abs(video.currentTime - target) < 0.0001 && video.readyState >= 2) {
+          resolve();
+          return;
+        }
+        const timer = setTimeout(() => {
+          video.removeEventListener('seeked', done);
+          reject(new Error('抽帧超时，换一段短一点的视频再试'));
+        }, 8000);
+        function done() {
+          clearTimeout(timer);
+          video.removeEventListener('seeked', done);
+          resolve();
+        }
+        video.addEventListener('seeked', done);
+        video.currentTime = target;
+      });
+    }
+
+    async function framesFromImages(list, maxEdge) {
+      const sorted = [...list].sort((a, b) => a.name.localeCompare(b.name, 'zh', { numeric: true }));
+      const out = [];
+      for (const file of sorted) {
+        const bitmap = await createImageBitmap(file);
+        const size = fitSize(bitmap.width, bitmap.height, maxEdge);
+        out.push(canvasFrame(bitmap, size.width, size.height, bitmap.width, bitmap.height));
+        bitmap.close();
+      }
+      return out;
+    }
+
+    async function framesFromGif(file, maxEdge, maxFrames, gen) {
+      if (typeof ImageDecoder === 'undefined') throw new Error('这个浏览器拆不了 GIF，请换 Chrome 或 Edge');
+      const decoder = new ImageDecoder({ data: await file.arrayBuffer(), type: 'image/gif' });
+      await decoder.tracks.ready;
+      const track = decoder.tracks.selectedTrack;
+      const total = Math.min(track.frameCount, maxFrames);
+      const out = [];
+      for (let i = 0; i < total; i += 1) {
+        if (gen !== extractGen) return [];
+        const { image } = await decoder.decode({ frameIndex: i });
+        const size = fitSize(image.displayWidth, image.displayHeight, maxEdge);
+        out.push(canvasFrame(image, size.width, size.height, image.displayWidth, image.displayHeight));
+        image.close();
+        setStatus(`正在拆 GIF ${i + 1}/${total}`);
+      }
+      decoder.close();
+      return out;
+    }
+
+    async function framesFromVideo(file, maxEdge, maxFrames, fps, start, end, gen) {
+      const url = URL.createObjectURL(file);
+      const video = document.createElement('video');
+      video.muted = true;
+      video.playsInline = true;
+      video.preload = 'auto';
+      video.src = url;
+      try {
+        await new Promise((resolve, reject) => {
+          video.onloadedmetadata = () => resolve();
+          video.onerror = () => reject(new Error('这个视频浏览器解不了，请改成 MP4 或 WebM'));
+        });
+        const duration = Number.isFinite(video.duration) ? video.duration : 0;
+        const from = Math.max(0, start || 0);
+        const to = end > from ? Math.min(end, duration) : duration;
+        if (!(to > from)) throw new Error('时间范围是空的');
+        let step = 1 / Math.max(1, fps);
+        let count = Math.max(1, Math.floor((to - from) / step));
+        if (count > maxFrames) {
+          count = maxFrames;
+          step = (to - from) / count;
+        }
+        const size = fitSize(video.videoWidth, video.videoHeight, maxEdge);
+        const out = [];
+        for (let i = 0; i < count; i += 1) {
+          if (gen !== extractGen) return [];
+          await seek(video, Math.min(from + i * step, Math.max(from, to - 0.001)));
+          out.push(canvasFrame(video, size.width, size.height, video.videoWidth, video.videoHeight));
+          setStatus(`正在抽帧 ${i + 1}/${count}`);
+        }
+        return out;
+      } finally {
+        URL.revokeObjectURL(url);
+        video.removeAttribute('src');
+        video.load();
+      }
+    }
+
+    function isVideo(file) {
+      return /^video\//.test(file.type) || /\.(mp4|webm|mov|m4v)$/i.test(file.name);
+    }
+
+    $('stop').addEventListener('click', () => {
+      extractGen += 1;
+      $('stop').hidden = true;
+      setStatus('已停止');
+    });
+
+    $('extract').addEventListener('click', async () => {
+      if (!files.length) {
+        setStatus('先选择视频或图片', true);
+        return;
+      }
+      stopPlay();
+      const gen = ++extractGen;
+      $('stop').hidden = false;
+      $('extract').disabled = true;
+      aligned = false;
+      try {
+        const maxEdge = Number($('maxEdge').value) || 720;
+        const maxFrames = Number($('maxFrames').value) || 48;
+        const video = files.find(isVideo);
+        const gif = files.find((file) => file.type === 'image/gif' || /\.gif$/i.test(file.name));
+        let next = [];
+        if (video) next = await framesFromVideo(video, maxEdge, maxFrames, Number($('fps').value) || 12, Number($('start').value) || 0, Number($('end').value) || 0, gen);
+        else if (gif && files.length === 1) next = await framesFromGif(gif, maxEdge, maxFrames, gen);
+        else next = await framesFromImages(files.filter((file) => !isVideo(file) && !/\.gif$/i.test(file.name)), maxEdge);
+        if (gen !== extractGen) return;
+        if (!next.length) throw new Error('没有抽出画面');
+        frames = next;
+        index = 0;
+        render();
+        setStatus(`已提取 ${frames.length} 帧`);
+      } catch (error) {
+        if (gen === extractGen) setStatus(error && error.message ? error.message : '提取失败', true);
+      } finally {
+        if (gen === extractGen) {
+          $('stop').hidden = true;
+          $('extract').disabled = false;
+        }
+      }
+    });
+
+    function rerenderPreview() {
+      if (!frames.length || !$('previewKey').checked) return;
+      const shown = viewFrame(frames[index]);
+      paint(preview, shown);
+    }
+    ['keyColor', 'tolerance', 'softness', 'despill', 'previewKey'].forEach((id) => {
+      $(id).addEventListener('input', rerenderPreview);
+      $(id).addEventListener('change', rerenderPreview);
+    });
+
+    $('pick').addEventListener('click', () => {
+      picking = true;
+      setStatus('在预览上点一下背景色');
+    });
+    preview.addEventListener('click', (event) => {
+      if (!picking || !frames.length) return;
+      const frame = frames[index];
+      if (frame.width !== frame.sourceWidth || frame.height !== frame.sourceHeight) {
+        picking = false;
+        setStatus('对齐之后背景色对不上原图，先点还原画面再吸取', true);
+        return;
+      }
+      const rect = preview.getBoundingClientRect();
+      const x = Math.min(frame.width - 1, Math.max(0, Math.round((event.clientX - rect.left) / rect.width * frame.width)));
+      const y = Math.min(frame.height - 1, Math.max(0, Math.round((event.clientY - rect.top) / rect.height * frame.height)));
+      const i = (y * frame.width + x) * 4;
+      const data = frame.original;
+      const hex = [data[i], data[i + 1], data[i + 2]].map((v) => v.toString(16).padStart(2, '0')).join('');
+      $('keyColor').value = '#' + hex;
+      picking = false;
+      setStatus(`背景色已设为 #${hex}`);
+      rerenderPreview();
+    });
+
+    $('applyChroma').addEventListener('click', () => {
+      const options = chromaOptions();
+      frames.forEach((frame) => {
+        frame.data = new Uint8ClampedArray(frame.original);
+        chromaKey(frame, options);
+      });
+      aligned = false;
+      $('previewKey').checked = false;
+      render();
+      setStatus('抠图已应用到全部帧。如果还要对齐，再点一次对齐脚底。');
+    });
+
+    $('restore').addEventListener('click', () => {
+      frames.forEach((frame) => {
+        frame.width = frame.sourceWidth;
+        frame.height = frame.sourceHeight;
+        frame.data = new Uint8ClampedArray(frame.original);
+        frame.mark = '';
+      });
+      aligned = false;
+      render();
+      setStatus('已还原成刚提取的画面');
+    });
+
+    function applyMarks(indices, kind) {
+      frames.forEach((frame) => {
+        if (frame.mark === kind) frame.mark = '';
+      });
+      indices.forEach((i) => {
+        if (frames[i]) frames[i].mark = kind;
+      });
+      render();
+    }
+
+    $('markDup').addEventListener('click', () => {
+      const hits = markDuplicates(frames, Number($('dupThreshold').value) || 8);
+      applyMarks(hits, 'dup');
+      setStatus(hits.length ? `标记了 ${hits.length} 帧几乎相同的画面` : '没有发现重复帧');
+    });
+    $('markJump').addEventListener('click', () => {
+      const hits = findJumps(frames);
+      applyMarks(hits, 'jump');
+      setStatus(hits.length ? `标记了 ${hits.length} 处画面突变` : '没有明显跳变');
+    });
+    $('markCurrent').addEventListener('click', () => {
+      const frame = frames[index];
+      frame.mark = frame.mark ? '' : 'dup';
+      render();
+    });
+    $('deleteMarked').addEventListener('click', () => {
+      const before = frames.length;
+      frames = frames.filter((frame) => !frame.mark);
+      if (!frames.length) frames = [];
+      index = Math.min(index, Math.max(0, frames.length - 1));
+      render();
+      setStatus(frames.length === before ? '没有可删的标记' : `删掉 ${before - frames.length} 帧，还剩 ${frames.length} 帧`);
+    });
+    $('reduce').addEventListener('click', () => {
+      const keep = new Set(keepIndices(frames.length, Number($('everyN').value) || 2));
+      frames = frames.filter((_, i) => keep.has(i));
+      index = 0;
+      render();
+      setStatus(`减帧后还剩 ${frames.length} 帧`);
+    });
+    $('cutLoop').addEventListener('click', () => {
+      const found = findLoop(frames);
+      if (!found) {
+        setStatus('至少要有 3 帧才能找循环', true);
+        return;
+      }
+      const limit = Number($('dupThreshold').value) || 8;
+      if (found.score > limit) {
+        index = found.index;
+        render();
+        setStatus(`最接近开头的是第 ${found.index + 1} 帧，差异 ${found.score.toFixed(1)}，没有自动截断`);
+        return;
+      }
+      frames = frames.slice(0, found.index);
+      index = 0;
+      $('loop').checked = true;
+      render();
+      setStatus(`已截到第 ${frames.length} 帧，可以循环`);
+    });
+    $('align').addEventListener('click', () => {
+      const width = Number($('outW').value) || 480;
+      const height = Number($('outH').value) || 720;
+      setStatus('正在对齐脚底…');
+      const result = alignFrames(frames, width, height, { smooth: $('smooth').checked, pad: 12 });
+      frames = frames.map((frame, i) => ({
+        width,
+        height,
+        data: result.frames[i].data,
+        original: frame.original,
+        sourceWidth: frame.sourceWidth,
+        sourceHeight: frame.sourceHeight,
+        mark: frame.mark,
+      }));
+      anchor = result.anchor;
+      aligned = true;
+      $('previewKey').checked = false;
+      render();
+      setStatus(`已对齐到 ${width}×${height}，脚底锚点 ${anchor[0]}, ${anchor[1]}`);
+    });
+
+    $('prev').addEventListener('click', () => {
+      stopPlay();
+      index = (index - 1 + frames.length) % frames.length;
+      render();
+    });
+    $('next').addEventListener('click', () => {
+      stopPlay();
+      index = (index + 1) % frames.length;
+      render();
+    });
+    $('play').addEventListener('click', () => {
+      if (playing) {
+        stopPlay();
+        return;
+      }
+      playing = true;
+      $('play').textContent = '暂停';
+      const fps = Math.max(1, Number($('fps').value) || 12);
+      playTimer = setInterval(() => {
+        index = (index + 1) % frames.length;
+        renderPreview();
+      }, 1000 / fps);
+    });
+
+    async function frameToPng(frame) {
+      const canvas = document.createElement('canvas');
+      paint(canvas, frame);
+      const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/png'));
+      if (!blob) throw new Error('PNG 导出失败');
+      return new Uint8Array(await blob.arrayBuffer());
+    }
+
+    $('download').addEventListener('click', async () => {
+      if (!aligned) {
+        setStatus('先对齐脚底，导出的每一帧才会一样大', true);
+        return;
+      }
+      $('download').disabled = true;
+      try {
+        const id = clipSelect.value;
+        const packed = packSheet(frames);
+        const manifest = buildClipManifest(id, frames, packed, {
+          fps: Number($('fps').value) || 12,
+          loop: $('loop').checked,
+          anchor,
+        });
+        setStatus('正在打包…');
+        const files = [{
+          name: `${id}.json`,
+          data: new TextEncoder().encode(JSON.stringify(manifest)),
+        }, {
+          name: `${id}.png`,
+          data: await frameToPng(packed.sheet),
+        }];
+        for (let i = 0; i < frames.length; i += 1) {
+          files.push({
+            name: `frames/${String(i + 1).padStart(4, '0')}.png`,
+            data: await frameToPng(frames[i]),
+          });
+          if (i % 4 === 3) setStatus(`正在打包 ${i + 1}/${frames.length}`);
+        }
+        const zip = zipStore(files);
+        const blob = new Blob([zip], { type: 'application/zip' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `${id}-frames.zip`;
+        link.click();
+        URL.revokeObjectURL(url);
+        setStatus(`已下载 ${id}-frames.zip。把 ${id}.png 和 ${id}.json 放进 assets/clips/。`);
+      } catch (error) {
+        setStatus(error && error.message ? error.message : '导出失败', true);
+      } finally {
+        $('download').disabled = frames.length === 0;
+      }
+    });
+
+    render();
+  </script>
+</body>
+</html>
