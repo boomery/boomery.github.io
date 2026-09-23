@@ -217,6 +217,36 @@
     .status { min-height: 1.4em; margin-top: 12px; font-size: 0.9rem; }
     .status.is-error { color: #b42318; }
     .fine { margin-top: 8px; color: var(--muted); font-size: 0.75rem; }
+    body.editor-open { overflow: hidden; }
+    .editor {
+      position: fixed;
+      inset: 0;
+      z-index: 40;
+      background: #eef1f6;
+      display: flex;
+      flex-direction: column;
+    }
+    .editor[hidden] { display: none; }
+    .editor-bar, .editor-options, .editor-foot {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      background: #fff;
+      border-bottom: 1px solid #e6ebf4;
+      flex-wrap: wrap;
+    }
+    .editor-bar { min-height: 52px; }
+    .editor-bar strong { font-size: 0.95rem; margin-right: 4px; }
+    .editor-tools { display: flex; flex-wrap: wrap; gap: 6px; flex: 1; }
+    .editor-tools button.is-on { outline: 2px solid var(--accent); background: #eef0ff; color: var(--accent); }
+    .editor-options { font-size: 0.78rem; color: #556; }
+    .editor-options label, .editor-zoom { display: flex; align-items: center; gap: 6px; }
+    .editor-options input[type="number"] { width: 72px; }
+    .editor-stage { flex: 1; min-height: 0; position: relative; background: #dfe3ec; }
+    #editorCanvas { width: 100%; height: 100%; display: block; touch-action: none; }
+    .editor-foot { border-bottom: 0; border-top: 1px solid #e6ebf4; justify-content: space-between; }
+    .editor-foot .hint { margin: 0; }
     @media (max-width: 860px) {
       .layout { grid-template-columns: 1fr; }
       .nav { height: auto; min-height: var(--nav-h); padding-top: 8px; padding-bottom: 8px; }
@@ -326,12 +356,50 @@
           <button id="prev" type="button">上一帧</button>
           <button id="play" type="button">播放</button>
           <button id="next" type="button">下一帧</button>
+          <button id="editFrame" type="button">编辑当前帧</button>
         </div>
         <div class="film" id="film"></div>
         <div class="status" id="status" role="status"></div>
       </section>
     </div>
   </main>
+  <div class="editor" id="editor" hidden role="dialog" aria-modal="true" aria-labelledby="editorTitle">
+    <header class="editor-bar">
+      <strong id="editorTitle">编辑帧</strong>
+      <div class="editor-tools" id="editorTools"></div>
+      <button id="editorX" type="button" class="ghost">关闭</button>
+    </header>
+    <div class="editor-options">
+      <label>笔刷<input id="brushSize" class="scrub" type="number" min="1" max="80" value="12" /></label>
+      <label>颜色<input id="brushColor" type="color" value="#ffffff" /></label>
+      <label>透明度<input id="brushAlpha" class="scrub" type="number" min="0" max="100" value="100" /></label>
+      <label><input id="checker" type="checkbox" checked /> 棋盘格</label>
+      <label>底色<input id="matColor" type="color" value="#d5d8e0" /></label>
+      <span id="editorNote"></span>
+    </div>
+    <div class="editor-stage" id="editorStage">
+      <canvas id="editorCanvas"></canvas>
+    </div>
+    <footer class="editor-foot">
+      <p class="hint">滚轮缩放，右键或中键拖拽平移，方向键切帧。Ctrl+S 保存，Ctrl+Z 撤销。</p>
+      <div class="actions">
+        <button id="editorUndo" type="button">撤销</button>
+        <button id="editorRedo" type="button">重做</button>
+        <button id="editorReset" type="button">还原</button>
+        <button id="editorSave" type="button">保存</button>
+        <button id="editorBatch" type="button">批量应用</button>
+        <button id="editorPrev" type="button">上一帧</button>
+        <button id="editorNext" type="button">下一帧</button>
+      </div>
+      <div class="actions">
+        <span class="editor-zoom" id="editorZoom">100%</span>
+        <button id="editorFit" type="button">适配</button>
+        <button id="editorOne" type="button">1:1</button>
+        <button id="editorClose" type="button">关闭</button>
+        <button id="editorSaveClose" class="primary" type="button">保存并关闭</button>
+      </div>
+    </footer>
+  </div>
   <script type="module">
     import {
       CLIP_PRESETS,
@@ -347,6 +415,7 @@
       buildClipManifest,
       zipStore,
     } from './frames.mjs';
+    import { createEditSession, copyChangedPixels } from './frames-editor.mjs';
 
     const $ = (id) => document.getElementById(id);
     const drop = $('drop');
@@ -413,7 +482,7 @@
       const has = frames.length > 0;
       preview.classList.toggle('is-on', has);
       empty.hidden = has;
-      ['applyChroma', 'restore', 'markDup', 'markJump', 'markCurrent', 'deleteMarked', 'reduce', 'cutLoop', 'align', 'download', 'prev', 'play', 'next'].forEach((id) => {
+      ['applyChroma', 'restore', 'markDup', 'markJump', 'markCurrent', 'deleteMarked', 'reduce', 'cutLoop', 'align', 'download', 'prev', 'play', 'next', 'editFrame'].forEach((id) => {
         $(id).disabled = !has;
       });
       if (!has) {
@@ -455,6 +524,10 @@
           stopPlay();
           index = i;
           renderPreview();
+        });
+        button.addEventListener('dblclick', (event) => {
+          event.preventDefault();
+          openEditor(i);
         });
         film.appendChild(button);
       });
@@ -714,7 +787,7 @@
       input.addEventListener('pointerup', end);
       input.addEventListener('pointercancel', end);
     }
-    ['tolerance', 'softness', 'despill'].forEach((id) => enableScrub($(id)));
+    ['tolerance', 'softness', 'despill', 'brushSize', 'brushAlpha'].forEach((id) => enableScrub($(id)));
 
     ['keyColor', 'tolerance', 'softness', 'despill', 'previewKey'].forEach((id) => {
       $(id).addEventListener('input', rerenderPreview);
@@ -924,6 +997,450 @@
         setStatus(error && error.message ? error.message : '导出失败', true);
       } finally {
         $('download').disabled = frames.length === 0;
+      }
+    });
+
+    const EDITOR_TOOLS = [
+      ['select', '选区'],
+      ['brush', '画笔'],
+      ['eraser', '橡皮'],
+      ['fill', '填充'],
+      ['tint', '填色'],
+      ['rect', '矩形'],
+      ['ellipse', '椭圆'],
+      ['blur', '柔化'],
+      ['restore', '误除'],
+    ];
+    const editorTools = $('editorTools');
+    const editorCanvas = $('editorCanvas');
+    const editorStage = $('editorStage');
+    const editorBuffer = document.createElement('canvas');
+    const editorView = { scale: 1, x: 0, y: 0 };
+    let editorTool = 'brush';
+    let editorIndex = 0;
+    let editorSession = null;
+    let editorSelection = null;
+    let editorDrag = null;
+    let editorSpace = false;
+    let editorClean = null;
+
+    function editorUnsaved() {
+      if (!editorSession) return false;
+      const now = editorSession.pixels();
+      const base = editorClean || editorSession.changedFromOpen().before;
+      for (let pixel = 0; pixel < now.length; pixel += 1) {
+        if (now[pixel] !== base[pixel]) return true;
+      }
+      return false;
+    }
+
+    EDITOR_TOOLS.forEach(([id, label]) => {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.textContent = label;
+      button.dataset.tool = id;
+      button.addEventListener('click', () => {
+        editorTool = id;
+        syncEditorTools();
+        drawEditor();
+      });
+      editorTools.appendChild(button);
+    });
+
+    function syncEditorTools() {
+      editorTools.querySelectorAll('button').forEach((button) => {
+        button.classList.toggle('is-on', button.dataset.tool === editorTool);
+      });
+      const cursors = { select: 'default', fill: 'cell' };
+      editorCanvas.style.cursor = editorSpace ? 'grab' : (cursors[editorTool] || 'crosshair');
+    }
+
+    function editorColor() {
+      const [red, green, blue] = hexToRgb($('brushColor').value);
+      const alpha = Math.round((Number($('brushAlpha').value) || 0) * 2.55);
+      return [red, green, blue, alpha];
+    }
+
+    function brushRadius() {
+      return Math.max(1, Number($('brushSize').value) || 1);
+    }
+
+    function editorPoint(event) {
+      const rect = editorCanvas.getBoundingClientRect();
+      return {
+        x: (event.clientX - rect.left - editorView.x) / editorView.scale,
+        y: (event.clientY - rect.top - editorView.y) / editorView.scale,
+      };
+    }
+
+    function fitEditor() {
+      if (!editorSession) return;
+      const pad = 24;
+      const width = editorStage.clientWidth;
+      const height = editorStage.clientHeight;
+      editorView.scale = Math.max(0.1, Math.min((width - pad) / editorSession.width, (height - pad) / editorSession.height));
+      editorView.x = (width - editorSession.width * editorView.scale) / 2;
+      editorView.y = (height - editorSession.height * editorView.scale) / 2;
+    }
+
+    function editorOneToOne() {
+      if (!editorSession) return;
+      const width = editorStage.clientWidth;
+      const height = editorStage.clientHeight;
+      const cx = (width / 2 - editorView.x) / editorView.scale;
+      const cy = (height / 2 - editorView.y) / editorView.scale;
+      editorView.scale = 1;
+      editorView.x = width / 2 - cx;
+      editorView.y = height / 2 - cy;
+    }
+
+    function normalizeSelection(x0, y0, x1, y1) {
+      const left = Math.max(0, Math.min(x0, x1));
+      const top = Math.max(0, Math.min(y0, y1));
+      const right = Math.min(editorSession.width, Math.max(x0, x1));
+      const bottom = Math.min(editorSession.height, Math.max(y0, y1));
+      if (right - left < 1 || bottom - top < 1) return null;
+      return { x: left, y: top, w: right - left, h: bottom - top };
+    }
+
+    function loadEditorFrame(frameIndex) {
+      editorIndex = frameIndex;
+      index = frameIndex;
+      const shown = viewFrame(frames[frameIndex]);
+      editorSession = createEditSession(shown.width, shown.height, shown.data);
+      editorSelection = null;
+      editorClean = null;
+      $('editorTitle').textContent = `编辑帧 #${String(frameIndex + 1).padStart(3, '0')}`;
+      $('editorNote').textContent = '';
+      fitEditor();
+      syncEditorTools();
+      drawEditor();
+      render();
+    }
+
+    function openEditor(frameIndex) {
+      if (!frames.length) return;
+      stopPlay();
+      $('editor').hidden = false;
+      document.body.classList.add('editor-open');
+      loadEditorFrame(frameIndex);
+    }
+
+    function writeEditorFrame() {
+      if (!editorSession) return false;
+      const data = editorSession.commit();
+      frames[editorIndex].data = data;
+      editorClean = data;
+      $('previewKey').checked = false;
+      return true;
+    }
+
+    function closeEditor(force) {
+      if (!editorSession) return;
+      if (!force && editorUnsaved() && !window.confirm('关闭会丢掉还没保存的修改')) return;
+      editorSession = null;
+      editorDrag = null;
+      $('editor').hidden = true;
+      document.body.classList.remove('editor-open');
+      render();
+    }
+
+    function shiftEditor(delta) {
+      if (!editorSession || frames.length < 2) return;
+      const dirty = editorUnsaved();
+      if (dirty) frames[editorIndex].data = editorSession.commit();
+      const next = (editorIndex + delta + frames.length) % frames.length;
+      const shown = viewFrame(frames[next]);
+      if (dirty) $('previewKey').checked = false;
+      editorIndex = next;
+      index = next;
+      editorSession = createEditSession(shown.width, shown.height, shown.data);
+      editorSelection = null;
+      editorClean = null;
+      $('editorTitle').textContent = `编辑帧 #${String(next + 1).padStart(3, '0')}`;
+      fitEditor();
+      drawEditor();
+      render();
+    }
+
+    function syncEditorHistory() {
+      $('editorUndo').disabled = !editorSession || !editorSession.canUndo();
+      $('editorRedo').disabled = !editorSession || !editorSession.canRedo();
+      $('editorReset').disabled = !editorSession || !editorSession.isDirty();
+      $('editorPrev').disabled = frames.length < 2;
+      $('editorNext').disabled = frames.length < 2;
+    }
+
+    function drawEditor() {
+      if (!editorSession || $('editor').hidden) return;
+      const width = editorStage.clientWidth;
+      const height = editorStage.clientHeight;
+      const ratio = window.devicePixelRatio || 1;
+      editorCanvas.width = Math.max(1, Math.floor(width * ratio));
+      editorCanvas.height = Math.max(1, Math.floor(height * ratio));
+      const ctx = editorCanvas.getContext('2d');
+      ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+      ctx.fillStyle = $('checker').checked ? '#f7f8fb' : $('matColor').value;
+      ctx.fillRect(0, 0, width, height);
+      if ($('checker').checked) {
+        ctx.fillStyle = '#e4e7ee';
+        const cell = 16;
+        for (let y = 0; y < height; y += cell) {
+          for (let x = (Math.floor(y / cell) % 2) * cell; x < width; x += cell * 2) ctx.fillRect(x, y, cell, cell);
+        }
+      }
+      if (editorBuffer.width !== editorSession.width || editorBuffer.height !== editorSession.height) {
+        editorBuffer.width = editorSession.width;
+        editorBuffer.height = editorSession.height;
+      }
+      editorBuffer.getContext('2d').putImageData(new ImageData(new Uint8ClampedArray(editorSession.pixels()), editorSession.width, editorSession.height), 0, 0);
+      ctx.imageSmoothingEnabled = editorView.scale < 2;
+      ctx.setTransform(ratio * editorView.scale, 0, 0, ratio * editorView.scale, ratio * editorView.x, ratio * editorView.y);
+      ctx.drawImage(editorBuffer, 0, 0);
+      ctx.strokeStyle = '#4a5fd4';
+      ctx.fillStyle = 'rgba(74, 95, 212, 0.18)';
+      ctx.lineWidth = 1 / editorView.scale;
+      const box = editorDrag && editorDrag.draft ? editorDrag.draft : editorSelection;
+      if (box) {
+        ctx.setLineDash([4 / editorView.scale, 3 / editorView.scale]);
+        ctx.strokeRect(box.x, box.y, box.w, box.h);
+        ctx.setLineDash([]);
+        const handle = 8 / editorView.scale;
+        [[box.x, box.y], [box.x + box.w, box.y], [box.x, box.y + box.h], [box.x + box.w, box.y + box.h]].forEach(([hx, hy]) => {
+          ctx.fillStyle = '#fff';
+          ctx.fillRect(hx - handle / 2, hy - handle / 2, handle, handle);
+          ctx.strokeRect(hx - handle / 2, hy - handle / 2, handle, handle);
+        });
+      }
+      if (editorDrag && editorDrag.shape) {
+        ctx.setLineDash([]);
+        ctx.globalAlpha = 0.35;
+        ctx.fillStyle = $('brushColor').value;
+        const { x0, y0, x1, y1, kind } = editorDrag.shape;
+        if (kind === 'rect') ctx.fillRect(Math.min(x0, x1), Math.min(y0, y1), Math.abs(x1 - x0), Math.abs(y1 - y0));
+        else {
+          ctx.beginPath();
+          ctx.ellipse((x0 + x1) / 2, (y0 + y1) / 2, Math.max(0.5, Math.abs(x1 - x0) / 2), Math.max(0.5, Math.abs(y1 - y0) / 2), 0, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        ctx.globalAlpha = 1;
+      }
+      $('editorZoom').textContent = `${Math.round(editorView.scale * 100)}%`;
+      syncEditorHistory();
+    }
+
+    function hitHandle(point) {
+      if (!editorSelection) return '';
+      const reach = 10 / editorView.scale;
+      const handles = {
+        nw: [editorSelection.x, editorSelection.y],
+        ne: [editorSelection.x + editorSelection.w, editorSelection.y],
+        sw: [editorSelection.x, editorSelection.y + editorSelection.h],
+        se: [editorSelection.x + editorSelection.w, editorSelection.y + editorSelection.h],
+      };
+      return Object.keys(handles).find((name) => Math.hypot(point.x - handles[name][0], point.y - handles[name][1]) <= reach) || '';
+    }
+
+    function stamp(x, y) {
+      const radius = brushRadius();
+      const color = editorColor();
+      if (editorTool === 'brush') editorSession.paintBrush(x, y, radius, color, editorSelection);
+      else if (editorTool === 'eraser') editorSession.eraseBrush(x, y, radius, color[3], editorSelection);
+      else if (editorTool === 'tint') editorSession.tintBrush(x, y, radius, color, editorSelection);
+      else if (editorTool === 'blur') editorSession.blurBrush(x, y, radius, editorSelection);
+      else if (editorTool === 'restore') editorSession.restoreBrush(x, y, radius, editorSelection);
+    }
+
+    function strokeTo(x, y) {
+      const spacing = Math.max(1, brushRadius() * 0.35);
+      const dist = Math.hypot(x - editorDrag.x, y - editorDrag.y);
+      const steps = Math.max(1, Math.ceil(dist / spacing));
+      for (let step = 1; step <= steps; step += 1) {
+        stamp(editorDrag.x + (x - editorDrag.x) * (step / steps), editorDrag.y + (y - editorDrag.y) * (step / steps));
+      }
+      editorDrag.x = x;
+      editorDrag.y = y;
+    }
+
+    editorCanvas.addEventListener('contextmenu', (event) => event.preventDefault());
+    editorCanvas.addEventListener('pointerdown', (event) => {
+      if (!editorSession) return;
+      try { editorCanvas.setPointerCapture(event.pointerId); } catch { /* 合成事件没有捕获权限 */ }
+      const point = editorPoint(event);
+      if (event.button === 1 || event.button === 2 || editorSpace) {
+        editorDrag = { kind: 'pan', pointerId: event.pointerId, x: event.clientX, y: event.clientY };
+        return;
+      }
+      if (event.button !== 0) return;
+      if (editorTool === 'select') {
+        const handle = hitHandle(point);
+        if (handle) editorDrag = { kind: 'resize', pointerId: event.pointerId, handle, origin: editorSelection };
+        else if (editorSelection && point.x >= editorSelection.x && point.y >= editorSelection.y && point.x < editorSelection.x + editorSelection.w && point.y < editorSelection.y + editorSelection.h) {
+          editorDrag = { kind: 'move', pointerId: event.pointerId, x: point.x, y: point.y, origin: { ...editorSelection } };
+        } else editorDrag = { kind: 'select', pointerId: event.pointerId, x: point.x, y: point.y, draft: null };
+        return;
+      }
+      if (editorTool === 'rect' || editorTool === 'ellipse') {
+        editorDrag = { kind: 'shape', pointerId: event.pointerId, shape: { kind: editorTool, x0: point.x, y0: point.y, x1: point.x, y1: point.y } };
+        drawEditor();
+        return;
+      }
+      if (editorTool === 'fill') {
+        editorSession.begin();
+        editorSession.fill(point.x, point.y, editorColor(), editorSelection);
+        drawEditor();
+        return;
+      }
+      editorSession.begin();
+      editorDrag = { kind: 'draw', pointerId: event.pointerId, x: point.x, y: point.y };
+      stamp(point.x, point.y);
+      drawEditor();
+    });
+    editorCanvas.addEventListener('pointermove', (event) => {
+      if (!editorDrag || editorDrag.pointerId !== event.pointerId) return;
+      if (editorDrag.kind === 'pan') {
+        editorView.x += event.clientX - editorDrag.x;
+        editorView.y += event.clientY - editorDrag.y;
+        editorDrag.x = event.clientX;
+        editorDrag.y = event.clientY;
+        drawEditor();
+        return;
+      }
+      const point = editorPoint(event);
+      if (editorDrag.kind === 'draw') {
+        strokeTo(point.x, point.y);
+        drawEditor();
+        return;
+      }
+      if (editorDrag.kind === 'shape') {
+        editorDrag.shape.x1 = point.x;
+        editorDrag.shape.y1 = point.y;
+        drawEditor();
+        return;
+      }
+      if (editorDrag.kind === 'select') {
+        editorDrag.draft = normalizeSelection(editorDrag.x, editorDrag.y, point.x, point.y);
+        drawEditor();
+        return;
+      }
+      if (editorDrag.kind === 'move') {
+        const dx = point.x - editorDrag.x;
+        const dy = point.y - editorDrag.y;
+        const nextX = Math.max(0, Math.min(editorSession.width - editorDrag.origin.w, editorDrag.origin.x + dx));
+        const nextY = Math.max(0, Math.min(editorSession.height - editorDrag.origin.h, editorDrag.origin.y + dy));
+        editorSelection = { ...editorDrag.origin, x: nextX, y: nextY };
+        drawEditor();
+        return;
+      }
+      if (editorDrag.kind === 'resize') {
+        const anchor = {
+          nw: [editorDrag.origin.x + editorDrag.origin.w, editorDrag.origin.y + editorDrag.origin.h],
+          ne: [editorDrag.origin.x, editorDrag.origin.y + editorDrag.origin.h],
+          sw: [editorDrag.origin.x + editorDrag.origin.w, editorDrag.origin.y],
+          se: [editorDrag.origin.x, editorDrag.origin.y],
+        }[editorDrag.handle];
+        editorSelection = normalizeSelection(anchor[0], anchor[1], point.x, point.y) || editorDrag.origin;
+        drawEditor();
+      }
+    });
+    function endEditorDrag(event) {
+      if (!editorDrag || editorDrag.pointerId !== event.pointerId) return;
+      if (editorDrag.kind === 'shape' && editorSession) {
+        const { kind, x0, y0, x1, y1 } = editorDrag.shape;
+        editorSession.begin();
+        if (kind === 'rect') editorSession.rect(x0, y0, x1, y1, editorColor(), editorSelection);
+        else editorSession.ellipse(x0, y0, x1, y1, editorColor(), editorSelection);
+      }
+      if (editorDrag.kind === 'select') editorSelection = editorDrag.draft;
+      editorDrag = null;
+      drawEditor();
+    }
+    editorCanvas.addEventListener('pointerup', endEditorDrag);
+    editorCanvas.addEventListener('pointercancel', endEditorDrag);
+    editorCanvas.addEventListener('wheel', (event) => {
+      if (!editorSession) return;
+      event.preventDefault();
+      const rect = editorCanvas.getBoundingClientRect();
+      const localX = event.clientX - rect.left;
+      const localY = event.clientY - rect.top;
+      const beforeX = (localX - editorView.x) / editorView.scale;
+      const beforeY = (localY - editorView.y) / editorView.scale;
+      editorView.scale = Math.min(16, Math.max(0.1, editorView.scale * (event.deltaY < 0 ? 1.1 : 0.9)));
+      editorView.x = localX - beforeX * editorView.scale;
+      editorView.y = localY - beforeY * editorView.scale;
+      drawEditor();
+    }, { passive: false });
+
+    new ResizeObserver(() => drawEditor()).observe(editorStage);
+    ['checker', 'matColor', 'brushColor'].forEach((id) => $(id).addEventListener('input', drawEditor));
+    $('editFrame').addEventListener('click', () => openEditor(index));
+    $('editorFit').addEventListener('click', () => { fitEditor(); drawEditor(); });
+    $('editorOne').addEventListener('click', () => { editorOneToOne(); drawEditor(); });
+    $('editorUndo').addEventListener('click', () => { if (editorSession && editorSession.undo()) drawEditor(); });
+    $('editorRedo').addEventListener('click', () => { if (editorSession && editorSession.redo()) drawEditor(); });
+    $('editorReset').addEventListener('click', () => { if (editorSession && editorSession.reset()) drawEditor(); });
+    $('editorPrev').addEventListener('click', () => shiftEditor(-1));
+    $('editorNext').addEventListener('click', () => shiftEditor(1));
+    $('editorSave').addEventListener('click', () => {
+      if (!writeEditorFrame()) return;
+      $('editorNote').textContent = '已保存到这一帧';
+      render();
+      drawEditor();
+    });
+    $('editorSaveClose').addEventListener('click', () => {
+      writeEditorFrame();
+      closeEditor(true);
+      setStatus(`第 ${index + 1} 帧已写回`);
+    });
+    $('editorClose').addEventListener('click', () => closeEditor(false));
+    $('editorX').addEventListener('click', () => closeEditor(false));
+    $('editorBatch').addEventListener('click', () => {
+      if (!editorSession) return;
+      const dirty = editorSession.isDirty();
+      if (!dirty) {
+        $('editorNote').textContent = '这一帧还没有改动';
+        return;
+      }
+      const change = editorSession.changedFromOpen();
+      writeEditorFrame();
+      const result = copyChangedPixels(change.before, change.after, change.width, change.height, frames.filter((_, frameIndex) => frameIndex !== editorIndex));
+      $('editorNote').textContent = result.pixels
+        ? `已写到另外 ${result.applied} 帧${result.skipped ? `，${result.skipped} 帧尺寸不同已跳过` : ''}`
+        : '这一帧还没有改动';
+      render();
+      drawEditor();
+    });
+    window.addEventListener('keydown', (event) => {
+      if ($('editor').hidden) return;
+      if (event.code === 'Space') editorSpace = true;
+      if (event.key === 'Escape') closeEditor(false);
+      const typing = event.target.matches('input, textarea, select');
+      if (typing) return;
+      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'z') {
+        event.preventDefault();
+        if (event.shiftKey) { if (editorSession) editorSession.redo(); }
+        else if (editorSession) editorSession.undo();
+        drawEditor();
+      } else if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'y') {
+        event.preventDefault();
+        if (editorSession) editorSession.redo();
+        drawEditor();
+      } else if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 's') {
+        event.preventDefault();
+        if (writeEditorFrame()) {
+          $('editorNote').textContent = '已保存到这一帧';
+          render();
+          drawEditor();
+        }
+      } else if (event.key === 'ArrowLeft') shiftEditor(-1);
+      else if (event.key === 'ArrowRight') shiftEditor(1);
+      else if (event.key === '[') $('brushSize').value = String(Math.max(1, brushRadius() - 1));
+      else if (event.key === ']') $('brushSize').value = String(Math.min(80, brushRadius() + 1));
+    });
+    window.addEventListener('keyup', (event) => {
+      if (event.code === 'Space') {
+        editorSpace = false;
+        syncEditorTools();
       }
     });
 

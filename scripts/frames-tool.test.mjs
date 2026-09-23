@@ -12,6 +12,10 @@ import {
   crc32,
   buildClipManifest,
 } from '../myblog/source/tools/frames.mjs';
+import {
+  createEditSession,
+  copyChangedPixels,
+} from '../myblog/source/tools/frames-editor.mjs';
 
 function frame(width, height, paint) {
   const data = new Uint8ClampedArray(width * height * 4);
@@ -84,6 +88,41 @@ test('精灵图和素材包清单', () => {
   assert.equal(manifest.frameCount, 2);
   assert.ok(CLIP_PRESETS.some((item) => item.id === 'shen_duanshui'));
   assert.ok(CLIP_PRESETS.some((item) => item.id === 'yan_lueying' && item.loop === false));
+});
+
+test('编辑帧可以涂、擦、填、误除，并且能撤销', () => {
+  const session = createEditSession(4, 4, frame(4, 4, (x, y) => (x < 2 ? [0, 180, 0, 255] : [0, 0, 0, 0])).data);
+  session.begin();
+  session.eraseBrush(0.5, 0.5, 1, 255, null);
+  assert.equal(session.pixels()[3], 0);
+  session.restoreBrush(0.5, 0.5, 1, null);
+  assert.equal(session.pixels()[3], 255);
+  session.begin();
+  session.paintBrush(3.5, 3.5, 1, [20, 40, 60, 255], null);
+  assert.equal(session.pixels()[(3 * 4 + 3) * 4], 20);
+  session.undo();
+  assert.equal(session.pixels()[(3 * 4 + 3) * 4 + 3], 0);
+  session.redo();
+  assert.equal(session.pixels()[(3 * 4 + 3) * 4], 20);
+  session.begin();
+  session.fill(0, 0, [9, 9, 9, 255], { x: 0, y: 0, w: 2, h: 4 });
+  assert.equal(session.pixels()[0], 9);
+  assert.equal(session.pixels()[(0 * 4 + 2) * 4 + 3], 0);
+  session.begin();
+  session.rect(0, 0, 1, 1, [1, 2, 3, 255], null);
+  session.ellipse(2, 2, 3.2, 3.2, [4, 5, 6, 255], null);
+  assert.equal(session.pixels()[0], 1);
+  assert.ok(session.pixels()[(3 * 4 + 3) * 4 + 3] > 0);
+  const before = new Uint8ClampedArray(session.changedFromOpen().before);
+  const after = session.pixels();
+  const other = frame(4, 4, () => [7, 7, 7, 255]);
+  const mismatch = frame(3, 3, () => [1, 1, 1, 255]);
+  const copied = copyChangedPixels(before, after, 4, 4, [other, mismatch]);
+  assert.equal(copied.applied, 1);
+  assert.equal(copied.skipped, 1);
+  assert.equal(other.data[0], after[0]);
+  session.reset();
+  assert.equal(session.isDirty(), false);
 });
 
 test('zip 能按原样装回文件', () => {
