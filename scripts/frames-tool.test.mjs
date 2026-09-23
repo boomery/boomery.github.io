@@ -4,6 +4,7 @@ import {
   CLIP_PRESETS,
   chromaKey,
   replaceWithTransparent,
+  clearRect,
   previewChroma,
   markDuplicates,
   findLoop,
@@ -117,6 +118,14 @@ test('去色溢洗掉不贴边的头发绿', () => {
   assert.ok(shot.data[hair + 1] <= 40);
   const skin = (1 * 5 + 1) * 4;
   assert.equal(shot.data[skin + 1], 70);
+});
+
+test('矩形遮罩把框住的区域变成透明', () => {
+  const shot = frame(4, 4, () => [10, 20, 30, 255]);
+  clearRect(shot, { x0: 2.2, y0: 1.1, x1: 3.8, y1: 2.9 });
+  assert.equal(shot.data[(1 * 4 + 2) * 4 + 3], 0);
+  assert.equal(shot.data[(2 * 4 + 3) * 4 + 3], 0);
+  assert.equal(shot.data[3], 255);
 });
 
 test('预览抠图时保留已经换成透明的像素', () => {

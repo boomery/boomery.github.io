@@ -174,6 +174,26 @@ export function replaceWithTransparent(frame, options = {}) {
   return frame;
 }
 
+export function clearRect(frame, rect) {
+  const data = frame.data;
+  const width = frame.width;
+  const height = frame.height;
+  const x0 = Math.max(0, Math.min(width, Math.floor(Math.min(rect.x0, rect.x1))));
+  const x1 = Math.max(0, Math.min(width, Math.ceil(Math.max(rect.x0, rect.x1))));
+  const y0 = Math.max(0, Math.min(height, Math.floor(Math.min(rect.y0, rect.y1))));
+  const y1 = Math.max(0, Math.min(height, Math.ceil(Math.max(rect.y0, rect.y1))));
+  for (let y = y0; y < y1; y += 1) {
+    for (let x = x0; x < x1; x += 1) {
+      const i = (y * width + x) * 4;
+      data[i] = 0;
+      data[i + 1] = 0;
+      data[i + 2] = 0;
+      data[i + 3] = 0;
+    }
+  }
+  return frame;
+}
+
 export function previewChroma(frame, options = {}) {
   const source = frame.original || frame.data;
   const copy = { width: frame.width, height: frame.height, data: new Uint8ClampedArray(source) };
