@@ -139,23 +139,13 @@ export function chromaKey(frame, options = {}) {
     let alpha = prev;
     if (dist <= inner || outer <= inner) alpha = 0;
     else alpha = Math.round(prev * ((dist - inner) / (outer - inner)));
-    if (spillOn && alpha < prev) wash(i, despill * (1 - alpha / 255));
     data[i + 3] = alpha;
   }
 
   if (spillOn) {
-    for (let y = 0; y < h; y += 1) {
-      for (let x = 0; x < w; x += 1) {
-        const p = y * w + x;
-        const i = p * 4;
-        if (mask[p] || data[i + 3] === 0) continue;
-        let touch = false;
-        if (x > 0 && data[i - 4 + 3] === 0) touch = true;
-        else if (x + 1 < w && data[i + 4 + 3] === 0) touch = true;
-        else if (y > 0 && data[i - w * 4 + 3] === 0) touch = true;
-        else if (y + 1 < h && data[i + w * 4 + 3] === 0) touch = true;
-        if (touch) wash(i, despill);
-      }
+    for (let i = 0; i < data.length; i += 4) {
+      if (data[i + 3] === 0) continue;
+      wash(i, despill);
     }
   }
   return frame;

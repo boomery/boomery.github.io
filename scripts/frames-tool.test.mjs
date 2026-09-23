@@ -104,6 +104,21 @@ test('透明替换去掉指定颜色，不要求连着边缘', () => {
   assert.equal(shot.data[3], 255);
 });
 
+test('去色溢洗掉不贴边的头发绿', () => {
+  const shot = frame(5, 5, (x, y) => {
+    const edge = x === 0 || y === 0 || x === 4 || y === 4;
+    if (edge) return [0, 255, 0, 255];
+    if (x === 2 && y === 2) return [40, 160, 30, 255];
+    return [90, 70, 50, 255];
+  });
+  chromaKey(shot, { color: [0, 255, 0], tolerance: 30, softness: 0, despill: 1 });
+  const hair = (2 * 5 + 2) * 4;
+  assert.equal(shot.data[hair + 3], 255);
+  assert.ok(shot.data[hair + 1] <= 40);
+  const skin = (1 * 5 + 1) * 4;
+  assert.equal(shot.data[skin + 1], 70);
+});
+
 test('预览抠图时保留已经换成透明的像素', () => {
   const shot = frame(3, 3, (x, y) => {
     if (x === 1 && y === 1) return [200, 30, 30, 255];

@@ -427,7 +427,7 @@
             <label class="field"><span class="term has-tip" tabindex="0" data-tip="要抠掉的那种颜色，多半是绿幕或蓝幕。用吸管在画面上点一下最准。">背景色</span><input id="keyColor" type="color" value="#00ff00" /></label>
             <label class="field"><span class="field-head"><span class="term has-tip" tabindex="0" data-tip="和背景色有多接近，也当成背景。调大抠得更干净，衣服上相近的颜色也会被抠穿。">容差</span> <b data-for="tolerance">80</b></span><input id="tolerance" type="range" min="0" max="255" value="80" /></label>
             <label class="field"><span class="field-head"><span class="term has-tip" tabindex="0" data-tip="人物轮廓交界处留一层半透明。调大边缘更软，调成 0 就是硬切边。">边缘柔化</span> <b data-for="softness">18</b></span><input id="softness" type="range" min="0" max="80" value="18" /></label>
-            <label class="field"><span class="field-head"><span class="term has-tip" tabindex="0" data-tip="把沾到头发和衣服边上的绿边洗淡。调大绿边更淡，调成 0 就保留原来的颜色。">去色溢</span> <b data-for="despill">0.85</b></span><input id="despill" type="range" min="0" max="1" step="0.05" value="0.85" /></label>
+            <label class="field"><span class="field-head"><span class="term has-tip" tabindex="0" data-tip="把沾在头发和衣服上的绿幕颜色洗掉。拉到 1，多出来的绿色会全部洗掉，绿色衣服也会变淡。调成 0 就保留原来的颜色。">去色溢</span> <b data-for="despill">0.85</b></span><input id="despill" type="range" min="0" max="1" step="0.05" value="0.85" /></label>
           </div>
           <div class="checks"><label><input id="previewKey" type="checkbox" /> <span class="term has-tip" tabindex="0" data-tip="只在这一张上看抠图结果，还不会改掉全部画面。已经换成透明的地方会留着。">预览当前帧</span></label></div>
           <div class="actions">
