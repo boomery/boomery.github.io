@@ -127,14 +127,7 @@ python3 - "$DST/night.js" <<'PY'
 import pathlib, re, sys
 path = pathlib.Path(sys.argv[1])
 js = path.read_text(encoding="utf-8")
-safe_copy = (
-    "copy_to_fs:function(path,buffer){const idx=path.lastIndexOf(\"/\");let dir=\"/\";if(idx>0){dir=path.slice(0,idx)}"
-    "try{FS.stat(dir)}catch(e){if(e.errno!==GodotFS.ENOENT){GodotRuntime.error(e)}FS.mkdirTree(dir)}"
-    "const src=buffer instanceof ArrayBuffer?new Uint8Array(buffer,0,buffer.byteLength):ArrayBuffer.isView(buffer)?new Uint8Array(buffer.buffer,buffer.byteOffset,buffer.byteLength):new Uint8Array(buffer);"
-    "function commit(owned){FS.writeFile(path,owned)}"
-    "if(src.length<=1048576){commit(src.slice());return}"
-    "return new Promise(function(resolve,reject){let owned=null;let offset=0;const chunk=1048576;function step(){try{if(!owned)owned=new Uint8Array(src.length);const end=Math.min(offset+chunk,src.length);owned.set(src.subarray(offset,end),offset);offset=end;if(offset<src.length){setTimeout(step,0);return}commit(owned);resolve()}catch(err){reject(err)}}setTimeout(step,0)})}"
-)
+safe_copy = ('copy_to_fs:function(path,buffer){const idx=path.lastIndexOf("/");let dir="/";if(idx>0){dir=path.slice(0,idx)}try{FS.stat(dir)}catch(e){if(e.errno!==GodotFS.ENOENT){GodotRuntime.error(e)}FS.mkdirTree(dir)}const src=buffer instanceof ArrayBuffer?new Uint8Array(buffer,0,buffer.byteLength):ArrayBuffer.isView(buffer)?new Uint8Array(buffer.buffer,buffer.byteOffset,buffer.byteLength):new Uint8Array(buffer);function report(loaded){const fn=globalThis.NightPackProgress;if(typeof fn==="function"){try{fn(loaded,src.length)}catch(err){}}}function commit(owned){FS.writeFile(path,owned,{canOwn:true});var stream=null;try{if(owned.length<4)return;stream=FS.open(path,"r");var head=new Uint8Array(4);var n=FS.read(stream,head,0,4,0);if(n===4&&head[0]===owned[0]&&head[1]===owned[1]&&head[2]===owned[2]&&head[3]===owned[3])return}catch(err){}finally{if(stream){try{FS.close(stream)}catch(err){}}}FS.writeFile(path,owned.slice())}if(src.length<=1048576){const small=src.slice();report(src.length);commit(small);return}return new Promise(function(resolve,reject){let owned=null;let offset=0;let settled=false;const chunk=2097152;function later(fn){var done=false;function go(){if(done)return;done=true;fn()}if(typeof requestAnimationFrame==="function"){requestAnimationFrame(function(){setTimeout(go,0)})}setTimeout(go,32)}function pump(){try{const end=Math.min(offset+chunk,src.length);owned.set(src.subarray(offset,end),offset);offset=end;report(offset);if(offset<src.length){later(pump);return}commit(owned);report(src.length);later(resolve)}catch(err){reject(err)}}function allocated(bytes){if(settled)return;settled=true;owned=bytes;report(0);later(pump)}function begin(){report(0);try{const url=URL.createObjectURL(new Blob(["self.onmessage=function(ev){var bytes=new Uint8Array(ev.data);self.postMessage(bytes.buffer,[bytes.buffer]);}"],{type:"application/javascript"}));const worker=new Worker(url);worker.onmessage=function(ev){worker.terminate();URL.revokeObjectURL(url);allocated(new Uint8Array(ev.data))};worker.onerror=function(){worker.terminate();URL.revokeObjectURL(url);allocated(new Uint8Array(src.length))};worker.postMessage(src.length)}catch(err){allocated(new Uint8Array(src.length))}}later(begin)})}')
 stock_copy = (
     "copy_to_fs:function(path,buffer){const idx=path.lastIndexOf(\"/\");let dir=\"/\";if(idx>0){dir=path.slice(0,idx)}"
     "try{FS.stat(dir)}catch(e){if(e.errno!==GodotFS.ENOENT){GodotRuntime.error(e)}FS.mkdirTree(dir)}"
@@ -145,8 +138,10 @@ shared_copy = (
     "try{FS.stat(dir)}catch(e){if(e.errno!==GodotFS.ENOENT){GodotRuntime.error(e)}FS.mkdirTree(dir)}"
     "FS.writeFile(path,buffer instanceof ArrayBuffer?new Uint8Array(buffer,0,buffer.byteLength):ArrayBuffer.isView(buffer)?new Uint8Array(buffer.buffer,buffer.byteOffset,buffer.byteLength):new Uint8Array(buffer),{canOwn:true})}"
 )
-if "owned.set(src.subarray(offset,end),offset)" in js:
-    print("night.js 行囊已会复制后再交给引擎")
+if "globalThis.NightPackProgress" in js:
+    print("night.js 行囊写入会分段推进进度")
+elif """function commit(owned){FS.writeFile(path,owned)}""" in js and stock_copy not in js:
+    raise SystemExit("night.js 仍是旧的整包写入，请先同步 copy_to_fs")
 elif stock_copy in js:
     js = js.replace(stock_copy, safe_copy, 1)
     print("night.js 已改为独立复制行囊")
