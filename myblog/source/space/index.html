@@ -758,8 +758,9 @@
       .visual-room__tile:nth-child(1) { grid-row: span 1; }
       .visual-room__tile:nth-child(4) { grid-column: span 1; }
       .explore-grid { grid-template-columns: 1fr; }
-      .space-nav__links a:not(.is-active) { display: none; }
-      .space-nav__links a.is-active + a { display: inline-flex; }
+      .space-nav { flex-wrap: wrap; gap: 6px; }
+      .space-nav__links { width: 100%; justify-content: space-between; gap: 0; }
+      .space-nav__links a { min-height: 44px; display: inline-flex; align-items: center; padding: 6px; }
     }
   </style>
 </head>
@@ -774,13 +775,11 @@
     boomery <span>Space</span>
   </a>
   <div class="space-nav__links">
-    <a href="/space/" class="is-active">数字空间</a>
-    <a href="/gallery/">Gallery</a>
-    <a href="/tools/">工具</a>
-    <a href="/night/">夜行镖</a>
-    <a href="/categories/技术/">Tech</a>
-    <a href="/about">About</a>
-    <a href="/">博客</a>
+      <a href="/works/">作品</a>
+      <a href="/tools/">工具</a>
+      <a href="/gallery/">影像</a>
+      <a href="/writing/">文字</a>
+      <a href="/about/">关于</a>
   </div>
 </nav>
 

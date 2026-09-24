@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title><%= page.title %></title>
+  <meta name="description" content="我是 boomery。写了十年代码，现在把想法做成游戏、工具和影像。写给自己，也写给路过的人。">
+  <link rel="canonical" href="<%= config.url %>/<%= page.worksOnly ? 'works/' : '' %>">
+  <link rel="icon" href="/images/boomery-logo.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/styles/creative-home.css">
+  <link rel="preload" href="/night/art/ferry-night.webp" as="image">
+  <% if (!page.worksOnly) { %><script src="/js/creative-home.js" defer></script><% } %>
+</head>
+<body>
+  <a class="skip-link" href="#content">跳到主要内容</a>
+  <header class="site-header">
+    <div class="header-inner wrap">
+      <a class="wordmark" href="/" aria-label="boomery 首页">boomery<span class="brand-dot">.</span></a>
+      <nav aria-label="主导航">
+        <a href="/works/"<%- page.worksOnly ? ' aria-current="page"' : '' %>>作品</a>
+        <a href="/tools/">工具</a><a href="/gallery/">影像</a><a href="/writing/">文字</a><a href="/about/">关于</a>
+      </nav>
+    </div>
+  </header>
+  <main id="content" class="wrap">
+    <section class="intro" aria-labelledby="intro-title">
+      <div class="intro-copy">
+        <p class="eyebrow">BOOMERY / <%= page.worksOnly ? 'SELECTED WORKS' : 'PERSONAL SPACE' %></p>
+        <h1 id="intro-title"><%= page.worksOnly ? '把想法，做成作品。' : '做些属于自己的东西。' %></h1>
+        <p class="intro-description"><%= page.worksOnly ? '游戏与互动实验，记录每一次从想法到实现的尝试。' : '我是 boomery。写了十年代码，现在把想法做成游戏、工具和影像。' %></p>
+        <p class="intro-note">写给自己，也写给路过的人。</p>
+      </div>
+      <div class="orbit" aria-hidden="true"><span></span><small>IDEAS<br>INTO<br>A QUIETER<br>WORLD</small></div>
+    </section>
+    <section class="featured" aria-labelledby="works-title">
+      <div class="section-heading"><h2 id="works-title"><span>01 /</span> 精选作品</h2><% if (!page.worksOnly) { %><a href="/works/">全部作品 <span aria-hidden="true">↗</span></a><% } %></div>
+      <a class="project" href="/night/" aria-label="进入夜行镖：槐安夜雨">
+        <img class="project-art" src="/night/art/ferry-night.webp" alt="冷雨中的旧渡口，一位侠客望向远处的灯火" fetchpriority="high" width="1672" height="941">
+        <div class="project-copy"><p class="eyebrow">GAME / 001</p><h3>槐安夜雨</h3><p class="project-kind">夜行镖 · 武侠游戏</p><p class="project-description">一场从旧渡口开始的江湖夜行。</p><span class="project-button">进入体验 <span aria-hidden="true">↗</span></span></div>
+      </a>
+    </section>
+    <% if (!page.worksOnly) { %>
+    <div class="discovery">
+      <section aria-labelledby="gallery-title">
+        <div class="section-heading"><h2 id="gallery-title"><span>02 /</span> 影像</h2><a href="/gallery/">打开 Gallery <span aria-hidden="true">↗</span></a></div>
+        <div class="photo-grid" id="home-photos"><a class="gallery-fallback" href="/gallery/"><span class="gallery-symbol" aria-hidden="true">◯</span><strong>影像与审美</strong><span>飘落 / 柱廊 / 胶片 / 网格</span><span class="gallery-enter">走进 Gallery ↗</span></a></div>
+        <p class="section-note">一些想留下来的瞬间。</p>
+      </section>
+      <section aria-labelledby="tools-title">
+        <div class="section-heading"><h2 id="tools-title"><span>03 /</span> 工具</h2><a href="/tools/">全部工具 <span aria-hidden="true">↗</span></a></div>
+        <div class="tool-list">
+          <a class="tool" href="/tools/"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.3" aria-hidden="true"><path d="M8 3h11l6 6v20H8zM19 3v7h6M12 16h9M12 21h9"/></svg><div><h3>Excel 转 PDF</h3><p>在浏览器里整理与导出表格</p></div><span aria-hidden="true">↗</span></a>
+          <a class="tool" href="/tools/frames.html"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.3" aria-hidden="true"><path d="M3 9h22v20H3zM7 5h22v20M11 1h20v20M5 25l6-7 5 5 4-4 4 6"/><circle cx="10" cy="15" r="2"/></svg><div><h3>动作序列帧</h3><p>视频抽帧、抠图与精灵图导出</p></div><span aria-hidden="true">↗</span></a>
+        </div>
+      </section>
+    </div>
+    <section class="writing" aria-labelledby="writing-title">
+      <div class="section-heading"><h2 id="writing-title"><span>04 /</span> 最近写下的</h2><a href="/writing/">全部文字 <span aria-hidden="true">↗</span></a></div>
+      <div class="writing-list"><% page.posts.each(function(post) { %>
+        <a class="writing-row" href="<%= url_for(post.path) %>"><h3><%= post.title %></h3><span><%= post.tags.toArray().some(tag => tag.name === '产品方案') ? '产品思考' : post.categories.toArray().some(category => category.name === '生活') ? '生活记录' : '工程笔记' %> <span aria-hidden="true">↗</span></span></a>
+      <% }); %></div>
+    </section>
+    <% } else { %><p class="works-note">更多创作正在慢慢发生。也可以看看我的<a href="/tools/">小工具 ↗</a>，或读读<a href="/writing/">制作与思考的记录 ↗</a>。</p><% } %>
+  </main>
+  <footer class="site-footer"><div class="wrap"><a class="wordmark" href="/">boomery.</a><p>持续创作，慢慢生长。</p><a href="/about/">认识 boomery ↗</a></div></footer>
+</body>
+</html>

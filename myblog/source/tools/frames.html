@@ -373,6 +373,16 @@
       .steps { border-radius: 16px; }
       .steps button { font-size: 0.78rem; padding: 8px 4px; }
     }
+    .nav-links a { min-height: 44px; min-width: 44px; display: inline-flex; align-items: center; justify-content: center; }
+    @media (max-width: 600px) {
+      .nav { flex-wrap: wrap; gap: 4px; height: auto; padding-top: 10px; padding-bottom: 4px; }
+      .nav-links { width: 100%; justify-content: space-between; gap: 0; }
+      .nav-links a { padding: 6px; }
+      .layout > *, .panel, .stack, .field { min-width: 0; }
+      .fields { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      input, select { min-width: 0; max-width: 100%; }
+      .checks, .meta { flex-wrap: wrap; }
+    }
   </style>
 </head>
 <body>
@@ -383,11 +393,11 @@
       boomery <span>Tools</span>
     </a>
     <div class="nav-links">
-      <a href="/tools/" class="is-active">工具</a>
-      <a href="/space/">数字空间</a>
-      <a href="/gallery/">Gallery</a>
-      <a href="/night/">夜行镖</a>
-      <a href="/">博客</a>
+      <a href="/works/">作品</a>
+      <a href="/tools/" class="is-active" aria-current="page">工具</a>
+      <a href="/gallery/">影像</a>
+      <a href="/writing/">文字</a>
+      <a href="/about/">关于</a>
     </div>
   </nav>
   <main>

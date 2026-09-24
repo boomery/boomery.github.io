@@ -5,8 +5,8 @@
 
 # Site
 title: boomery
-subtitle: AI × 个人数字空间
-description: 用 AI 与工程能力构建个人数字表达空间——产品思考、技术实现与 Gallery 审美实验。
+subtitle: 个人创作空间
+description: boomery 的个人创作空间——游戏、小工具、影像，以及一路写下的工程笔记与产品思考。
 keywords: AI, 个人数字空间, 独立开发, 产品方案, Gallery, boomery
 author: boomery
 language: zh-CN
@@ -74,7 +74,7 @@ highlight:
 # per_page: Posts displayed per page. (0 = disable pagination)
 # order_by: Posts order. (Order by date descending by default)
 index_generator:
-  path: ''
+  path: 'writing'
   per_page: 10
   order_by: -date
   
@@ -106,3 +106,7 @@ deploy:
   type: git
   repo: https://github.com/boomery/boomery.github.io.git
   branch: master
+
+# This stylesheet is imported by NexT, not a standalone Stylus entry.
+exclude:
+  - _data/**
