@@ -599,3 +599,57 @@ h1 {
     scroll-behavior:auto!important;
   }
 }
+
+/* Keep the cover area composed while the image travels over a slow connection. */
+.project {
+  background: radial-gradient(ellipse at 76% 30%, #29313c 0%, #141d27 42%, #0b1118 85%);
+}
+.project-art {
+  transition: opacity .65s ease, transform .6s;
+}
+.project.is-loading .project-art, .project.is-error .project-art {
+  opacity: 0;
+}
+.project.is-loading::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(110deg, transparent 20%, rgba(181, 193, 219, .09) 48%, transparent 76%);
+  transform: translateX(-100%);
+  animation: cover-shimmer 2.8s ease-in-out infinite;
+  pointer-events: none;
+}
+.project-loading {
+  position: absolute;
+  right: 24px;
+  bottom: 22px;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 8px 12px;
+  border: 1px solid rgba(192, 180, 235, .18);
+  background: rgba(11, 17, 24, .8);
+  color: #ccc8d6;
+  font-size: 12px;
+  line-height: 1.5;
+  pointer-events: none;
+}
+.project-loading[hidden] { display: none; }
+.project-loading-dot {
+  width: 5px;
+  height: 5px;
+  flex: 0 0 5px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+.project.is-loading .project-loading-dot { animation: cover-pulse 1.5s ease-in-out infinite; }
+.project.is-slow::before, .project.is-slow .project-loading-dot { animation: none; }
+@keyframes cover-shimmer { to { transform: translateX(100%); } }
+@keyframes cover-pulse { 50% { opacity: .3; } }
+@media (max-width: 700px) {
+  .project-loading { top: 14px; right: 14px; bottom: auto; left: 14px; width: fit-content; max-width: calc(100% - 28px); font-size: 11px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .project.is-loading::before, .project.is-loading .project-loading-dot { animation: none; }
+}

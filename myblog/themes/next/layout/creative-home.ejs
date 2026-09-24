@@ -9,7 +9,7 @@
   <link rel="icon" href="/images/boomery-logo.svg" type="image/svg+xml">
   <link rel="stylesheet" href="/styles/creative-home.css">
   <link rel="preload" href="/night/art/ferry-night.webp" as="image">
-  <% if (!page.worksOnly) { %><script src="/js/creative-home.js" defer></script><% } %>
+  <script src="/js/creative-home.js" defer></script>
 </head>
 <body>
   <a class="skip-link" href="#content">跳到主要内容</a>
@@ -36,6 +36,7 @@
       <div class="section-heading"><h2 id="works-title"><span>01 /</span> 精选作品</h2><% if (!page.worksOnly) { %><a href="/works/">全部作品 <span aria-hidden="true">↗</span></a><% } %></div>
       <a class="project" href="/night/" aria-label="进入夜行镖：槐安夜雨">
         <img class="project-art" src="/night/art/ferry-night.webp" alt="冷雨中的旧渡口，一位侠客望向远处的灯火" fetchpriority="high" width="1672" height="941">
+        <span class="project-loading" role="status" aria-live="polite" hidden><span class="project-loading-dot" aria-hidden="true"></span><span class="project-loading-text"></span></span>
         <div class="project-copy"><p class="eyebrow">GAME / 001</p><h3>槐安夜雨</h3><p class="project-kind">夜行镖 · 武侠游戏</p><p class="project-description">一场从旧渡口开始的江湖夜行。</p><span class="project-button">进入体验 <span aria-hidden="true">↗</span></span></div>
       </a>
     </section>

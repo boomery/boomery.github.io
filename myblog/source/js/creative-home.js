@@ -1,5 +1,40 @@
 'use strict';
 
+// Cover feedback is independent of the Gallery request and also runs on /works/.
+(function () {
+  document.querySelectorAll('.project').forEach(project => {
+    const image = project.querySelector('.project-art');
+    const status = project.querySelector('.project-loading');
+    if (!image || !status) return;
+    const label = status.querySelector('.project-loading-text');
+    let settled = false;
+    let timer;
+    function finish(success) {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timer);
+      project.classList.remove('is-loading', 'is-slow');
+      project.classList.add(success ? 'is-loaded' : 'is-error');
+      status.hidden = success;
+      label.textContent = success ? '' : '封面暂未加载，可直接进入体验';
+    }
+    image.addEventListener('load', () => finish(true), { once: true });
+    image.addEventListener('error', () => finish(false), { once: true });
+    // A warm cache may complete before the deferred script runs.
+    if (image.complete) {
+      finish(image.naturalWidth > 0);
+      return;
+    }
+    project.classList.add('is-loading');
+    label.textContent = '正在载入江湖…';
+    status.hidden = false;
+    timer = setTimeout(() => {
+      project.classList.add('is-slow');
+      label.textContent = '封面加载较慢，可先进入体验';
+    }, 12000);
+  });
+})();
+
 // The static Gallery entrance remains usable if the API or any image fails.
 (async function () {
   const container = document.getElementById('home-photos');
